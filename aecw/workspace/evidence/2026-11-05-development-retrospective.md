@@ -12,7 +12,7 @@
 | 项 | 结果 |
 |---|---|
 | 起点 | 原插件 `DSH_end/插件/task-complete-toast` v1.2.0；160/160；已有试点文档，但没有 AECW 三域结构 |
-| 终点 | 独立项目 `D:\DSH\task-complete-toast-aecw`；AECW 三域 + 单一 STATUS + 台账 + 门禁 + 基线 + 进化台账 |
+| 终点 | 独立项目 `D:\DSH\task-complete-toast-aecw`；**产品代码 `product/`、AECW 治理 `aecw/` 物理分离**；三域 + 单一 STATUS + 台账 + 门禁 + 基线 + 进化台账 |
 | 代码 | G1/G2/G3 原样；新增 **G4 外观设置 + 实时预览**；修复 **G2 遮挡时无系统通知** |
 | 测试 | 起点 160/160 → **169/169**；`node --check` 17/17 |
 | 真机 | G4 设置页人类验收（E2，无截图）；G2 遮挡推送人类真机通过（E2，无截图） |
@@ -66,6 +66,7 @@
 | 16:15 | 进化试验 | EV-001 运行态探针 trial：正控 7/7、负控 fail；提案六项齐全 | F-044；`cluster/evolution.md` |
 | 16:26 | 激活 + 独立目录 | EV-001 写入 AGENTS；项目迁至 `D:\DSH\task-complete-toast-aecw`；独立仓库；profile 重装；迁移后探针 7/7 | F-045/F-046；`2026-11-05-standalone-migration.md` |
 | 16:30+ | 全量整理 | 本文件；索引/STATUS/README 同步 | 本文件 |
+| 16:40 | 产品/AECW 分层 | 产品统一 `product/`，治理统一 `aecw/`；profile 重装指向 `product/`；探针 7/7 | F-047；`2026-11-05-standalone-migration.md` §1.1 |
 
 ---
 
@@ -82,7 +83,7 @@
 | 7 | 替换安装并真机 | profile/junction → 副本；设置页验收 | F-038/F-040 |
 | 8 | 授权没有推送（遮挡场景） | hidden + 失焦补发；W16/W17；真机通过 | F-041/F-042 |
 | 9 | 基线冻结，做一次进化 | commit/tag；EV-001 trial | F-043/F-044 |
-| 10 | 激活 + 独立文件夹 + 全量整理 | AGENTS 探针；独立目录/仓库；本文件 | F-045/F-046 |
+| 10 | 激活 + 独立文件夹 + 全量整理 | AGENTS 探针；独立目录/仓库；产品/AECW 分层；本文件 | F-045/F-046/F-047 |
 
 ---
 
@@ -138,22 +139,28 @@
 
 ```text
 D:\DSH\task-complete-toast-aecw\        # 独立项目 / 独立 git 仓库
-├─ STATUS.md                            # 唯一当前状态（阶段 closed）
-├─ BLUEPRINT.md                         # grow-2 蓝图（approved，closed）
-├─ ledger.md                            # DR/F/CR 台账
-├─ human/                               # direction v1.2 / decisions / acceptance
-├─ cluster/                             # roster/board/runs/learning/evolution
-├─ workspace/
-│  ├─ evidence/                         # 基线/迁移/设置/G2/EV-001 证据
-│  ├─ memory/                           # 设计契约 §16、ADR、EV-001 提案
-│  ├─ work/                             # 产物/草稿
-│  └─ landing/                          # manifest/交接/迁移
-├─ gates/                               # 阶段 0–2、adoption、freeze、start、grow-2
-├─ inbox/                               # DR-002 / CR-001
-├─ bin/aecw.mjs + core/                  # 自包含 AECW CLI/模板（从 prototype 复制）
-├─ scripts/probe.mjs                    # EV-001 运行态探针（已激活）
-├─ index.js/client.js/lib/test/...      # 产品代码（v1.2.0 + G4）
-└─ package.json / cordis.patch.yml
+├─ README.md                            # 仓库地图（本文件入口）
+├─ AGENTS.md                            # 仓库级分离规则
+├─ product/                             # 产品代码（可安装包，profile 指向这里）
+│  ├─ index.js / client.js / lib/ / locale/ / test/
+│  ├─ package.json / cordis.patch.yml / icon.svg
+│  └─ README.md                         # 产品功能/安装/限制
+└─ aecw/                                # AECW 治理结构与工具
+   ├─ STATUS.md                         # 唯一当前状态（阶段 closed）
+   ├─ BLUEPRINT.md                      # grow-2 蓝图（approved，closed）
+   ├─ ledger.md                         # DR/F/CR 台账
+   ├─ human/                            # direction v1.2 / decisions / acceptance
+   ├─ cluster/                          # roster/board/runs/learning/evolution
+   ├─ workspace/
+   │  ├─ evidence/                      # 基线/迁移/设置/G2/EV-001 证据
+   │  ├─ memory/                        # 设计契约 §16、ADR、EV-001 提案
+   │  ├─ work/                          # 产物/草稿
+   │  └─ landing/                       # manifest/交接/迁移
+   ├─ gates/                            # 阶段 0–2、adoption、freeze、start、grow-2
+   ├─ inbox/                            # DR-002 / CR-001
+   ├─ bin/aecw.mjs + core/              # 自包含 AECW CLI/模板（从 prototype 复制）
+   ├─ scripts/probe.mjs                 # EV-001 运行态探针（已激活）
+   └─ AGENTS.md                         # AECW 治理规则
 ```
 
 关键文件：
@@ -163,6 +170,7 @@ D:\DSH\task-complete-toast-aecw\        # 独立项目 / 独立 git 仓库
 - 阶段门禁：[`../../gates/2026-11-05-grow-2.md`](../../gates/2026-11-05-grow-2.md)
 - 基线：[`baseline-2026-11-05-grow-2.md`](baseline-2026-11-05-grow-2.md)
 - 独立迁移：[`2026-11-05-standalone-migration.md`](2026-11-05-standalone-migration.md)
+- 产品说明：[`../../../product/README.md`](../../../product/README.md)
 - 设置契约：[`../memory/design-contract-v1.2.0.md`](../memory/design-contract-v1.2.0.md) §16
 - 进化：[`../../cluster/evolution.md`](../../cluster/evolution.md)；[`../memory/ev-001-runtime-probe.md`](../memory/ev-001-runtime-probe.md)
 
@@ -204,21 +212,24 @@ D:\DSH\task-complete-toast-aecw\        # 独立项目 / 独立 git 仓库
 ## 附录 A：关键命令索引
 
 ```powershell
-# 工作目录
+# 仓库根
 cd D:\DSH\task-complete-toast-aecw
 
 # 运行态探针（EV-001，门禁前必跑）
-node scripts/probe.mjs
+node aecw/scripts/probe.mjs
 
-# 全量测试
+# 全量测试（产品代码在 product/）
+cd product
 node --test --test-isolation=none test/smoke.test.js test/integration.test.js test/store.test.js test/format.test.js test/dismiss.test.js test/notifier.test.js test/resolver.test.js test/wiring.test.js test/presentation.test.js test/interaction.test.js
+cd ..
 
-# 结构检查
-node bin/aecw.mjs check .
+# 结构检查（治理目录是 aecw/）
+node aecw/bin/aecw.mjs check aecw
 
 # 当前 git
 git log --oneline -5
 git tag --points-at HEAD
+```
 ```
 
 ## 附录 B：术语

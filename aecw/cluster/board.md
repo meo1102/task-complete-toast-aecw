@@ -16,6 +16,7 @@
 | T-008 | 插件介绍文案修正（任务级，2026-11-05） | 单代理 | done | F-031 旧文案；v1.2.0 能力 | `locale/zh.json`、`locale/en.json`、README；smoke 回归断言 | F-032；当时 smoke 7/7、全量 160/160 |
 | T-009 | EV-001 运行态探针（阶段外） | 单代理 + 人类 | done（active） | 学习账候选；F-043 基线 | `scripts/probe.mjs`；AGENTS 门禁前必跑 | 正控 7/7、负控 fail；F-044/F-045 |
 | T-010 | 独立目录迁移 + 开发过程全记录（阶段外） | 单代理 + 人类 | done | 人类“独立文件夹/全量整理” | 独立仓库、迁移记录、复盘 | F-046；[`development-retrospective`](../workspace/evidence/2026-11-05-development-retrospective.md) |
+| T-011 | 产品/AECW 分层（阶段外） | 单代理 + 人类 | done | 人类“产品代码统一放置” | `product/`、`aecw/`、profile 指向 product | F-047；探针 7/7、169/169 |
 
 ## 积压（不进 `grow-2`，后续阶段处理）
 

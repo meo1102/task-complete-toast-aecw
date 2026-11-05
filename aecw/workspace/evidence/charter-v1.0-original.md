@@ -4,7 +4,7 @@
 > **v1.0** ｜ 2026-11-04 ｜ 人类批准：2026-11-04（本会话发起人）
 > **变更**：v1.0-draft → v1.0（仅批准生效，无条款实质变更）｜**生效**：2026-11-04
 > **人类方向所有者**：本会话发起人（2026-11-04 批准）｜**执行**：agent 集群。
-> **上位依据**：[PLAN-v0.7-信任优先.md](../../../agent-engineering-control/PLAN-v0.7-信任优先.md)（边界清晰 → 默认相信 → 例外升级 → 抽样验证 → 失信收紧）与 [REPORT-v4.md](../../../agent-engineering-control/REPORT-v4.md)（方向/目标/三条基线/两本账/六道门）。
+> **上位依据**：[PLAN-v0.7-信任优先.md](../../../../agent-engineering-control/PLAN-v0.7-信任优先.md)（边界清晰 → 默认相信 → 例外升级 → 抽样验证 → 失信收紧）与 [REPORT-v4.md](../../../../agent-engineering-control/REPORT-v4.md)（方向/目标/三条基线/两本账/六道门）。
 > 本文件**当时**是总约束；迁移后以 [`human/direction.md`](../../human/direction.md) 与 [`STATUS.md`](../../STATUS.md) 为准。修改需人类批准、升版本、留沿革。
 
 ## 1. 方向

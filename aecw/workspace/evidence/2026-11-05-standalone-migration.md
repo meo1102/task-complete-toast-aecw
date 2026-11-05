@@ -1,6 +1,7 @@
 # 独立目录迁移 · 2026-11-05
 
 > 目的：把 `task-complete-toast-aecw` 从 `DSH_end/插件/` 中移出，成为独立项目目录/仓库，避免与指南仓、原插件、原型机材料混在一起管理。
+> **布局 v2（同日，人类指令“AECW 文件与产品代码不要混杂”）**：产品代码统一到 `product/`，AECW 治理到 `aecw/`；profile 改指 `...\product`。见 §1.1。
 > 证据等级：**E1**（命令/输出可复现）。
 
 ## 1. 路径
@@ -14,7 +15,19 @@
 
 原 `DSH_end` 仓库中的历史仍保留（tag `aecw-grow-2-2026-11-05` → `4aff41a`），删除提交 `5d3865c` 只移出目录，不改写历史。
 
-## 2. 迁移步骤
+## 1.1 布局 v2（同日）
+
+| 项 | 布局 v1（历史） | 布局 v2（当前） |
+|---|---|---|
+| 产品代码 | 仓库根混放 | **`D:\DSH\task-complete-toast-aecw\product`** |
+| AECW 结构 | 仓库根混放 | **`D:\DSH\task-complete-toast-aecw\aecw`** |
+| profile link | `...\task-complete-toast-aecw` | **`...\task-complete-toast-aecw\product`** |
+| 测试入口 | 根目录 | `cd product` 后运行 |
+| AECW CLI | `node bin/aecw.mjs` | `node aecw/bin/aecw.mjs check aecw` |
+
+迁移后探针（布局 v2）：**7/7 PASS**（`profile link`/`junction target` 均指向 `...\product`）。
+
+## 2. 迁移步骤（布局 v1 历史）
 
 ```powershell
 # 1) 目录移动（旧路径已不存在）

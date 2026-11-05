@@ -67,6 +67,7 @@
 | F-044 | 2026-11-05 | EV-001 运行态探针试用：正控 7/7（exit 0）；负控坏 URL 5/7（HTTP 两项 FAIL，exit 1）；只读、无配置写入 | `node scripts/probe.mjs`；`--url http://127.0.0.1:1` | 已核验（E1） | 本会话 agent | [`ev-001-probe-2026-11-05.md`](workspace/evidence/ev-001-probe-2026-11-05.md)；`cluster/evolution.md` |
 | F-045 | 2026-11-05 | 人类激活 EV-001：`node scripts/probe.mjs` 写入 AGENTS，作为门禁/交付前必跑；FAIL 不得开门禁 | 2026-11-05 人类消息 | 已核验（人类决定） | 人类本人 | `cluster/evolution.md`；`AGENTS.md`；`STATUS.md` |
 | F-046 | 2026-11-05 | 项目迁至独立目录/仓库：`D:\DSH\task-complete-toast-aecw`；独立仓库 initial `67809d0`、tag `aecw-standalone-2026-11-05`；profile link/junction 重装指向新路径；迁移后探针 7/7 | `Move-Item`、`plugin_manager`、`git init/commit/tag`、`node scripts/probe.mjs` | 已核验（E1） | 本会话 agent | [`workspace/evidence/2026-11-05-standalone-migration.md`](workspace/evidence/2026-11-05-standalone-migration.md) |
+| F-047 | 2026-11-05 | 布局 v2：产品代码统一 `product/`，AECW 治理统一 `aecw/`；profile 重装指向 `...\product`；迁移后探针 7/7；测试 169/169 | `git mv`、`plugin_manager`、`node aecw/scripts/probe.mjs`、`node --test` | 已核验（E1） | 本会话 agent | [`standalone-migration`](workspace/evidence/2026-11-05-standalone-migration.md) §1.1；F-046 |
 
 ## C. 变更台账
 

@@ -18,6 +18,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const PRODUCT = path.resolve(ROOT, '..', 'product');
 const args = process.argv.slice(2);
 const arg = (name, fallback) => {
   const index = args.indexOf(`--${name}`);
@@ -44,17 +45,18 @@ function readJson(file) {
 }
 
 await check('宿主 package.json', () => {
-  const pkg = readJson(path.join(ROOT, 'package.json'));
+  const pkg = readJson(path.join(PRODUCT, 'package.json'));
   if (pkg.name !== '@local/task-complete-toast') throw new Error(`unexpected name ${pkg.name}`);
   if (typeof pkg.version !== 'string' || pkg.version.length === 0) throw new Error('missing version');
-  return `${pkg.name}@${pkg.version}`;
+  return `${pkg.name}@${pkg.version} (${PRODUCT})`;
 });
 
 await check('profile dependency link', () => {
   const pkg = readJson(path.join(profileDir, 'package.json'));
   const link = pkg.dependencies?.['@local/task-complete-toast'];
   if (typeof link !== 'string') throw new Error('dependency missing');
-  if (!link.includes('task-complete-toast-aecw')) throw new Error(`not pointing to AECW copy: ${link}`);
+  const normalized = link.replace(/\\/g, '/').replace(/\/+$/, '');
+  if (!/task-complete-toast-aecw\/product$/.test(normalized)) throw new Error(`not pointing to product/: ${link}`);
   return link;
 });
 
@@ -68,7 +70,8 @@ await check('profile bundles', () => {
 await check('junction target', () => {
   const link = path.join(profileDir, 'node_modules', '@local', 'task-complete-toast');
   const target = fs.realpathSync(link);
-  if (!target.includes('task-complete-toast-aecw')) throw new Error(`unexpected target: ${target}`);
+  const normalized = target.replace(/\\/g, '/').replace(/\/+$/, '');
+  if (!/task-complete-toast-aecw\/product$/.test(normalized)) throw new Error(`unexpected target: ${target}`);
   return target;
 });
 

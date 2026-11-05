@@ -6,7 +6,8 @@
 | 项 | 值 |
 |---|---|
 | 版本 | `1.2.0`（tag `v1.2.0`，发布提交 `2f0d437`，原件仓库） |
-| 位置 | `D:\DSH\task-complete-toast-aecw`（独立仓库，initial `67809d0`）；历史归档在 `DSH_end`（`4aff41a`/tag `aecw-grow-2-2026-11-05`） |
+| 位置 | `D:\DSH\task-complete-toast-aecw`（独立仓库，initial `67809d0`）；**产品 `product/`，AECW `aecw/`**；历史归档在 `DSH_end`（`4aff41a`/tag `aecw-grow-2-2026-11-05`） |
+| 安装目标 | profile bundle 指向 **`D:\DSH\task-complete-toast-aecw\product`** |
 | 可用 | G1 完成提示 5/5；G2 授权/确认提醒 7/8（G2-8 未测）；G3 外观 6/6（G3-4b 未单独）；**E2 目视，零截图** |
 | 可运维 | 零第三方运行时依赖、无构建链；安装/重装：`plugin_manager remove_bundle` + `install_bundle`；客户端改动刷新页面，宿主改动重启；G4 设置页依赖 DSH `settings.plugins.tab` 与宿主 `configEditor` |
 | 可交接 | `STATUS.md` + `ledger.md` + `gates/` + `workspace/evidence/` + 本清单；渲染顺序：STATUS → direction → BLUEPRINT → ledger → 最近门禁 |

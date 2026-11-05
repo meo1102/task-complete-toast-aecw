@@ -4,7 +4,7 @@
 > 所有者口径：按 **Git 提交人**记录（`meo1102@163.com`，2026-11-05 人类指令）。
 > 规则：本页是当前状态；其他文档是证据/历史。冲突以本页为准；每次门禁/冻结/发布先更新本页。
 > 证据等级：**E1** 运行事实（可复现）｜**E2** 人类目视（无截图）｜**E3** 文档主张（未复核）。
-> **副本说明**：项目位于 **`D:\DSH\task-complete-toast-aecw`**（2026-11-05 从 `DSH_end/插件/` 迁出，独立仓库；历史归档在 `DSH_end`）。本目录是 `task-complete-toast` v1.2.0 的 **AECW 结构副本**；迁移时产品逻辑未改，同日按 `grow-2` 实现 G4 外观设置。**已替换安装**：desktop profile 的 link/junction 指向本副本；原件保留在原路径，可回滚。结构迁移见 [`workspace/landing/migration-aecw-2026-11-05.md`](workspace/landing/migration-aecw-2026-11-05.md)；独立目录迁移见 [`workspace/evidence/2026-11-05-standalone-migration.md`](workspace/evidence/2026-11-05-standalone-migration.md)。
+> **副本说明**：项目位于 **`D:\DSH\task-complete-toast-aecw`**（独立仓库；历史归档在 `DSH_end`）。**布局：产品代码 `../product/`；AECW 治理 `../aecw/`**，两者不混放。本目录是 `task-complete-toast` v1.2.0 的 **AECW 结构副本**；迁移时产品逻辑未改，同日按 `grow-2` 实现 G4 外观设置。**已替换安装**：desktop profile 的 link/junction 指向 `../product/`；原件保留在原路径，可回滚。结构迁移见 [`workspace/landing/migration-aecw-2026-11-05.md`](workspace/landing/migration-aecw-2026-11-05.md)；独立目录迁移见 [`workspace/evidence/2026-11-05-standalone-migration.md`](workspace/evidence/2026-11-05-standalone-migration.md)。
 
 ---
 
@@ -13,7 +13,7 @@
 - 阶段：grow-2（closed）
 - 阶段状态：closed
 - 版本：1.2.0（产品基线；G4 设置未发布）
-- 当前目标：`grow-2` 已关闭；阶段外进化 **EV-001 运行态探针已激活**（门禁/交付前必跑）；等人类决定发布/下一阶段
+- 当前目标：`grow-2` 已关闭；**布局 v2：产品 `product/`、AECW `aecw/`**；EV-001 运行态探针已激活（门禁/交付前必跑）；等人类决定发布/下一阶段
 - 当前门禁：2026-11-05-grow-2（有条件通过）
 
 ## 2. 当前证据
@@ -101,12 +101,12 @@
 | [`workspace/evidence/2026-11-05-development-retrospective.md`](workspace/evidence/2026-11-05-development-retrospective.md) | 当前（复盘） | 本次开发过程全记录：需求/时间线/决策/失败/证据/未完成 |
 | `workspace/memory/` | 当前/参考 | 设计契约（§16 G4）、ADR、历史映射、V 项对账、设置方案 |
 | `workspace/landing/` | 当前/历史 | 落地清单、交接说明、迁移说明 |
-| `README.md` | 当前摘要 + 历史细节 | 功能/安装说明；状态以本页为准 |
-| `AGENTS.md` | 当前 | 开发约定（AECW 版） |
+| [`../product/README.md`](../product/README.md) | 当前摘要 + 历史细节 | 产品功能/安装说明；状态以本页为准 |
+| `AGENTS.md` | 当前 | AECW 治理/开发约定；仓库级见 [`../AGENTS.md`](../AGENTS.md) |
 
 ## 6. 下一步
 
-**阶段 `grow-2` 已关闭（2026-11-05，有条件通过）。历史基线 commit `4aff41a` / tag `aecw-grow-2-2026-11-05`（`DSH_end` 归档）；独立仓库 initial `67809d0` / tag `aecw-standalone-2026-11-05`。停在这里，等人类决定发布或下一阶段。**
+**阶段 `grow-2` 已关闭（2026-11-05，有条件通过）。布局 v2：产品 `product/`、AECW `aecw/`，profile 指向 `product/`。历史基线 commit `4aff41a` / tag `aecw-grow-2-2026-11-05`（`DSH_end` 归档）；独立仓库 initial `67809d0` / tag `aecw-standalone-2026-11-05`。停在这里，等人类决定发布或下一阶段。**
 
 1. **EV-001 已激活**：`node scripts/probe.mjs` 写入 AGENTS，门禁/交付前必跑；正控 7/7、负控 fail。分布外验证/真实回滚演练仍待做。
 2. **已闭合**：G4 设置页人类验收（F-040）；G2 遮挡推送真机通过（F-042）；A 方案持久化（F-038）；自动化 169/169；基线冻结（F-043）。

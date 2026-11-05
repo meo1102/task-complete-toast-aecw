@@ -23,6 +23,7 @@
 | 2026-11-05 | 单代理 | 基线冻结 + EV-001 试用 | commit `4aff41a` / tag `aecw-grow-2-2026-11-05`；运行态探针正控 7/7、负控 fail；未激活 | F-043/F-044；[`evolution.md`](evolution.md) |
 | 2026-11-05 | 单代理 + 人类 | EV-001 激活 + 独立目录迁移 | 探针写入 AGENTS；项目迁至 `D:\DSH\task-complete-toast-aecw`，独立仓库 `67809d0`，profile 重装；迁移后探针 7/7 | F-045/F-046；[`standalone-migration`](../workspace/evidence/2026-11-05-standalone-migration.md) |
 | 2026-11-05 | 单代理 | 全量开发过程整理 | 时间线/需求追踪/决策/失败修正/证据/未完成项；独立仓库提交 | [`development-retrospective`](../workspace/evidence/2026-11-05-development-retrospective.md) |
+| 2026-11-05 | 单代理 + 人类 | 产品/AECW 分层 + profile 重装 | 产品 → `product/`，治理 → `aecw/`；profile 指向 `...\product`；探针 7/7、测试 169/169 | F-047；[`standalone-migration`](../workspace/evidence/2026-11-05-standalone-migration.md) §1.1 |
 
 ## 未记录但已发生（避免“记录即完成”的错觉）
 
