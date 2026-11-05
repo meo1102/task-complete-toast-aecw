@@ -52,4 +52,4 @@ node aecw/bin/aecw.mjs check aecw
 
 profile 的 bundle 指向 **`D:\DSH\task-complete-toast-aecw\product`**（不是仓库根）；`package.json`、`cordis.patch.yml`、`locale/` 等都在 `product/`。迁移/回滚见 [`aecw/workspace/evidence/2026-11-05-standalone-migration.md`](aecw/workspace/evidence/2026-11-05-standalone-migration.md)。
 
-> 当前版本 `1.2.0`；G4 设置页已人类验收（E2，无截图），G4 未发布；已知遗留以 `aecw/STATUS.md` 为准。
+> 当前版本 **`1.3.0`**（已发布）；G4 设置页与 G2 遮挡修复包含在内；截图/录屏要求人类挂起；已知遗留以 [`aecw/STATUS.md`](aecw/STATUS.md) 为准。

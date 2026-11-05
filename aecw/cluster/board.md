@@ -19,6 +19,7 @@
 | T-010 | 独立目录迁移 + 开发过程全记录（阶段外） | 单代理 + 人类 | done | 人类“独立文件夹/全量整理” | 独立仓库、迁移记录、复盘 | F-046；[`development-retrospective`](../workspace/evidence/2026-11-05-development-retrospective.md) |
 | T-011 | 产品/AECW 分层（阶段外） | 单代理 + 人类 | done | 人类“产品代码统一放置” | `product/`、`aecw/`、profile 指向 product | F-047；探针 7/7、169/169 |
 | T-012 | v0.9 校准（maintenance） | 单代理 + 人类 | done | 人类“按 REVIEW/PLAN 校准” | PROJECT/state/criteria；check 升级；文档真话修复 | F-048；`v0.9-calibration`；check FAIL 0 |
+| T-013 | v1.3.0 发布（release） | 单代理 + 人类 | done | G4 + G2 修复；截图挂起指令 | package 1.3.0、tag `v1.3.0`、发布门 | F-049；`release-v1.3.0`；ED-001/002 waived |
 
 ## 积压（不进 `grow-2`，后续阶段处理）
 

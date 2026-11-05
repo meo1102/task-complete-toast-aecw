@@ -27,6 +27,7 @@
 | 2026-11-05 | 单代理 | 全量开发过程整理 | 时间线/需求追踪/决策/失败修正/证据/未完成项；独立仓库提交 | [`development-retrospective`](../workspace/evidence/2026-11-05-development-retrospective.md) |
 | 2026-11-05 | 单代理 + 人类 | 产品/AECW 分层 + profile 重装 | 产品 → `product/`，治理 → `aecw/`；profile 指向 `...\product`；探针 7/7、测试 169/169 | F-047；[`standalone-migration`](../workspace/evidence/2026-11-05-standalone-migration.md) §1.1 |
 | 2026-11-05 | 单代理 + 人类 | v0.9 校准（maintenance） | PROJECT/state/criteria；文档状态头；check 对账；负控三项通过；产品代码未改 | F-048；[`v0.9-calibration`](../workspace/evidence/2026-11-05-v09-calibration.md) |
+| 2026-11-05 | 单代理 + 人类 | v1.3.0 发布 | G4 + G2 遮挡修复；package 1.3.0；截图/录屏挂起；169/169 + probe 7/7 | F-049；[`release-v1.3.0`](../gates/2026-11-05-release-v1.3.0.md) |
 
 ## 未记录但已发生（避免“记录即完成”的错觉）
 

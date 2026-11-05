@@ -61,5 +61,5 @@ node bin/aecw.mjs start . --by meo1102 --first-report "..."
 - 行为变更：先改 [`workspace/memory/design-contract-v1.2.0.md`](workspace/memory/design-contract-v1.2.0.md) 与 [`workspace/memory/adr-001-023.md`](workspace/memory/adr-001-023.md)，再改代码与测试。
 - 证据：事实写进 `ledger.md`（F 编号）；阶段结束更新门禁；验收必须列失败/未测项。
 - 基线：阶段结束提交 commit/tag，记录源码/测试哈希与验收基线版本。
-- 当前发布口径：v1.2.0；G2-8、G3-4b 等已知未测见 `STATUS.md` §3/§4，不写「全绿」。
+- 当前发布口径：v1.3.0（G1/G2/G3 + G4 + G2 遮挡修复）；截图/录屏要求人类挂起；G2-8、G3-4b 等已知未测见 `STATUS.md` §3/§4，不写「全绿」。
 - 每道门/发布先更新 `STATUS.md`，再更新其他文档；旧文档标 `SUPERSEDED`。

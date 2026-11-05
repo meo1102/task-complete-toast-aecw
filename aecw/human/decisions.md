@@ -25,6 +25,7 @@
 | 2026-11-05 | **项目迁至独立目录/仓库**：`D:\DSH\task-complete-toast-aecw`；不再从 `DSH_end`/原型机目录内管理 | 人类“项目文件整理到独立文件夹，不要和原型机文件混在一起” | profile 重装指向新路径；旧历史归档 `DSH_end`；见 [`2026-11-05-standalone-migration.md`](../workspace/evidence/2026-11-05-standalone-migration.md) |
 | 2026-11-05 | **产品/AECW 分层**：产品代码统一 `product/`，AECW 治理统一 `aecw/`，不混放；profile 指向 `product/` | 人类“AECW 结构的文件和产品代码不要混杂在一起，产品代码统一放置” | 见 [`standalone-migration`](../workspace/evidence/2026-11-05-standalone-migration.md) §1.1；F-047 |
 | 2026-11-05 | **按 REVIEW/PLAN v0.9 校准**：maintenance 泳道；加 PROJECT/state/criteria；修文档矛盾；升级 check；**不改产品行为/人类验收/发布决定** | 人类“先按照这两个文档校准项目” | 见 [`v0.9-calibration`](../workspace/evidence/2026-11-05-v09-calibration.md)；F-048；adoption 仍 provisional |
+| 2026-11-05 | **发布 v1.3.0**：G4 外观设置 + G2 遮挡推送修复；**截图/录屏要求全部挂起**（ED-001/ED-002 waived）；adoption 仍 provisional | 人类“截图/录屏的要求都挂起，发布新版本” | 见 [`release-v1.3.0`](../gates/2026-11-05-release-v1.3.0.md)、[`2026-11-05-release-v1.3.0.md`](../workspace/evidence/2026-11-05-release-v1.3.0.md)；F-049 |
 
 ## 待人类（阶段外，不阻塞 maintenance）
 

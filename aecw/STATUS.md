@@ -1,14 +1,14 @@
 # STATUS · task-complete-toast（AECW 副本）
 
 > 状态：current｜最后核对：2026-11-05
-<!-- AECW-STATE {"stage":"grow-2/closed","release":"1.2.0/released","g4":"accepted/unreleased","evolution":"EV-001/active","adoption":"provisional","evidence_debt":["ED-001","ED-002","ED-003","ED-004"]} -->
-> **状态摘要（`state.json` 对账）**：stage `grow-2/closed`；release `1.2.0/released`；G4 `accepted/unreleased`；EV-001 `active`；adoption `provisional`；证据债 `ED-001/002/003/004`。验收矩阵见 [`criteria.md`](criteria.md)。
+<!-- AECW-STATE {"stage":"grow-2/closed","release":"1.3.0/released","g4":"released/released","evolution":"EV-001/active","adoption":"provisional","evidence_debt":["ED-001","ED-002","ED-003","ED-004"]} -->
+> **状态摘要（`state.json` 对账）**：stage `grow-2/closed`；release `1.3.0/released`；G4 `released/released`；EV-001 `active`；adoption `provisional`；证据债 `ED-001/002`（挂起）、`ED-003/004`（open）。验收矩阵见 [`criteria.md`](criteria.md)。
 
-> **唯一当前状态页。** 最后更新：2026-11-05｜版本：1.2.0｜人类所有者：meo1102
+> **唯一当前状态页。** 最后更新：2026-11-05｜版本：1.3.0｜人类所有者：meo1102
 > 所有者口径：按 **Git 提交人**记录（`meo1102@163.com`，2026-11-05 人类指令）。
 > 规则：本页是当前状态；其他文档是证据/历史。冲突以本页为准；每次门禁/冻结/发布先更新本页。
 > 证据等级：**E1** 运行事实（可复现）｜**E2** 人类目视（无截图）｜**E3** 文档主张（未复核）。
-> **副本说明**：项目位于 **`D:\DSH\task-complete-toast-aecw`**（独立仓库；历史归档在 `DSH_end`）。**布局：产品代码 `../product/`；AECW 治理 `../aecw/`**，两者不混放。本目录是 `task-complete-toast` v1.2.0 的 **AECW 结构副本**；迁移时产品逻辑未改，同日按 `grow-2` 实现 G4 外观设置。**已替换安装**：desktop profile 的 link/junction 指向 `../product/`；原件保留在原路径，可回滚。结构迁移见 [`workspace/landing/migration-aecw-2026-11-05.md`](workspace/landing/migration-aecw-2026-11-05.md)；独立目录迁移见 [`workspace/evidence/2026-11-05-standalone-migration.md`](workspace/evidence/2026-11-05-standalone-migration.md)。
+> **副本说明**：项目位于 **`D:\DSH\task-complete-toast-aecw`**（独立仓库；历史归档在 `DSH_end`）。**布局：产品代码 `../product/`；AECW 治理 `../aecw/`**，两者不混放。本项目基于 `task-complete-toast` v1.2.0 复制；**当前发布 1.3.0**（G1/G2/G3 + G4 + G2 遮挡修复）。**已替换安装**：desktop profile 的 link/junction 指向 `../product/`；原件保留在原路径，可回滚。结构迁移见 [`workspace/landing/migration-aecw-2026-11-05.md`](workspace/landing/migration-aecw-2026-11-05.md)；独立目录迁移见 [`workspace/evidence/2026-11-05-standalone-migration.md`](workspace/evidence/2026-11-05-standalone-migration.md)。
 
 ---
 
@@ -16,7 +16,7 @@
 
 - 阶段：grow-2（closed）
 - 阶段状态：closed
-- 版本：1.2.0（产品基线；G4 设置未发布）
+- 版本：1.3.0（已发布；G4/G2 修复包含在内）
 - 当前目标：`grow-2` 已关闭；**布局 v2：产品 `product/`、AECW `aecw/`**；EV-001 运行态探针已激活（门禁/交付前必跑）；等人类决定发布/下一阶段
 - 当前门禁：2026-11-05-grow-2（有条件通过）
 
@@ -32,7 +32,7 @@
   - `lib/config.js` `7D11DC96006D81A726B8200F7AF7A0F8E345B49DD4230B0C3FD272B48D2E0A1F`
   - `lib/host.js` `0FC37D2D10AA8559FC8C818A38795245713B726D15209CA34760F34BC5F2F5B9`
   - `index.js` `7D90BC6CC88D12F106F268895F843B9414ABAF03BD2D367D23BBC7D291B09278`
-  - `package.json` `77C60378A6D8861749714AFB567569A2F87FCC05D2E1030DBA93F99CA779E117`（未升版）
+  - `package.json` `C33D737C3A43B287B935229EC5FE8F71FB0D48FF5FEC43B108DDC2C32A6B1BB6`（1.3.0）
 - 介绍文案：`locale/zh.json`、`locale/en.json` 已与 v1.2.0 能力对齐（F-031/F-032）。
 - 设置探针：客户端有 `settings.plugins.tab` 槽；宿主有 `configEditor`（A 方案）；Theme tokens 只有颜色、无字体 token（F-033/F-036）。
 - 编码：全项目 `.md/.js/.json/.yml/.svg` 无 `U+FFFD`。
@@ -44,7 +44,8 @@
 
 - G1：**5/5**；G2：**7/8**（G2-8 挂起）；G3：**6/6**（G3-4b 未单独，计入 G3-4）。
 - **G4 设置页**：人类目视后验收（“设置页效果符合预想”，2026-11-05，E2，无截图，F-040）。
-- **G2 遮挡推送修复**：授权弹窗 → 最小化 DSH → Windows 通知出现 → 拒绝后消失（2026-11-05，E2，无截图，F-042）。
+- **G2 遮挡推送修复**：授权弹窗 → 最小化 DSH → Windows 通知出现 → 拒绝后消失（2026-11-05，E2，无截图，F-042）；随 1.3.0 发布（F-049）。
+- **v1.3.0 发布**：G4 + G2 遮挡修复；截图/录屏要求人类挂起；见 [`gates/2026-11-05-release-v1.3.0.md`](gates/2026-11-05-release-v1.3.0.md)。
 - 证据：[`真机复验-G2`](workspace/evidence/真机复验-G2-2026-11-04.md)、[`真机验收结果-G3`](workspace/evidence/真机验收结果-G3-2026-11-04.md)、[`2026-11-05-G4-live-host.md`](workspace/evidence/2026-11-05-G4-live-host.md)；均为人类口述 + 代理记录，**零截图**。
 
 ### 2.3 E3（文档主张，未复核）
@@ -65,9 +66,9 @@
 
 | # | 项 | 状态 | 下一步 |
 |---|---|---|---|
-| 1 | G4 真机截图/录屏 | **零**（设置页效果已 E2 验收；ED-001） | 按 ED-001 补截图，或人类签署不补 |
+| 1 | G4 真机截图/录屏 | **挂起**（ED-001 waived，2026-11-05 人类指令） | 不再作为本轮发布条件；后续需要时再补 |
 | 2 | 颜色对比度：只设一色或跟随 token 时无法计算 | 已用 4.5:1 守卫但仅双色场景 | 真机目视；必要时调阈值/提示 |
-| 3 | **G2 遮挡推送修复** | **真机通过**（E2，F-042）；截图缺口 ED-002 | 按 ED-002 补截图/录屏，或人类签署不补 |
+| 3 | **G2 遮挡推送修复** | **真机通过并随 1.3.0 发布**（E2，F-042/F-049）；截图挂起（ED-002 waived） | 后续需要时再补 |
 | 4 | 13 项历史 V 项（V05、V08–V10、V14、V16、V18、V20、V22、V24–V27） | 未测；**无人裁决**（积压，不属 grow-2） | 后续阶段逐项做/接受/删除 |
 | 5 | V01、V04、V23 | **账上缺失**（原始清单未定义） | 人类裁决删除或补定义 |
 | 6 | DSH 版本 | 未复核 | 版本探针 |
@@ -105,10 +106,11 @@
 | `workspace/evidence/blueprint-v1-steward-1.md` | 历史（未执行） | v1 `steward-1` 草案 |
 | `ledger.md` | 当前 | 异议/事实/变更（DR/F/CR） |
 | `cluster/` | 当前 | 名册/任务板/运行/学习/进化/维护/发布 |
-| `gates/` | 历史 | 每道门当时的记录；含 charter-freeze / start-order / adoption / grow-2 |
+| `gates/` | 历史 | 每道门当时的记录；含 charter-freeze / start-order / adoption / grow-2 / release-v1.3.0 |
 | `workspace/evidence/` | 证据 | 原始记录与历史快照；单份文件头标 SUPERSEDED/HISTORICAL |
 | [`workspace/evidence/2026-11-05-development-retrospective.md`](workspace/evidence/2026-11-05-development-retrospective.md) | 历史（复盘） | 本次开发过程全记录：需求/时间线/决策/失败/证据/未完成 |
 | [`workspace/evidence/2026-11-05-v09-calibration.md`](workspace/evidence/2026-11-05-v09-calibration.md) | 当前 | v0.9 校准证据：PROJECT/state/criteria、check 对账、负控 |
+| [`workspace/evidence/2026-11-05-release-v1.3.0.md`](workspace/evidence/2026-11-05-release-v1.3.0.md) | 当前 | v1.3.0 发布证据：版本/tag/哈希/校验/豁免 |
 | `workspace/memory/` | 当前/参考 | 设计契约（§16 G4）、ADR、历史映射、V 项对账、设置方案 |
 | `workspace/landing/` | 当前/历史 | 落地清单、交接说明、迁移说明 |
 | [`../product/README.md`](../product/README.md) | 当前摘要 + 历史细节 | 产品功能/安装说明；状态以本页为准 |
@@ -120,15 +122,13 @@
 
 1. **v0.9 校准已完成**（maintenance）：`PROJECT.json`、`state.json`、`criteria.md`；当前文档矛盾修复；历史文档加状态头；`check` 增加路径/命令/状态/围栏/文档头检查。**未改产品行为。**
 2. **EV-001 已激活**：`node aecw/scripts/probe.mjs` 写入 AGENTS，门禁/交付前必跑；正控 7/7、负控 fail。分布外验证/真实回滚演练仍待做。
-3. **已闭合**：G4 设置页人类验收（F-040）；G2 遮挡推送真机通过（F-042）；A 方案持久化（F-038）；自动化 169/169；基线冻结（F-043）。
-4. **仍开放（不阻塞本次关闭）**：
-   - 真机截图/录屏：**零**（ED-001/ED-002，设置页/G2 均为 E2 口述）；
+3. **v1.3.0 已发布**：G4 外观设置 + G2 遮挡推送修复；门禁 [`gates/2026-11-05-release-v1.3.0.md`](gates/2026-11-05-release-v1.3.0.md)；tag `v1.3.0`；截图/录屏要求按人类指令**挂起**（ED-001/ED-002 waived）。
+4. **仍开放（不阻塞本次发布）**：
    - G2-8、G3-4b 仍为已接受遗留；13 项 V 项 + V01/V04/V23 未裁决；
-   - G4 未发布（版本仍 `1.2.0`），发布门禁另行；
    - G2 多标签、窄窗、自定义主题一致性未验；
-   - adoption 仍 provisional（ED-003）。
-5. **下一阶段/发布**：由人类决定；若进入下一阶段，先写新 `BLUEPRINT` 版本、`freeze`、`start`；不得沿用本阶段授权自动续跑。
-6. 未发布前**不得**声明“G4 正式发布/全部通过”。
+   - adoption 仍 provisional（ED-003）；EV-001 分布外/回滚演练（ED-004）。
+5. **下一阶段**：由人类决定；若进入下一阶段，先写新 `BLUEPRINT` 版本、`freeze`、`start`；不得沿用本阶段授权自动续跑。
+6. **1.3.0 已发布**，但仍不得把“零截图/多标签未验”说成“全部通过”。
 
 ## 7. 阶段授权（冻结）
 

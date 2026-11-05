@@ -5,18 +5,18 @@
 > **当前状态：以 [`STATUS.md`](../aecw/STATUS.md) 为准。** 本 README 是功能/安装说明，历史细节可能滞后；冲突时以 STATUS 为准。
 > **开发过程全记录**：[`2026-11-05-development-retrospective.md`](../aecw/workspace/evidence/2026-11-05-development-retrospective.md)（需求追踪/时间线/决策/失败修正/未完成项）。
 > **项目位置**：`D:\DSH\task-complete-toast-aecw`（独立 Git 仓库）；**产品代码在本目录 `product/`**，AECW 治理在 `../aecw/`。
-> **本副本来源**：2026-11-05 复制自 `DSH_end/插件/task-complete-toast` v1.2.0；随后更新介绍文案/回归断言（F-031/F-032），并在 `grow-2` 实现 G4 外观设置。
+> **本副本来源**：2026-11-05 复制自 `DSH_end/插件/task-complete-toast` v1.2.0；随后更新介绍文案/回归断言（F-031/F-032），实现 G4 外观设置与 G2 遮挡修复，并发布 **v1.3.0**。
 > **安装状态**：desktop profile 的 link/junction 指向 **`D:\DSH\task-complete-toast-aecw\product`**；原件保留在 `DSH_end/插件/task-complete-toast`，可回滚。与原件同包名。
-> **开发约束**：先读 [`direction.md`](../aecw/human/direction.md)（v1.2-aecw，含 G4）+ [`BLUEPRINT.md`](../aecw/BLUEPRINT.md)（阶段 `grow-2`，closed）。**v1.2.0 发布**：G1 完成提示、G2 授权/确认提醒、G3 弹窗样式自定义；G4 设置人类验收但未发布；已知遗留见文末。
+> **开发约束**：先读 [`direction.md`](../aecw/human/direction.md)（v1.2-aecw，含 G4）+ [`BLUEPRINT.md`](../aecw/BLUEPRINT.md)（阶段 `grow-2`，closed）。**v1.3.0 发布**：G1/G2/G3 + G4 外观设置 + G2 遮挡修复；截图/录屏要求人类挂起；已知遗留见文末。
 
 DSH 持久化插件：当 Agent 从运行变为空闲时，在窗口右下角提示任务完成；当轮次等待人类授权/确认时，提示处理；当页面不可见或被遮挡时，改发 Windows 系统通知。
 
 | 项 | 值 |
 |---|---|
 | 包名 | `@local/task-complete-toast` |
-| 版本 | `1.2.0`（与原件同一基线） |
+| 版本 | `1.3.0`（已发布；tag `v1.3.0`） |
 | 目标环境 | DSH Desktop `0.2.1-rc.3`（Cordis），Windows |
-| 代码状态 | G1/G2/G3 已发布；G4 设置页**已由人类验收（E2，无截图）**；G2 遮挡推送修复**真机通过**；已知未测：G2-8、G3-4b |
+| 代码状态 | G1/G2/G3 + G4 设置页 + G2 遮挡修复**已发布 1.3.0**；截图/录屏挂起；已知未测：G2-8、G3-4b |
 | 自动化 | **169/169** 通过，`node --check` 17/17（2026-11-05 本副本） |
 | 真机验收 | G1 5/5；G2 7/8（G2-8 挂起）；G3 6/6（G3-4b 未单独实测）；**G4 设置页人类验收（无截图）**；**G2 遮挡推送真机通过（最小化 → 通知 → 拒绝消失）** |
 | 治理结构 | AECW 三域：`human/`、`cluster/`、`workspace/`；门禁 `gates/`；异议/变更 `inbox/`；台账 `ledger.md` |
@@ -47,7 +47,7 @@ node aecw/bin/aecw.mjs check aecw
 
 **产品代码只改 `product/`，治理文件只改 `aecw/`**；不要混放。
 
-> **G4 状态（2026-11-05）**：设置页已由人类验收（E2，无截图），G2 遮挡推送真机通过；**G4 未发布**，版本仍 `1.2.0`。见 [`STATUS.md`](../aecw/STATUS.md) 与 [`design-contract`](../aecw/workspace/memory/design-contract-v1.2.0.md) §16。
+> **G4 状态（2026-11-05）**：设置页已由人类验收（E2，无截图），G2 遮挡推送真机通过；**随 v1.3.0 发布**；截图/录屏要求人类挂起。见 [`STATUS.md`](../aecw/STATUS.md) 与 [`design-contract`](../aecw/workspace/memory/design-contract-v1.2.0.md) §16。
 
 ## 功能
 
@@ -59,7 +59,7 @@ node aecw/bin/aecw.mjs check aecw
 - **多标签**：80 ms 认领窗，`tabId` 字典序最小胜出；认领未决时等窗口结束再判定（ADR-015）。
 - **G2 授权/确认提醒（v1.2.0）**：只读 `uiSession.sessionStatus` 的 `pendingInteraction`；等待授权/回答时显示提醒，进入会话/解决/关闭后收起；页面不可见时发系统通知。不拦截 waterfall、不代替人类回答。**G2-8（双会话上限）未测，已接受为已知遗留。**
 - **G3 弹窗样式自定义（v1.2.0）**：`appearance.position` 四角、`theme` 跟随/亮/暗、`size` 紧凑/标准、`durationMs` 2–15 s、`showTitle`；纯 token，无任意 CSS。**G3-4b（提醒卡不受时长影响）未单独真机实测，已接受为已知遗留。**
-- **G4 外观设置（grow-2，已人类验收；未发布）**：设置 → 插件 → “任务完成提示设置”，可调字号 12–18 px、卡片宽度 280–480 px（最小宽度随字号联动）、背景色/文字色（`#RRGGBB`，对比度 <4.5:1 拒绝），即时预览；字体固定跟随系统正文字体。保存经宿主 `configEditor` 写入 Config（A 方案，已 live 验证）。**G4 未发布**；截图缺口 ED-001。
+- **G4 外观设置（grow-2，v1.3.0 已发布）**：设置 → 插件 → “任务完成提示设置”，可调字号 12–18 px、卡片宽度 280–480 px（最小宽度随字号联动）、背景色/文字色（`#RRGGBB`，对比度 <4.5:1 拒绝），即时预览；字体固定跟随系统正文字体。保存经宿主 `configEditor` 写入 Config（A 方案，已 live 验证）。截图/录屏要求人类挂起（ED-001 waived）。
 - **语言**：跟随 DSH 当前语言（内置 zh / en，其他回退 en）。
 
 ## 安装
@@ -128,11 +128,11 @@ node --test --test-isolation=none test/smoke.test.js test/integration.test.js te
 - 点击**系统通知**不会激活/还原最小化窗口（Electron + Windows；已接受为已知限制，见验收结果 §5-B）；应用内浮层点击可正常置前。
 - `Notification.permission` 在 Electron 恒为 `granted`，`denied → deferred` 分支仅由单测覆盖。
 - 状态行固定「待执行」（完成瞬间 Agent 空闲）；动态状态（执行中/等待回答）留待后续版本。
-- **G2 v1.2.0**：进入会话即收起卡片；**页面不可见/被遮挡时仍发系统通知**（2026-11-05 真机通过：最小化 → 通知 → 拒绝后消失）；G2-8 双会话上限未测（已接受）；多标签浮层各显示一次、系统通知已认领单发；可用 `notify.awaiting:false` 单独关闭。
+- **G2（基线 v1.2.0；遮挡修复 v1.3.0）**：进入会话即收起卡片；**页面不可见/被遮挡时仍发系统通知**（2026-11-05 真机通过：最小化 → 通知 → 拒绝后消失）；G2-8 双会话上限未测（已接受）；多标签浮层各显示一次、系统通知已认领单发；可用 `notify.awaiting:false` 单独关闭。
 - **G3 v1.2.0**：改 `appearance` 需重启宿主（config 半区）；显式 light/dark 是作用域调色板，不改变全局主题；G3-4b 未单独真机实测（已接受，结构由 `sticky`/不传 `durationMs` 保证）。
 - 13 项历史真机验收未做（V05/V08/V09/V10/V14/V16/V18/V20/V22/V24/V25/V26/V27），逐项原因见 `../aecw/workspace/memory/v-baseline-v01-v28.md`。
 - 原生 `Config` 表单不支持（手写 Standard Schema，属已知限制）；**G4 设置页** 通过 `settings.plugins.tab` 提供，不依赖原生表单。
-- **G4 设置（grow-2）**：**已由人类验收（E2，无截图）**。设置页在 **设置 → 插件 → 任务完成提示设置**（侧边栏“插件”页的插件卡片只显示插件信息，不是设置页）。保存依赖宿主 `configEditor`，不可用时提示“无法保存”。**G2 遮挡推送已真机通过**；G4 未发布，不称“正式发布”。
+- **G4 设置（grow-2，v1.3.0）**：**已由人类验收（E2，无截图）并随 1.3.0 发布**。设置页在 **设置 → 插件 → 任务完成提示设置**（侧边栏“插件”页的插件卡片只显示插件信息，不是设置页）。保存依赖宿主 `configEditor`，不可用时提示“无法保存”。截图/录屏要求人类挂起（ED-001 waived）。
 - 2026-11-04 G3 真机验收后 profile patch 已还原；若当前进程仍显示最后一轮的 `compact/无标题`，重启一次回到默认。
 
 ## 目录

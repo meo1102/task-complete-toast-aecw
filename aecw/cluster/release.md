@@ -5,16 +5,15 @@
 
 | 项 | 状态 | 版本/tag | 说明 |
 |---|---|---|---|
-| 产品基线 | released | `1.2.0` / `v1.2.0` | G1/G2/G3；历史发布 |
-| G4 外观设置 | accepted / **unreleased** | — | 人类验收 E2（F-040）；截图 ED-001；发布门未开 |
-| G2 遮挡推送修复 | accepted / **unreleased** | — | 人类真机 E2（F-042）；截图 ED-002；发布门未开 |
+| 产品基线 | **released** | `1.3.0` / `v1.3.0` | G1/G2/G3 + G4 + G2 遮挡修复；截图/录屏挂起 |
+| 旧基线 | released | `1.2.0` / `v1.2.0` | G1/G2/G3；历史发布 |
+| G4 外观设置 | **released** | `1.3.0` | 人类验收 E2（F-040）；ED-001 waived |
+| G2 遮挡推送修复 | **released** | `1.3.0` | 人类真机 E2（F-042）；ED-002 waived |
 | AECW 结构采纳 | provisional | — | adoption 待签 ED-003；不影响产品发布 |
 
-## 发布门前置
+## 发布记录
 
-1. ED-001、ED-002 补证据，或人类签署“不补”；
-2. G4/G2 修复的版本号、tag、发布说明；
-3. release manifest 更新（`workspace/landing/manifest.md`）；
-4. 人类发布决定（release gate）。
+- 2026-11-05：人类指令“截图/录屏要求都挂起，发布新版本”；发布 `1.3.0`，tag `v1.3.0`。
+- 发布门：[`../gates/2026-11-05-release-v1.3.0.md`](../gates/2026-11-05-release-v1.3.0.md)；证据：[`../workspace/evidence/2026-11-05-release-v1.3.0.md`](../workspace/evidence/2026-11-05-release-v1.3.0.md)。
 
-> 当前结论：**没有发布动作**；不称“G4 已发布/可用”。
+> 当前结论：**1.3.0 已发布**；截图/录屏挂起；adoption provisional；不称“全部通过”。
