@@ -14,6 +14,8 @@
 | T-006 | WP-5 测试与真机矩阵 | 实现者 + 人类目视 | done（阶段关闭） | WP-2..4 | 真机记录 + 截图 | G4 验收（E2）+ G2 遮挡推送真机（E2）；截图仍为零，已在门禁列为缺口 |
 | T-007 | WP-6 文档与介绍一致性 | 工作区策展 | done | 上述输出 | 契约 §16、README、AGENTS、STATUS | 无“骨架/占位”旧文案 |
 | T-008 | 插件介绍文案修正（任务级，2026-11-05） | 单代理 | done | F-031 旧文案；v1.2.0 能力 | `locale/zh.json`、`locale/en.json`、README；smoke 回归断言 | F-032；当时 smoke 7/7、全量 160/160 |
+| T-009 | EV-001 运行态探针（阶段外） | 单代理 + 人类 | done（active） | 学习账候选；F-043 基线 | `scripts/probe.mjs`；AGENTS 门禁前必跑 | 正控 7/7、负控 fail；F-044/F-045 |
+| T-010 | 独立目录迁移 + 开发过程全记录（阶段外） | 单代理 + 人类 | done | 人类“独立文件夹/全量整理” | 独立仓库、迁移记录、复盘 | F-046；[`development-retrospective`](../workspace/evidence/2026-11-05-development-retrospective.md) |
 
 ## 积压（不进 `grow-2`，后续阶段处理）
 
