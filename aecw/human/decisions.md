@@ -27,12 +27,12 @@
 | 2026-11-05 | **按 REVIEW/PLAN v0.9 校准**：maintenance 泳道；加 PROJECT/state/criteria；修文档矛盾；升级 check；**不改产品行为/人类验收/发布决定** | 人类“先按照这两个文档校准项目” | 见 [`v0.9-calibration`](../workspace/evidence/2026-11-05-v09-calibration.md)；F-048；adoption 仍 provisional |
 | 2026-11-05 | **发布 v1.3.0**：G4 外观设置 + G2 遮挡推送修复；**截图/录屏要求全部挂起**（ED-001/ED-002 waived）；adoption 仍 provisional | 人类“截图/录屏的要求都挂起，发布新版本” | 见 [`release-v1.3.0`](../gates/2026-11-05-release-v1.3.0.md)、[`2026-11-05-release-v1.3.0.md`](../workspace/evidence/2026-11-05-release-v1.3.0.md)；F-049 |
 
-## 待人类（阶段外，不阻塞 maintenance）
+## 阶段外事项（已完成 / 待人类）
 
 | # | 事项 | 时点 | 说明 |
 |---|---|---|---|
 | 1 | ~~`grow-2` 阶段验收与遗留接受~~ | 已处理 | 2026-11-05 有条件通过；G4 F-040、G2 F-042；门禁 `grow-2` |
-| 2 | 真机截图（ED-001/ED-002） | 发布前 | 设置页/预览、G2 遮挡推送；未补则需人类签署不补 |
+| 2 | 真机截图（ED-001/ED-002） | 已处理 | 2026-11-05 人类指令挂起；随 1.3.0 发布，不称“截图完成” |
 | 3 | adoption 门禁签署（ED-003） | 2026-11-12 | 当前 provisional；签署后转 accepted |
-| 4 | G4 发布决定（版本/tag/发布说明） | 发布门 | G4 accepted/unreleased；未发布 |
+| 4 | G4 发布决定（版本/tag/发布说明） | 已处理 | 2026-11-05 发布 `1.3.0` / tag `v1.3.0`（F-049） |
 | 5 | EV-001 分布外验证/回滚演练（ED-004） | 2026-11-19 | active；到期复核 |

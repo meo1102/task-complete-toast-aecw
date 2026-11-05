@@ -15,7 +15,7 @@
 | G2-SCREENSHOT | G2 遮挡推送截图/录屏 | waived | 无（ED-002 waived） | — | 挂起 2026-11-05（人类指令） | release |
 | G3-BASE | 弹窗样式自定义 6/6 | met | F-027（E2，2026-11-04） | 人类 | 有条件接受 2026-11-04 | release |
 | G3-4b | 提醒卡不受 `durationMs` 单独真机 | waived | F-027 | 人类 | 接受为遗留 2026-11-04 | release |
-| G4-ENTRY | 人类可在无 agent 指路下找到设置入口 | met | F-040（E2） | 人类 | 接受 2026-11-05 | release |
+| G4-ENTRY | 设置入口可达并经人类确认（设置 → 插件 → 页签） | met | F-040（E2；人类在被告知入口后使用） | 人类 | 接受 2026-11-05 | release |
 | G4-UI | 设置页可打开、控件/预览/保存可操作 | met | F-040（E2） | 人类 | 接受 2026-11-05 | release |
 | G4-BOUNDS | 字号 12–18、宽度 280–480、最小宽度联动 | met | F-037（E1 单测）；F-040（E2） | 人类 | 接受 2026-11-05 | release |
 | G4-COLOR | 背景/文字色 + 对比度守卫 | met | F-037（E1）；F-040（E2） | 人类 | 接受 2026-11-05 | release |
@@ -32,6 +32,8 @@
 | AECW-ADOPT | AECW 结构采纳（adoption 门禁） | deferred | `gates/2026-11-05-adoption.md` | 人类 | 临时采纳（provisional），签署待 ED-003 | adoption |
 | EV-001 | 运行态探针 trial → active | met | F-044/F-045 | 人类 | 激活 2026-11-05 | evolution |
 | EV-001-OOD | 分布外验证/真实回滚演练 | deferred | 无（ED-004） | — | 激活时已知；到期复核 | evolution |
+
+> G4-ENTRY 只证明“入口可达且人类确认”，**不证明“无 agent 指路独立发现”**；后者未单列，列入后续 UX/入口观察项，不追溯改写 1.3.0 发布结论。
 
 ## 门禁规则
 

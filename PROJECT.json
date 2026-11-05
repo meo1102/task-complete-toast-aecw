@@ -10,7 +10,7 @@
     "profile": "desktop"
   },
   "commands": {
-    "test": "cd product && node --test --test-isolation=none test",
+    "test": "cd product && node --test --test-isolation=none test/*.test.js",
     "probe": "node aecw/scripts/probe.mjs",
     "check": "node aecw/bin/aecw.mjs check aecw"
   },

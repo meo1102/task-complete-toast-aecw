@@ -36,7 +36,7 @@
 |---|---|---|
 | maintenance | v0.9 校准、布局 v2、路径/命令修复 | 人类校准指令；[`maintenance.md`](maintenance.md) |
 | evolution | EV-001 运行态探针（active） | [`evolution.md`](evolution.md) |
-| release | G4/G2 遮挡修复未发布 | [`release.md`](release.md)；ED-001/ED-002/ED-003 |
+| release | **v1.3.0 已发布**（G4 + G2 遮挡修复） | [`release.md`](release.md)；ED-001/ED-002 waived；ED-003 open |
 | stage | `grow-2` closed | [`../gates/2026-11-05-grow-2.md`](../gates/2026-11-05-grow-2.md) |
 
 ## 说明

@@ -9,11 +9,11 @@
 
 | 文件 | 内容 | 时效 |
 |---|---|---|
-| [`design-contract-v1.2.0.md`](design-contract-v1.2.0.md) | v1.2.0 行为契约 + §16 G4 增量（字号/宽度/颜色/设置页/预览） | 当前（G4 未发布、未真机） |
+| [`design-contract-v1.2.0.md`](design-contract-v1.2.0.md) | v1.2.0 行为契约 + §16 G4 增量（字号/宽度/颜色/设置页/预览） | 当前（G4 随 1.3.0 发布；截图挂起） |
 | [`adr-001-023.md`](adr-001-023.md) | ADR-001–023 + 真机缺陷根因复盘（A–E） | 当前 |
 | [`history-mapping.md`](history-mapping.md) | 版本/发布/G2 编号/哈希的 11 条矛盾裁决；D→DR 映射 | 当前（防旧文档污染） |
 | [`v-baseline-v01-v28.md`](v-baseline-v01-v28.md) | V01–V28 逐项状态与建议处置 | 当前（待人类逐项裁决） |
-| [`appearance-settings-design.md`](appearance-settings-design.md) | G4 外观设置 + 预览：探针、A 方案、字段契约、实施状态 | 已实现（代码+单测）；真机未验 |
+| [`appearance-settings-design.md`](appearance-settings-design.md) | G4 外观设置 + 预览：探针、A 方案、字段契约、实施状态 | 已实现并随 1.3.0 发布；人类验收 E2；截图挂起 |
 | [`g4-charter-impact.md`](g4-charter-impact.md) | G4 / G3 约束放宽的 charter 级影响分析 | 已批准（2026-11-05）；留档 |
 | [`ev-001-runtime-probe.md`](ev-001-runtime-probe.md) | EV-001 运行态探针进化提案（假设/证据/影响/回滚/可证伪） | active（2026-11-05 激活） |
 

@@ -2,8 +2,8 @@
 
 > 状态：current｜最后核对：2026-11-05
 
-> 对象：v1.2.0（技术发布）+ AECW 结构副本（2026-11-05）。
-> 这是落地事实清单，不是发布公告；发布口径见 [`../evidence/acceptance-report-v1.2.0.md`](../evidence/acceptance-report-v1.2.0.md) §14。
+> 对象：v1.3.0（2026-11-05 发布）。
+> 这是落地事实清单，不是发布公告；发布口径见 [`../../gates/2026-11-05-release-v1.3.0.md`](../../gates/2026-11-05-release-v1.3.0.md) 与 [`../evidence/2026-11-05-release-v1.3.0.md`](../evidence/2026-11-05-release-v1.3.0.md)。
 
 | 项 | 值 |
 |---|---|
@@ -17,8 +17,8 @@
 | 证据债 | ED-001/ED-002 已挂起（waived）；ED-003 adoption 签署、ED-004 EV-001 分布外/回滚仍 open |
 | 成本 | 本机零依赖、零外部服务；人类注意力：2026-11-04 真机约 40 min（未计入决策问答） |
 | 已接受遗留 | G2-8、G3-4b、G1 通知点击不还原（R1）——见 [`../../human/acceptance.md`](../../human/acceptance.md) |
-| G4 状态 | **设置页已人类验收**（E2，无截图，F-040）；**G2 遮挡推送真机通过**（F-042）；未发布 |
+| G4 状态 | **设置页已人类验收**（E2，无截图，F-040）；**G2 遮挡推送真机通过**（F-042）；**随 1.3.0 发布**；截图/录屏挂起（ED-001/ED-002） |
 | 照护者 | **meo1102**（Git 提交人：`meo1102@163.com`） |
 | 退役 | 从 profile 移除 link/junction 与 bundles 条目 → 卸载 bundle → 删除本目录；不改 DSH 源码/安装目录；`cordis.patch.yml` 无残留配置 |
 | 未证明（不得外推） | 外部用户、其他 Windows/DSH 版本、多 agent 场景、100 次压测、G2-8 上限/顺序、G3-4b 时长 |
-| 副本边界 | **已替换安装**（2026-11-05）：desktop profile link/junction → 本副本；原件保留在原路径可回滚；与原件同包名 |
+| 项目边界 | **已替换安装**（2026-11-05）：desktop profile link/junction → 本项目 `product/`；原件保留在原路径可回滚；与原件同包名 |

@@ -21,12 +21,13 @@
 | [`阶段报告-2026-11-04.md`](阶段报告-2026-11-04.md) | 阶段 0–2 报告 + 学习 | 部分历史（§3 有复制残留） | E2/E3 |
 | [`试点数据-项目开发过程-2026-11-04.md`](试点数据-项目开发过程-2026-11-04.md) | 试点开发过程回溯整理 | 当前回溯 | E3 |
 | [`接手测试-2026-11-04.md`](接手测试-2026-11-04.md) | 新 agent 只读文档的接手测试记录 | 历史 | E2/E3 |
-| [`baseline-2026-11-05-grow-2.md`](baseline-2026-11-05-grow-2.md) | grow-2 代码/验收基线：commit `4aff41a`、tag、哈希 | 冻结基线 | E1 |
+| [`baseline-2026-11-05-grow-2.md`](baseline-2026-11-05-grow-2.md) | grow-2 代码/验收基线：commit `4aff41a`、tag、哈希 | 历史冻结基线（grow-2） | E1 |
 | [`ev-001-probe-2026-11-05.md`](ev-001-probe-2026-11-05.md) | EV-001 运行态探针正控/负控证据 | 历史（trial 记录；当前 active） | E1 |
 | [`2026-11-05-G4-live-host.md`](2026-11-05-G4-live-host.md) | G4 替换安装、live 设置路由、A 方案持久化验证（host 部分） | 历史（设置页后已验收） | E1 |
-| [`2026-11-05-standalone-migration.md`](2026-11-05-standalone-migration.md) | 从 `DSH_end/插件` 迁到独立目录/独立仓库；布局 v2：产品 `product/`、AECW `aecw/`；迁移后探针 7/7 | 当前 | E1 |
-| [`2026-11-05-v09-calibration.md`](2026-11-05-v09-calibration.md) | v0.9 校准：PROJECT/state/criteria、文档状态头、check 对账、负控 | 当前 | E1 |
+| [`2026-11-05-standalone-migration.md`](2026-11-05-standalone-migration.md) | 从 `DSH_end/插件` 迁到独立目录/独立仓库；布局 v2：产品 `product/`、AECW `aecw/`；迁移后探针 7/7 | 历史（迁移已完成） | E1 |
+| [`2026-11-05-v09-calibration.md`](2026-11-05-v09-calibration.md) | v0.9 校准：PROJECT/state/criteria、文档状态头、check 对账、负控 | 历史（校准当时；随后 1.3.0 发布） | E1 |
 | [`2026-11-05-release-v1.3.0.md`](2026-11-05-release-v1.3.0.md) | v1.3.0 发布：版本/tag/哈希/校验/截图挂起 | 当前 | E1/E2 |
+| [`2026-11-05-v09-acceptance.md`](2026-11-05-v09-acceptance.md) | v0.9 校准验收：10 组残留修复；check/probe/tests；已知 check 缺口 | 当前 | E1/E2 |
 | [`2026-11-05-development-retrospective.md`](2026-11-05-development-retrospective.md) | **开发过程全记录**：需求追踪、时间线、决策、失败/修正、证据、未完成项 | 历史（复盘） | E3（叙述）/引用 E1/E2 |
 
 ## 规则

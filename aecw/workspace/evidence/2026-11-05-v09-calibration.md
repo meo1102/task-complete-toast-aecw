@@ -1,6 +1,7 @@
 # v0.9 校准证据 · 2026-11-05
 
-> 状态：current｜最后核对：2026-11-05
+> 状态：historical｜最后核对：2026-11-05
+> 说明：v0.9 校准当时的证据；随后 1.3.0 已发布。当前状态以 `STATUS.md`/`state.json` 为准。
 > 依据：[`REVIEW-task-complete-toast-aecw-2026-11-05.md`](../../../../agent-engineering-control/REVIEW-task-complete-toast-aecw-2026-11-05.md)、[`PLAN-v0.9-真实项目校准.md`](../../../../agent-engineering-control/PLAN-v0.9-真实项目校准.md)。
 > 范围：maintenance 泳道；**未改产品行为/人类验收/发布决定**。
 
@@ -67,6 +68,6 @@ tests 169 / pass 169 / fail 0
 ## 5. 结论
 
 - **结构绿灯不再等于事实绿灯**：`check` 现在对账 state/STATUS/criteria/路径/文档。
-- **未发布**：G4/G2 修复仍 accepted/unreleased；版本 `1.2.0`。
+- **校准时未发布**：G4/G2 修复当时 accepted/unreleased；版本 `1.2.0`。**随后 2026-11-05 发布 `1.3.0`**（见 `gates/2026-11-05-release-v1.3.0.md`）。
 - **adoption**：provisional；人类签署前不称“已采纳”。
 - **产品代码未改**；只改治理/文档/检查器。

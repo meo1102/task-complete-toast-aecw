@@ -8,6 +8,7 @@
 | 2026-11-05 | 独立目录迁移（v1） | 从 `DSH_end/插件` 移到 `D:\DSH\task-complete-toast-aecw`；独立 Git；profile 重装 | F-046；[`../workspace/evidence/2026-11-05-standalone-migration.md`](../workspace/evidence/2026-11-05-standalone-migration.md) |
 | 2026-11-05 | 布局 v2（产品/AECW 分层） | 产品 `product/`、治理 `aecw/`；profile 指向 `product/` | F-047；同一迁移记录 §1.1 |
 | 2026-11-05 | v0.9 校准 | `PROJECT.json`、`state.json`、`criteria.md`；当前文档矛盾修复；历史文档状态头；`check` 升级 | F-048；[`../workspace/evidence/2026-11-05-v09-calibration.md`](../workspace/evidence/2026-11-05-v09-calibration.md) |
+| 2026-11-05 | v0.9 校准验收 | 修复 13 处残留当前文档矛盾；G4-ENTRY 口径；`PROJECT.json` test 命令；`state.baseline`；验收报告 | F-050；[`../workspace/evidence/2026-11-05-v09-acceptance.md`](../workspace/evidence/2026-11-05-v09-acceptance.md) |
 
 ## 停止/回滚
 
