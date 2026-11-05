@@ -4,7 +4,7 @@
 > 所有者口径：按 **Git 提交人**记录（`meo1102@163.com`，2026-11-05 人类指令）。
 > 规则：本页是当前状态；其他文档是证据/历史。冲突以本页为准；每次门禁/冻结/发布先更新本页。
 > 证据等级：**E1** 运行事实（可复现）｜**E2** 人类目视（无截图）｜**E3** 文档主张（未复核）。
-> **副本说明**：本目录是 `task-complete-toast` v1.2.0 的 **AECW 结构副本**（复制于 2026-11-05）；迁移时产品逻辑未改，2026-11-05 按 `grow-2` 实现 G4 外观设置。**已替换安装**：desktop profile 的 link/junction 指向本副本；原件保留在原路径，可回滚。结构迁移见 [`workspace/landing/migration-aecw-2026-11-05.md`](workspace/landing/migration-aecw-2026-11-05.md)。
+> **副本说明**：项目位于 **`D:\DSH\task-complete-toast-aecw`**（2026-11-05 从 `DSH_end/插件/` 迁出，独立仓库；历史归档在 `DSH_end`）。本目录是 `task-complete-toast` v1.2.0 的 **AECW 结构副本**；迁移时产品逻辑未改，同日按 `grow-2` 实现 G4 外观设置。**已替换安装**：desktop profile 的 link/junction 指向本副本；原件保留在原路径，可回滚。结构迁移见 [`workspace/landing/migration-aecw-2026-11-05.md`](workspace/landing/migration-aecw-2026-11-05.md)；独立目录迁移见 [`workspace/evidence/2026-11-05-standalone-migration.md`](workspace/evidence/2026-11-05-standalone-migration.md)。
 
 ---
 
@@ -98,6 +98,7 @@
 | `cluster/` | 当前 | 名册/任务板/运行记录/学习账 |
 | `gates/` | 历史 | 每道门当时的记录；含 charter-freeze / start-order / adoption / grow-2 |
 | `workspace/evidence/` | 证据 | 原始记录与历史快照；单份文件头标 SUPERSEDED/HISTORICAL |
+| [`workspace/evidence/2026-11-05-development-retrospective.md`](workspace/evidence/2026-11-05-development-retrospective.md) | 当前（复盘） | 本次开发过程全记录：需求/时间线/决策/失败/证据/未完成 |
 | `workspace/memory/` | 当前/参考 | 设计契约（§16 G4）、ADR、历史映射、V 项对账、设置方案 |
 | `workspace/landing/` | 当前/历史 | 落地清单、交接说明、迁移说明 |
 | `README.md` | 当前摘要 + 历史细节 | 功能/安装说明；状态以本页为准 |

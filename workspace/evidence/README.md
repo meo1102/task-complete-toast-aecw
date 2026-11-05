@@ -22,6 +22,8 @@
 | [`baseline-2026-11-05-grow-2.md`](baseline-2026-11-05-grow-2.md) | grow-2 代码/验收基线：commit `4aff41a`、tag、哈希 | 冻结基线 | E1 |
 | [`ev-001-probe-2026-11-05.md`](ev-001-probe-2026-11-05.md) | EV-001 运行态探针正控/负控证据 | 当前（trial） | E1 |
 | [`2026-11-05-G4-live-host.md`](2026-11-05-G4-live-host.md) | G4 替换安装、live 设置路由、A 方案持久化验证（host 部分） | 当前（客户端 UI 待刷新） | E1 |
+| [`2026-11-05-standalone-migration.md`](2026-11-05-standalone-migration.md) | 从 `DSH_end/插件` 迁到独立目录/独立仓库；profile 重装；迁移后探针 7/7 | 当前 | E1 |
+| [`2026-11-05-development-retrospective.md`](2026-11-05-development-retrospective.md) | **开发过程全记录**：需求追踪、时间线、决策、失败/修正、证据、未完成项 | 当前（复盘） | E3（叙述）/引用 E1/E2 |
 
 ## 规则
 

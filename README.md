@@ -1,8 +1,10 @@
 # 任务完成提示（task-complete-toast）· AECW 副本
 
 > **当前状态：以 [`STATUS.md`](STATUS.md) 为准。** 本 README 是功能/安装说明，历史细节可能滞后；冲突时以 STATUS 为准。
+> **开发过程全记录**：[`workspace/evidence/2026-11-05-development-retrospective.md`](workspace/evidence/2026-11-05-development-retrospective.md)（需求追踪/时间线/决策/失败修正/未完成项）。
+> **项目位置**：`D:\DSH\task-complete-toast-aecw`（2026-11-05 从 `DSH_end/插件/` 迁出，独立 Git 仓库；历史归档在 `DSH_end`）。
 > **本目录是 AECW 结构副本**（2026-11-05 复制自 `DSH_end/插件/task-complete-toast` v1.2.0）：迁移时产品逻辑未改；随后按人类指令更新介绍文案与回归断言（F-031/F-032），并在 `grow-2` 实现 G4 外观设置；治理工件按 `agent-engineering-control/prototype` 的三域架构重排。
-> **安装状态**：2026-11-05 按人类选择**替换原件**：desktop profile 的 link/junction 已指向本副本；原件保留在 `DSH_end/插件/task-complete-toast`，可回滚（remove_bundle 后 install_bundle 指向原件）。与原件同包名。
+> **安装状态**：2026-11-05 按人类选择**替换原件**：desktop profile 的 link/junction 已指向本副本（迁移后为 `D:\DSH\task-complete-toast-aecw`）；原件保留在 `DSH_end/插件/task-complete-toast`，可回滚（remove_bundle 后 install_bundle 指向原件）。与原件同包名。
 > **开发约束**：先读 [`human/direction.md`](human/direction.md)（v1.2-aecw，含 G4）+ [`BLUEPRINT.md`](BLUEPRINT.md)（阶段 `grow-2`，approved）。**v1.2.0 发布**：G1 完成提示、G2 授权/确认提醒、G3 弹窗样式自定义；G4 设置未发布；已知遗留见文末。
 
 DSH 持久化插件：当 Agent 从运行变为空闲时，在窗口右下角提示任务完成；当轮次等待人类授权/确认时，提示处理；当页面不可见或被遮挡时，改发 Windows 系统通知。

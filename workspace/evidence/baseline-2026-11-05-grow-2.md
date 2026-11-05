@@ -4,8 +4,10 @@
 
 | 项 | 值 |
 |---|---|
-| Git 提交 | `4aff41a`（`DSH_end` 仓库，master） |
-| Git tag | `aecw-grow-2-2026-11-05` |
+| Git 提交 | `4aff41a`（`DSH_end` 仓库，历史归档） |
+| Git tag（历史） | `aecw-grow-2-2026-11-05`（`DSH_end`） |
+| 独立仓库 | `D:\DSH\task-complete-toast-aecw`；initial `67809d0`；tag `aecw-standalone-2026-11-05` |
+| 迁移记录 | [`2026-11-05-standalone-migration.md`](2026-11-05-standalone-migration.md) |
 | 产品版本 | `1.2.0`（G4 设置未发布） |
 | 阶段 | `grow-2`（closed，有条件通过） |
 | 门禁 | [`gates/2026-11-05-grow-2.md`](../../gates/2026-11-05-grow-2.md) |

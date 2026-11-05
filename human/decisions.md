@@ -20,6 +20,7 @@
 | 2026-11-05 | **安装方式：替换原件**——把 desktop profile 的 link/junction 指向本副本（原件保留在原路径，可回滚） | 人类选择 1；不新增第二个包名 | profile/junction 已指向副本；plugin active；回滚 = remove_bundle 后 install_bundle 指向原件；F-038 |
 | 2026-11-05 | **同意做一次进化试验**：EV-001 运行态探针，低风险只读试用；**不自动晋升**为每道门必跑/共享规则 | 人类“基线冻结，先做个进化试试” | 正控 7/7、负控 fail；见 [`cluster/evolution.md`](../cluster/evolution.md)、[`ev-001-runtime-probe.md`](../workspace/memory/ev-001-runtime-probe.md)；激活待人类批准 |
 | 2026-11-05 | **激活 EV-001**：`node scripts/probe.mjs` 写入 AGENTS，作为门禁/交付前必跑；FAIL 不得开门禁 | 人类“激活” | 进化台账状态 active；只读、可回滚；分布外验证/回滚演练仍待做 |
+| 2026-11-05 | **项目迁至独立目录/仓库**：`D:\DSH\task-complete-toast-aecw`；不再从 `DSH_end`/原型机目录内管理 | 人类“项目文件整理到独立文件夹，不要和原型机文件混在一起” | profile 重装指向新路径；旧历史归档 `DSH_end`；见 [`2026-11-05-standalone-migration.md`](../workspace/evidence/2026-11-05-standalone-migration.md) |
 
 ## 待人类（阶段门禁时，不阻塞开工）
 

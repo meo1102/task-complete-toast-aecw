@@ -3,6 +3,7 @@
 > 对象：`task-complete-toast` v1.2.0 → `task-complete-toast-aecw`（本副本）。
 > 依据：`D:\DSH\agent-engineering-control\prototype`（三域 / 六接口 / 单一 STATUS / 蓝图 + freeze + start / 台账 + 门禁）。
 > 原则：**只搬结构、只改治理工件**；产品代码、测试、`package.json` 的版本与行为不变。
+> **后续（2026-11-05）**：项目已从 `DSH_end/插件/` 迁至独立目录 `D:\DSH\task-complete-toast-aecw`，并建独立 Git 仓库；见 [`../evidence/2026-11-05-standalone-migration.md`](../evidence/2026-11-05-standalone-migration.md)。本文件中的旧路径是历史记录。
 
 ## 1. 迁移映射（旧 → 新）
 

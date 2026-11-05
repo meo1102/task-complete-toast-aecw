@@ -21,6 +21,8 @@
 | 2026-11-05 | 单代理 + 人类 | G4 设置页验收 + G2 遮挡推送修复 | 人类验收设置页（E2 无截图）；定位“会话内直接 dismiss”导致遮挡无通知；改为 hidden 条目 + 不可见仍发通知；W16/W17、169/169 | F-040/F-041；[`human/acceptance.md`](../human/acceptance.md) |
 | 2026-11-05 | 单代理 + 人类 | G2 遮挡推送真机 + 阶段门禁 | 授权弹窗 → 最小化 → Windows 通知 → 拒绝后消失（E2）；`grow-2` 门禁有条件通过，阶段关闭 | F-042；[`gates/2026-11-05-grow-2.md`](../gates/2026-11-05-grow-2.md) |
 | 2026-11-05 | 单代理 | 基线冻结 + EV-001 试用 | commit `4aff41a` / tag `aecw-grow-2-2026-11-05`；运行态探针正控 7/7、负控 fail；未激活 | F-043/F-044；[`evolution.md`](evolution.md) |
+| 2026-11-05 | 单代理 + 人类 | EV-001 激活 + 独立目录迁移 | 探针写入 AGENTS；项目迁至 `D:\DSH\task-complete-toast-aecw`，独立仓库 `67809d0`，profile 重装；迁移后探针 7/7 | F-045/F-046；[`standalone-migration`](../workspace/evidence/2026-11-05-standalone-migration.md) |
+| 2026-11-05 | 单代理 | 全量开发过程整理 | 时间线/需求追踪/决策/失败修正/证据/未完成项；独立仓库提交 | [`development-retrospective`](../workspace/evidence/2026-11-05-development-retrospective.md) |
 
 ## 未记录但已发生（避免“记录即完成”的错觉）
 
