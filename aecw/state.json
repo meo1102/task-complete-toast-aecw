@@ -1,0 +1,104 @@
+{
+  "project": "task-complete-toast-aecw",
+  "updated": "2026-11-05",
+  "stage": {
+    "name": "grow-2",
+    "state": "closed",
+    "gate": "gates/2026-11-05-grow-2.md"
+  },
+  "features": {
+    "G1": {
+      "state": "released",
+      "release": "released",
+      "version": "1.2.0",
+      "evidence": ["F-022"]
+    },
+    "G2": {
+      "state": "released",
+      "release": "released",
+      "version": "1.2.0",
+      "evidence": ["F-026"],
+      "waiver": "G2-8"
+    },
+    "G2-occlusion": {
+      "state": "accepted",
+      "release": "unreleased",
+      "evidence": ["F-041", "F-042"]
+    },
+    "G3": {
+      "state": "released",
+      "release": "released",
+      "version": "1.2.0",
+      "evidence": ["F-027"],
+      "waiver": "G3-4b"
+    },
+    "G4": {
+      "state": "accepted",
+      "release": "unreleased",
+      "evidence": ["F-040"]
+    }
+  },
+  "release": {
+    "version": "1.2.0",
+    "state": "released",
+    "tag": "v1.2.0",
+    "note": "G1/G2/G3 基线；G4 与 G2 遮挡修复未发布"
+  },
+  "evolution": {
+    "EV-001": {
+      "state": "active",
+      "evidence": ["F-044", "F-045"]
+    }
+  },
+  "adoption": {
+    "state": "provisional",
+    "gate": "gates/2026-11-05-adoption.md",
+    "since": "2026-11-05",
+    "human_signature": "pending"
+  },
+  "lanes": {
+    "stage": "gates/2026-11-05-grow-2.md",
+    "maintenance": "cluster/maintenance.md",
+    "evolution": "cluster/evolution.md",
+    "release": "cluster/release.md"
+  },
+  "evidence_debt": [
+    {
+      "id": "ED-001",
+      "item": "G4 设置页/预览截图",
+      "owner": "meo1102",
+      "due": "2026-11-12",
+      "impact": "release",
+      "status": "open"
+    },
+    {
+      "id": "ED-002",
+      "item": "G2 遮挡推送截图/录屏",
+      "owner": "meo1102",
+      "due": "2026-11-12",
+      "impact": "release",
+      "status": "open"
+    },
+    {
+      "id": "ED-003",
+      "item": "adoption 门禁人类签署",
+      "owner": "meo1102",
+      "due": "2026-11-12",
+      "impact": "adoption",
+      "status": "open"
+    },
+    {
+      "id": "ED-004",
+      "item": "EV-001 分布外验证/回滚演练",
+      "owner": "agent",
+      "due": "2026-11-19",
+      "impact": "evolution",
+      "status": "open"
+    }
+  ],
+  "baseline": {
+    "commit": "4589b91",
+    "tag": "aecw-layout-v2-2026-11-05",
+    "product_version": "1.2.0"
+  }
+}

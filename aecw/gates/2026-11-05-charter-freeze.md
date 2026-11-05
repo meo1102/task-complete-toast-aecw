@@ -1,5 +1,8 @@
 # 宪章冻结与阶段授权 · task-complete-toast-aecw
 
+> 状态：historical｜最后核对：2026-11-05
+> 说明：历史记录，不参与当前结论；当前以 `aecw/STATUS.md` 为准。
+
 - 日期：2026-11-05
 - 人类所有者：meo1102
 - 宪章：human/direction.md（人类确认：是）

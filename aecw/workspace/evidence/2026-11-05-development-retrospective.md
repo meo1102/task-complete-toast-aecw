@@ -1,5 +1,8 @@
 # 开发过程全记录 · task-complete-toast-aecw（2026-11-05）
 
+> 状态：historical｜最后核对：2026-11-05
+> 说明：历史记录，不参与当前结论；当前以 `aecw/STATUS.md` 为准。
+
 > 对象：`task-complete-toast` v1.2.0 的 AECW 结构副本（现独立项目 `D:\DSH\task-complete-toast-aecw`）。
 > 范围：2026-11-05 从“复制 + 按原型机架构改造”到“G4 设置页 / G2 遮挡推送修复 / 阶段门禁 / 基线冻结 / EV-001 进化 / 独立目录迁移”的完整过程。
 > 用途：交接、审计、复盘；**不是发布公告**。当前状态以 [`../../STATUS.md`](../../STATUS.md) 为准；事实以 [`../../ledger.md`](../../ledger.md) 的 F/DR/CR 编号为准。
@@ -229,7 +232,6 @@ node aecw/bin/aecw.mjs check aecw
 # 当前 git
 git log --oneline -5
 git tag --points-at HEAD
-```
 ```
 
 ## 附录 B：术语

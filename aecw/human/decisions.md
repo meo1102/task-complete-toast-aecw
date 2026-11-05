@@ -1,5 +1,7 @@
 # 人类决策记录 · task-complete-toast
 
+> 状态：current｜最后核对：2026-11-05
+
 > 只记“决定 / 理由 / 影响”。S1/S2 见 `ledger.md` 与 `inbox/`；技术决策（ADR-001–023）见 [`workspace/memory/adr-001-023.md`](../workspace/memory/adr-001-023.md)。
 > **署名口径（2026-11-05 人类指令）**：人类按 **Git 提交人**记录 = `meo1102`（`meo1102@163.com`）。原记录中的「本会话发起人 / 人类本人」统一对应此人，不再写“待确认”。
 
@@ -22,11 +24,14 @@
 | 2026-11-05 | **激活 EV-001**：`node scripts/probe.mjs` 写入 AGENTS，作为门禁/交付前必跑；FAIL 不得开门禁 | 人类“激活” | 进化台账状态 active；只读、可回滚；分布外验证/回滚演练仍待做 |
 | 2026-11-05 | **项目迁至独立目录/仓库**：`D:\DSH\task-complete-toast-aecw`；不再从 `DSH_end`/原型机目录内管理 | 人类“项目文件整理到独立文件夹，不要和原型机文件混在一起” | profile 重装指向新路径；旧历史归档 `DSH_end`；见 [`2026-11-05-standalone-migration.md`](../workspace/evidence/2026-11-05-standalone-migration.md) |
 | 2026-11-05 | **产品/AECW 分层**：产品代码统一 `product/`，AECW 治理统一 `aecw/`，不混放；profile 指向 `product/` | 人类“AECW 结构的文件和产品代码不要混杂在一起，产品代码统一放置” | 见 [`standalone-migration`](../workspace/evidence/2026-11-05-standalone-migration.md) §1.1；F-047 |
+| 2026-11-05 | **按 REVIEW/PLAN v0.9 校准**：maintenance 泳道；加 PROJECT/state/criteria；修文档矛盾；升级 check；**不改产品行为/人类验收/发布决定** | 人类“先按照这两个文档校准项目” | 见 [`v0.9-calibration`](../workspace/evidence/2026-11-05-v09-calibration.md)；F-048；adoption 仍 provisional |
 
-## 待人类（阶段门禁时，不阻塞开工）
+## 待人类（阶段外，不阻塞 maintenance）
 
 | # | 事项 | 时点 | 说明 |
 |---|---|---|---|
-| 1 | `grow-2` 阶段验收与遗留接受 | 阶段末 | 设置页/预览/边界/真机截图是否验收；遗留由人类书面接受 |
-| 2 | 真机目视：设置页、12/18 px、280/480 px、联动、颜色对比度 | WP-5 | 代理记录 + 截图；E2 不得写成 E1 |
-| 3 | 对比度阈值 4.5:1（提案）是否接受 | WP-1 前可改 | 低于阈值拒绝保存并提示；如需放宽，改蓝图验收 |
+| 1 | ~~`grow-2` 阶段验收与遗留接受~~ | 已处理 | 2026-11-05 有条件通过；G4 F-040、G2 F-042；门禁 `grow-2` |
+| 2 | 真机截图（ED-001/ED-002） | 发布前 | 设置页/预览、G2 遮挡推送；未补则需人类签署不补 |
+| 3 | adoption 门禁签署（ED-003） | 2026-11-12 | 当前 provisional；签署后转 accepted |
+| 4 | G4 发布决定（版本/tag/发布说明） | 发布门 | G4 accepted/unreleased；未发布 |
+| 5 | EV-001 分布外验证/回滚演练（ED-004） | 2026-11-19 | active；到期复核 |

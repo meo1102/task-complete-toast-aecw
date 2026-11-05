@@ -1,11 +1,13 @@
 # AGENTS.md · task-complete-toast（AECW 治理）
 
+> 状态：current｜最后核对：2026-11-05
+
 本目录是 AECW 治理结构；**产品代码在 `../product/`**，不在这里。仓库级约定见 [`../AGENTS.md`](../AGENTS.md)。
 产品代码基线 = v1.2.0；本副本于 2026-11-05 从原件复制并按 `agent-engineering-control/prototype` 结构重排，**产品逻辑未改**；同日按人类指令更新介绍文案与回归断言（F-031/F-032）。
 
 ## 开工前
 
-0. 先读 [`STATUS.md`](STATUS.md)——**唯一当前状态**；其他文档是证据/历史，冲突时以 STATUS 为准。
+0. 先读 [`../PROJECT.json`](../PROJECT.json) → [`STATUS.md`](STATUS.md) → [`state.json`](state.json) → [`criteria.md`](criteria.md)。**唯一状态源是 `state.json`；`STATUS` 是视图**；其他文档是证据/历史，冲突时以 state + STATUS 摘要为准。
 1. 读 [`human/direction.md`](human/direction.md)——方向/边界/S1–S4/停止（继承试点宪章 v1.0）。
 2. 读 [`BLUEPRINT.md`](BLUEPRINT.md)——阶段 `grow-2`（外观设置 + 实时预览，**已关闭/有条件通过**）；下一阶段须新蓝图 + 重新 `freeze`/`start`，不自动续跑。
 3. 读 [`ledger.md`](ledger.md)、最近的 [`gates/`](gates/)；设计契约与 ADR 在 [`workspace/memory/`](workspace/memory/)；原始证据在 [`workspace/evidence/`](workspace/evidence/)。

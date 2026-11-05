@@ -1,5 +1,7 @@
 # 任务完成提示（task-complete-toast）· AECW 副本
 
+> 状态：current｜最后核对：2026-11-05
+
 > **当前状态：以 [`STATUS.md`](../aecw/STATUS.md) 为准。** 本 README 是功能/安装说明，历史细节可能滞后；冲突时以 STATUS 为准。
 > **开发过程全记录**：[`2026-11-05-development-retrospective.md`](../aecw/workspace/evidence/2026-11-05-development-retrospective.md)（需求追踪/时间线/决策/失败修正/未完成项）。
 > **项目位置**：`D:\DSH\task-complete-toast-aecw`（独立 Git 仓库）；**产品代码在本目录 `product/`**，AECW 治理在 `../aecw/`。
@@ -57,12 +59,12 @@ node aecw/bin/aecw.mjs check aecw
 - **多标签**：80 ms 认领窗，`tabId` 字典序最小胜出；认领未决时等窗口结束再判定（ADR-015）。
 - **G2 授权/确认提醒（v1.2.0）**：只读 `uiSession.sessionStatus` 的 `pendingInteraction`；等待授权/回答时显示提醒，进入会话/解决/关闭后收起；页面不可见时发系统通知。不拦截 waterfall、不代替人类回答。**G2-8（双会话上限）未测，已接受为已知遗留。**
 - **G3 弹窗样式自定义（v1.2.0）**：`appearance.position` 四角、`theme` 跟随/亮/暗、`size` 紧凑/标准、`durationMs` 2–15 s、`showTitle`；纯 token，无任意 CSS。**G3-4b（提醒卡不受时长影响）未单独真机实测，已接受为已知遗留。**
-- **G4 外观设置（grow-2，代码完成、真机未验）**：设置 → 插件 → “任务完成提示”，可调字号 12–18 px、卡片宽度 280–480 px（最小宽度随字号联动）、背景色/文字色（`#RRGGBB`，对比度 <4.5:1 拒绝），右侧即时预览；字体固定跟随系统正文字体。保存经宿主 `configEditor` 写入 Config（A 方案，预期刷新后仍生效，**真机待验**）。**未真机验证前不称可用。**
+- **G4 外观设置（grow-2，已人类验收；未发布）**：设置 → 插件 → “任务完成提示设置”，可调字号 12–18 px、卡片宽度 280–480 px（最小宽度随字号联动）、背景色/文字色（`#RRGGBB`，对比度 <4.5:1 拒绝），即时预览；字体固定跟随系统正文字体。保存经宿主 `configEditor` 写入 Config（A 方案，已 live 验证）。**G4 未发布**；截图缺口 ED-001。
 - **语言**：跟随 DSH 当前语言（内置 zh / en，其他回退 en）。
 
 ## 安装
 
-任选其一（原件在本机用第 3 种；**本副本未安装**）：
+任选其一（**本副本已安装**：profile link/junction → `...\product`）：
 
 1. **界面**：插件页 → 添加 → 从文件夹安装 → 选本目录。
 2. **plugin_manager**：`install_bundle`，`target` 传本目录绝对路径。
@@ -128,31 +130,23 @@ node --test --test-isolation=none test/smoke.test.js test/integration.test.js te
 - 状态行固定「待执行」（完成瞬间 Agent 空闲）；动态状态（执行中/等待回答）留待后续版本。
 - **G2 v1.2.0**：进入会话即收起卡片；**页面不可见/被遮挡时仍发系统通知**（2026-11-05 真机通过：最小化 → 通知 → 拒绝后消失）；G2-8 双会话上限未测（已接受）；多标签浮层各显示一次、系统通知已认领单发；可用 `notify.awaiting:false` 单独关闭。
 - **G3 v1.2.0**：改 `appearance` 需重启宿主（config 半区）；显式 light/dark 是作用域调色板，不改变全局主题；G3-4b 未单独真机实测（已接受，结构由 `sticky`/不传 `durationMs` 保证）。
-- 13 项历史真机验收未做（V05/V08/V09/V10/V14/V16/V18/V20/V22/V24/V25/V26/V27），逐项原因见 `workspace/memory/v-baseline-v01-v28.md`。
-- 配置面板不支持（`Config` 为手写 Standard Schema，属已知限制）。
-- **G4 设置（grow-2）**：**已由人类验收（E2，无截图）**。设置页在 **设置 → 插件 → 任务完成提示设置**（侧边栏“插件”页的插件卡片只显示插件信息，不是设置页）。保存依赖宿主 `configEditor`，不可用时提示“无法保存”。G2 遮挡推送修复待真机；未发布前不称“正式发布”。
+- 13 项历史真机验收未做（V05/V08/V09/V10/V14/V16/V18/V20/V22/V24/V25/V26/V27），逐项原因见 `../aecw/workspace/memory/v-baseline-v01-v28.md`。
+- 原生 `Config` 表单不支持（手写 Standard Schema，属已知限制）；**G4 设置页** 通过 `settings.plugins.tab` 提供，不依赖原生表单。
+- **G4 设置（grow-2）**：**已由人类验收（E2，无截图）**。设置页在 **设置 → 插件 → 任务完成提示设置**（侧边栏“插件”页的插件卡片只显示插件信息，不是设置页）。保存依赖宿主 `configEditor`，不可用时提示“无法保存”。**G2 遮挡推送已真机通过**；G4 未发布，不称“正式发布”。
 - 2026-11-04 G3 真机验收后 profile patch 已还原；若当前进程仍显示最后一轮的 `compact/无标题`，重启一次回到默认。
 
 ## 目录
 
 ```text
 task-complete-toast-aecw/
-├─ README.md  AGENTS.md
-├─ STATUS.md  BLUEPRINT.md  ledger.md
-├─ human/                  # direction / decisions / acceptance
-├─ cluster/                # roster / board / runs / learning
-├─ workspace/
-│  ├─ work/                # 候选/草稿（产品代码在根）
-│  ├─ evidence/            # E1/E2 原始证据与历史快照
-│  ├─ memory/              # 设计契约、ADR、历史映射、V 项对账
-│  └─ landing/             # 落地清单/交接/迁移记录
-├─ gates/                  # 门禁一页（含 2026-11-05-adoption）
-├─ inbox/                  # DR-002 / CR-001
-├─ bin/aecw.mjs  core/     # AECW CLI + 模板
-├─ package.json  cordis.patch.yml
-├─ index.js                # 宿主：Config、结果表、路由、配置注入
-├─ client.js               # 客户端：store、渲染、通知、结果桥
-├─ lib/                    # config / outcome-table / classify / host
-├─ locale/  icon.svg
-└─ test/                   # 10 个测试文件
+├─ README.md  AGENTS.md  PROJECT.json
+├─ product/                 # 本目录：产品代码（可安装包，profile 指向这里）
+│  ├─ index.js / client.js / lib/ / locale/ / test/
+│  ├─ package.json / cordis.patch.yml / icon.svg
+│  └─ README.md
+└─ aecw/                    # AECW 治理
+   ├─ STATUS.md / state.json / criteria.md / BLUEPRINT.md / ledger.md
+   ├─ human/ / cluster/ / workspace/ / gates/ / inbox/
+   ├─ bin/aecw.mjs  core/
+   └─ scripts/probe.mjs
 ```

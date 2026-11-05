@@ -1,19 +1,21 @@
 #!/usr/bin/env node
 /**
- * AECW 生态原型 v0.1 — 零依赖文件系统 CLI
+ * AECW 生态原型 v0.9 — 零依赖文件系统 CLI
  * 用法：node bin/aecw.mjs <command> <dir> [--flags]
- * 设计：人类 / 集群 / 工作区三域；STATUS.md 单一当前状态；异议与事实台账；门禁一页纸。
+ * 设计：人类 / 集群 / 工作区三域；state + criteria + STATUS 视图；异议与事实台账；门禁一页纸。
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CORE = path.join(ROOT, 'core');
 const DATE = new Date().toISOString().slice(0, 10);
+const TOOL_VERSION = '0.9.0';
 
 function usage() {
-  console.log(`AECW 生态原型 v0.1
+  console.log(`AECW 生态原型 v${TOOL_VERSION}
 
 用法：
   node bin/aecw.mjs init <dir> --name <名字> --owner <人类所有者> [--goal <目标>]
@@ -663,6 +665,31 @@ function cmdStatus(args) {
   console.log(fs.readFileSync(path.join(dir, 'STATUS.md'), 'utf8'));
 }
 
+function readJson(file) {
+  return JSON.parse(fs.readFileSync(file, 'utf8'));
+}
+
+function walkMarkdown(dir) {
+  const out = [];
+  if (!fs.existsSync(dir)) return out;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name === '.git' || entry.name === 'node_modules') continue;
+    const abs = path.join(dir, entry.name);
+    if (entry.isDirectory()) out.push(...walkMarkdown(abs));
+    else if (entry.name.endsWith('.md')) out.push(abs);
+  }
+  return out;
+}
+
+const STATE_ENUM = {
+  stage: new Set(['seed', 'frozen', 'executing', 'paused', 'closed']),
+  feature: new Set(['draft', 'candidate', 'accepted', 'released']),
+  evolution: new Set(['candidate', 'trial', 'active', 'retired']),
+  adoption: new Set(['pending', 'provisional', 'accepted']),
+  release: new Set(['unreleased', 'release-candidate', 'released', 'superseded']),
+  criteria: new Set(['met', 'waived', 'deferred', 'failed', 'not-started']),
+};
+
 function cmdCheck(args) {
   const dir = args[0] ? path.resolve(args[0]) : '';
   if (!dir) fail('check 需要一个项目目录');
@@ -772,6 +799,276 @@ function cmdCheck(args) {
   } else {
     console.log('  OK   仍在 seed（未冻结；执行前请 freeze + start）');
   }
+
+  // v0.9：项目清单、状态源、验收矩阵、文档状态与链接/围栏
+  const projectRoot = path.dirname(dir);
+  const manifestPath = path.join(projectRoot, 'PROJECT.json');
+  let manifest = null;
+  if (!fs.existsSync(manifestPath)) {
+    failCount++;
+    console.log('  FAIL 缺少 PROJECT.json（v0.9 项目清单）');
+  } else {
+    try {
+      manifest = readJson(manifestPath);
+      console.log('  OK   PROJECT.json');
+    } catch (error) {
+      failCount++;
+      console.log(`  FAIL PROJECT.json 无法解析：${error.message}`);
+    }
+  }
+
+  if (manifest) {
+    const roots = manifest.roots ?? {};
+    let rootsOk = true;
+    for (const key of ['product', 'governance', 'workspace']) {
+      if (typeof roots[key] !== 'string' || !fs.existsSync(path.join(projectRoot, roots[key]))) {
+        rootsOk = false;
+        failCount++;
+        console.log(`  FAIL PROJECT.json roots.${key} 不存在：${roots[key] ?? '（空）'}`);
+      }
+    }
+    if (rootsOk) console.log('  OK   PROJECT.json roots 存在');
+
+    const installTarget = manifest.install?.target;
+    if (typeof installTarget !== 'string' || !fs.existsSync(path.join(projectRoot, installTarget))) {
+      failCount++;
+      console.log(`  FAIL PROJECT.json install.target 不存在：${installTarget ?? '（空）'}`);
+    } else {
+      console.log('  OK   PROJECT.json install.target 存在');
+    }
+
+    const productDir = path.join(projectRoot, roots.product ?? 'product');
+    const governanceDir = path.join(projectRoot, roots.governance ?? 'aecw');
+    const commandChecks = [
+      ['test', path.join(productDir, 'test')],
+      ['probe', path.join(governanceDir, 'scripts', 'probe.mjs')],
+      ['check', path.join(governanceDir, 'bin', 'aecw.mjs')],
+    ];
+    for (const [name, target] of commandChecks) {
+      if (!fs.existsSync(target)) {
+        failCount++;
+        console.log(`  FAIL PROJECT.json commands.${name} 指向不存在：${target}`);
+      }
+    }
+
+    if (manifest.tool?.version !== TOOL_VERSION) {
+      failCount++;
+      console.log(`  FAIL 工具版本不一致：manifest ${manifest.tool?.version ?? '（空）'} vs CLI ${TOOL_VERSION}`);
+    } else {
+      console.log(`  OK   工具版本一致：${TOOL_VERSION}`);
+    }
+    if (!manifest.tool?.hash || manifest.tool.hash === 'TO_BE_UPDATED') {
+      failCount++;
+      console.log('  FAIL PROJECT.json tool.hash 未填');
+    } else {
+      const toolHash = crypto.createHash('sha256').update(fs.readFileSync(path.join(governanceDir, 'bin', 'aecw.mjs'))).digest('hex').toUpperCase();
+      if (toolHash !== String(manifest.tool.hash).toUpperCase()) {
+        failCount++;
+        console.log(`  FAIL 工具哈希漂移：manifest ${manifest.tool.hash} vs ${toolHash}`);
+      } else {
+        console.log('  OK   工具哈希一致');
+      }
+    }
+  }
+
+  const statePath = path.join(dir, 'state.json');
+  let stateFile = null;
+  if (!fs.existsSync(statePath)) {
+    failCount++;
+    console.log('  FAIL 缺少 state.json（v0.9 状态源）');
+  } else {
+    try {
+      stateFile = readJson(statePath);
+      const stageValue = `${stateFile.stage?.name}/${stateFile.stage?.state}`;
+      const expectedStage = `${stage}/${stageState}`;
+      if (stageValue !== expectedStage) {
+        failCount++;
+        console.log(`  FAIL state.stage 与 STATUS 不一致：${stageValue} vs ${expectedStage}`);
+      } else {
+        console.log('  OK   state.stage 与 STATUS 一致');
+      }
+      const releaseValue = `${stateFile.release?.version}/${stateFile.release?.state}`;
+      const g4Value = `${stateFile.features?.G4?.state}/${stateFile.features?.G4?.release}`;
+      const evValue = `EV-001/${stateFile.evolution?.['EV-001']?.state}`;
+      const summaryMatch = status.match(/<!--\s*AECW-STATE\s*(\{[\s\S]*?\})\s*-->/);
+      if (!summaryMatch) {
+        failCount++;
+        console.log('  FAIL STATUS 缺少 AECW-STATE 摘要块');
+      } else {
+        let summary;
+        try {
+          summary = JSON.parse(summaryMatch[1]);
+        } catch (error) {
+          failCount++;
+          console.log(`  FAIL STATUS AECW-STATE 无法解析：${error.message}`);
+        }
+        if (summary) {
+          const pairs = [
+            ['stage', summary.stage, stageValue],
+            ['release', summary.release, releaseValue],
+            ['g4', summary.g4, g4Value],
+            ['evolution', summary.evolution, evValue],
+            ['adoption', summary.adoption, stateFile.adoption?.state],
+          ];
+          for (const [label, actual, expected] of pairs) {
+            if (actual !== expected) {
+              failCount++;
+              console.log(`  FAIL STATUS 摘要 ${label} 与 state 不一致：${actual} vs ${expected}`);
+            }
+          }
+          if (JSON.stringify(summary.evidence_debt) !== JSON.stringify((stateFile.evidence_debt ?? []).map((row) => row.id))) {
+            failCount++;
+            console.log('  FAIL STATUS 摘要 evidence_debt 与 state 不一致');
+          }
+        }
+      }
+      if (!STATE_ENUM.stage.has(stateFile.stage?.state)) {
+        failCount++;
+        console.log(`  FAIL state.stage.state 非法：${stateFile.stage?.state}`);
+      }
+      for (const [id, feature] of Object.entries(stateFile.features ?? {})) {
+        if (!STATE_ENUM.feature.has(feature.state)) {
+          failCount++;
+          console.log(`  FAIL feature ${id} state 非法：${feature.state}`);
+        }
+        if (feature.release !== undefined && !STATE_ENUM.release.has(feature.release)) {
+          failCount++;
+          console.log(`  FAIL feature ${id} release 非法：${feature.release}`);
+        }
+      }
+      for (const [id, evolution] of Object.entries(stateFile.evolution ?? {})) {
+        if (!STATE_ENUM.evolution.has(evolution.state)) {
+          failCount++;
+          console.log(`  FAIL evolution ${id} state 非法：${evolution.state}`);
+        }
+      }
+      if (!STATE_ENUM.adoption.has(stateFile.adoption?.state)) {
+        failCount++;
+        console.log(`  FAIL adoption.state 非法：${stateFile.adoption?.state}`);
+      }
+      if (!STATE_ENUM.release.has(stateFile.release?.state)) {
+        failCount++;
+        console.log(`  FAIL release.state 非法：${stateFile.release?.state}`);
+      }
+      const productPkgPath = path.join(projectRoot, 'product', 'package.json');
+      if (fs.existsSync(productPkgPath)) {
+        const productVersion = readJson(productPkgPath).version;
+        if (productVersion !== stateFile.release?.version) {
+          failCount++;
+          console.log(`  FAIL release.version 与 product/package.json 不一致：${stateFile.release?.version} vs ${productVersion}`);
+        } else {
+          console.log('  OK   release.version 与产品版本一致');
+        }
+      }
+      const evolutionText = fs.readFileSync(path.join(dir, 'cluster', 'evolution.md'), 'utf8');
+      const evState = stateFile.evolution?.['EV-001']?.state;
+      if (evState && !evolutionText.includes(`**${evState}**`)) {
+        failCount++;
+        console.log(`  FAIL state.evolution 与 cluster/evolution.md 不一致：${evState}`);
+      } else if (evState) {
+        console.log('  OK   state.evolution 与进化台账一致');
+      }
+    } catch (error) {
+      failCount++;
+      console.log(`  FAIL state.json 无法解析：${error.message}`);
+    }
+  }
+
+  const criteriaPath = path.join(dir, 'criteria.md');
+  if (!fs.existsSync(criteriaPath)) {
+    failCount++;
+    console.log('  FAIL 缺少 criteria.md（v0.9 验收矩阵）');
+  } else {
+    const criteriaText = fs.readFileSync(criteriaPath, 'utf8');
+    let criteriaRows = 0;
+    for (const line of criteriaText.split(/\r?\n/)) {
+      if (!line.trim().startsWith('|')) continue;
+      const cells = line.split('|').slice(1, -1).map((cell) => cell.trim());
+      if (cells.length < 7 || cells[0] === 'ID' || /^-+$/.test(cells[0])) continue;
+      criteriaRows++;
+      const [id, , criterionStatus, evidence, , humanDecision, impact] = cells;
+      if (!STATE_ENUM.criteria.has(criterionStatus)) {
+        failCount++;
+        console.log(`  FAIL criteria ${id} 状态非法：${criterionStatus}`);
+      }
+      if (criterionStatus === 'met' && (!evidence || /^(无|—|-)$/.test(evidence))) {
+        failCount++;
+        console.log(`  FAIL criteria ${id} 为 met 但没有证据`);
+      }
+      if ((criterionStatus === 'waived' || criterionStatus === 'deferred') && (!humanDecision || !impact)) {
+        failCount++;
+        console.log(`  FAIL criteria ${id} 为 ${criterionStatus} 但缺少人类裁决/影响门`);
+      }
+      if (criterionStatus === 'failed' || criterionStatus === 'not-started') {
+        failCount++;
+        console.log(`  FAIL criteria ${id} 为 ${criterionStatus}，不得通过`);
+      }
+    }
+    if (criteriaRows === 0) {
+      failCount++;
+      console.log('  FAIL criteria.md 没有可解析的判据行');
+    } else {
+      console.log(`  OK   criteria.md（${criteriaRows} 行）`);
+    }
+    for (const debt of stateFile?.evidence_debt ?? []) {
+      if (debt.id && !criteriaText.includes(debt.id)) {
+        warnCount++;
+        console.log(`  WARN 证据债 ${debt.id} 未在 criteria.md 引用`);
+      }
+    }
+  }
+
+  const docFiles = [
+    ...walkMarkdown(dir),
+    path.join(projectRoot, 'README.md'),
+    path.join(projectRoot, 'AGENTS.md'),
+    path.join(projectRoot, 'product', 'README.md'),
+  ];
+  let docCount = 0;
+  for (const file of [...new Set(docFiles)]) {
+    if (!fs.existsSync(file) || file.includes(`${path.sep}core${path.sep}`)) continue;
+    docCount++;
+    const text = fs.readFileSync(file, 'utf8');
+    const rel = path.relative(projectRoot, file).replace(/\\/g, '/');
+    const head = text.split(/\r?\n/).slice(0, 10).join('\n');
+    if (!/^>\s*状态：(current|historical|superseded)/m.test(head)) {
+      failCount++;
+      console.log(`  FAIL 文档缺少状态头：${rel}`);
+    }
+    if (((text.match(/^```/gm) ?? []).length % 2) !== 0) {
+      failCount++;
+      console.log(`  FAIL Markdown 围栏未闭合：${rel}`);
+    }
+    const linkPattern = /\]\((?!https?:|mailto:|#)([^)\s]+)\)/g;
+    let match;
+    while ((match = linkPattern.exec(text)) !== null) {
+      const target = decodeURIComponent(match[1].split('#')[0]);
+      if (!target) continue;
+      const resolved = path.resolve(path.dirname(file), target);
+      if (!fs.existsSync(resolved)) {
+        failCount++;
+        console.log(`  FAIL 坏链：${rel} -> ${match[1]}`);
+      }
+    }
+  }
+  console.log(`  OK   文档状态/围栏/链接检查（${docCount} 份）`);
+
+  const contradictionChecks = [
+    [p.status, /客户端 UI 未确认/, 'STATUS 仍写“客户端 UI 未确认”'],
+    [p.status, /EV-001[^\n]*trial/, 'STATUS 仍把 EV-001 写成 trial'],
+    [path.join(projectRoot, 'product', 'README.md'), /本副本未安装/, '产品 README 仍写“本副本未安装”'],
+    [path.join(projectRoot, 'product', 'README.md'), /G2 遮挡推送修复待真机/, '产品 README 仍写“G2 待真机”'],
+    [p.board, /已冻结\/已开工|UI 待确认/, '任务板仍写阶段/设置页未完成'],
+    [path.join(dir, 'workspace', 'memory', 'README.md'), /trial（试用通过，未激活）/, 'memory README 仍写 EV-001 trial'],
+    [path.join(dir, 'workspace', 'memory', 'ev-001-runtime-probe.md'), /结论：[\s\S]{0,60}未激活/, 'EV-001 提案仍写“未激活”'],
+  ];
+  for (const [file, pattern, message] of contradictionChecks) {
+    if (fs.existsSync(file) && pattern.test(fs.readFileSync(file, 'utf8'))) {
+      failCount++;
+      console.log(`  FAIL 当前文档矛盾：${message}`);
+    }
+  }
+  console.log('  OK   当前文档关键词一致性');
 
   console.log(`结果：FAIL ${failCount}｜WARN ${warnCount}`);
   if (failCount) process.exit(1);

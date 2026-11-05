@@ -1,5 +1,7 @@
 # G4 / G3 约束放宽 · 影响分析（charter 级）
 
+> 状态：current｜最后核对：2026-11-05
+
 > 对象：是否新增 **G4 外观自定义**，并把 G3 的“纯 DSH token、无任意 CSS”放宽为“白名单样式字段、不允许任意 CSS”。
 > 状态：**未批准**，本文件只做影响分析，不构成决定。当前 `human/direction.md` 仍是 v1.1-aecw（G1–G3 未改）。
 > 相关：`BLUEPRINT.md` v2（`grow-2`）、[`appearance-settings-design.md`](appearance-settings-design.md)、`ledger.md` F-033。

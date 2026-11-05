@@ -1,5 +1,7 @@
 # EV-001 · 运行态探针（已激活）
 
+> 状态：current｜最后核对：2026-11-05
+
 > 状态：**active（2026-11-05 人类激活）**｜风险：低（只读脚本，无产品改动）｜日期：2026-11-05
 > 来源候选：[`../../cluster/learning.md`](../../cluster/learning.md) “把运行态探针（安装/路由/slot/版本）做成只读脚本，每道门前跑一次”。
 
@@ -18,8 +20,8 @@
 | F-003/F-008 | 接管时 README 称“已安装启用”，实际 bundle 缺失 + junction 指向旧路径；修复后仍需探针 |
 | F-033/F-036 | 设置页/`configEditor` 能力只能靠多轮 inspect/HTTP 探针确认 |
 | F-038/F-039 | 替换安装后需要 profile/junction/plugin active/slot 多步核对 |
-| 本次正控 | `node scripts/probe.mjs` → **7/7 PASS**，exit 0（2026-11-05，当前 GUI `36574`） |
-| 本次负控 | `node scripts/probe.mjs --url http://127.0.0.1:1` → **5/7**，两条 HTTP FAIL，exit 1 |
+| 本次正控 | `node aecw/scripts/probe.mjs` → **7/7 PASS**，exit 0（2026-11-05，当前 GUI `36574`） |
+| 本次负控 | `node aecw/scripts/probe.mjs --url http://127.0.0.1:1` → **5/7**，两条 HTTP FAIL，exit 1 |
 
 > 局限：这是**单一项目**的证据；不能证明对其它插件/其它 profile 同样有效（需分布外验证）。
 
@@ -74,7 +76,7 @@ AECW EV-001 probe: 5/7 passed · http://127.0.0.1:1
 exit=1
 ```
 
-结论：**试用通过**（正控全绿、负控能拦住）。**未激活**：尚未写入 AGENTS“每道门必跑”，也未推广到其它项目。
+结论：**trial 通过**（正控全绿、负控能拦住）。**2026-11-05 已激活**：写入 AGENTS“门禁/交付前必跑”；未推广到其它项目，分布外验证/回滚演练仍待做（ED-004）。
 
 ## 8. 进化门
 

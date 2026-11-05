@@ -1,5 +1,8 @@
 # AECW 结构迁移记录 · 2026-11-05
 
+> 状态：historical｜最后核对：2026-11-05
+> 说明：历史记录，不参与当前结论；当前以 `aecw/STATUS.md` 为准。
+
 > 对象：`task-complete-toast` v1.2.0 → `task-complete-toast-aecw`（本副本）。
 > 依据：`D:\DSH\agent-engineering-control\prototype`（三域 / 六接口 / 单一 STATUS / 蓝图 + freeze + start / 台账 + 门禁）。
 > 原则：**只搬结构、只改治理工件**；产品代码、测试、`package.json` 的版本与行为不变。

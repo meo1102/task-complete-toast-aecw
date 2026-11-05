@@ -1,0 +1,23 @@
+{
+  "project": "task-complete-toast-aecw",
+  "roots": {
+    "product": "product",
+    "governance": "aecw",
+    "workspace": "aecw/workspace"
+  },
+  "install": {
+    "target": "product",
+    "profile": "desktop"
+  },
+  "commands": {
+    "test": "cd product && node --test --test-isolation=none test",
+    "probe": "node aecw/scripts/probe.mjs",
+    "check": "node aecw/bin/aecw.mjs check aecw"
+  },
+  "tool": {
+    "name": "aecw",
+    "version": "0.9.0",
+    "mode": "vendored",
+    "hash": "B9F3AA173EE8F0226CB5FF0BA853A0793AD6BE532EB675F7DBAB18D4D85AD3B3"
+  }
+}

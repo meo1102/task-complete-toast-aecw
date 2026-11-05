@@ -1,19 +1,23 @@
 # task-complete-toast-aecw
 
+> 状态：current｜最后核对：2026-11-05
+
 DSH 持久化插件（完成提示 / 授权提醒 / 外观设置）的独立项目。仓库按“产品代码”和“AECW 治理结构”分层，**两者不再混放**。
 
 ## 目录
 
 ```text
 .
+├─ PROJECT.json # 项目清单：两个根/安装目标/命令/工具版本
 ├─ product/     # 产品代码（可安装包；package.json 在此）
 │  ├─ index.js / client.js / lib/ / locale/ / test/
 │  ├─ package.json / cordis.patch.yml / icon.svg
 │  └─ README.md              # 功能、安装、已知限制
 └─ aecw/        # AECW 治理结构与工具（不参与插件运行）
-   ├─ STATUS.md / BLUEPRINT.md / ledger.md
+   ├─ STATUS.md / state.json / criteria.md
+   ├─ BLUEPRINT.md / ledger.md
    ├─ human/ / cluster/ / workspace/ / gates/ / inbox/
-   ├─ bin/aecw.mjs + core/    # AECW CLI/模板
+   ├─ bin/aecw.mjs + core/    # AECW CLI/模板（v0.9）
    ├─ scripts/probe.mjs       # EV-001 运行态探针
    └─ AGENTS.md               # 治理/开发规则
 ```
@@ -21,9 +25,12 @@ DSH 持久化插件（完成提示 / 授权提醒 / 外观设置）的独立项�
 ## 入口
 
 - 当前状态：[`aecw/STATUS.md`](aecw/STATUS.md)
+- 状态源：[`aecw/state.json`](aecw/state.json)；验收矩阵：[`aecw/criteria.md`](aecw/criteria.md)
 - 开发/治理规则：[`aecw/AGENTS.md`](aecw/AGENTS.md)
 - 产品说明：[`product/README.md`](product/README.md)
+- 四条泳道：[`maintenance`](aecw/cluster/maintenance.md)、[`evolution`](aecw/cluster/evolution.md)、[`release`](aecw/cluster/release.md)、stage 门禁
 - 独立目录迁移：[`aecw/workspace/evidence/2026-11-05-standalone-migration.md`](aecw/workspace/evidence/2026-11-05-standalone-migration.md)
+- v0.9 校准：[`aecw/workspace/evidence/2026-11-05-v09-calibration.md`](aecw/workspace/evidence/2026-11-05-v09-calibration.md)
 - 开发过程全记录：[`aecw/workspace/evidence/2026-11-05-development-retrospective.md`](aecw/workspace/evidence/2026-11-05-development-retrospective.md)
 
 ## 常用命令

@@ -1,11 +1,13 @@
 # AGENTS.md · task-complete-toast-aecw（仓库级）
 
+> 状态：current｜最后核对：2026-11-05
+
 本仓库的硬规则：**产品代码与 AECW 治理结构物理分离**。
 
 - 产品代码只在 [`product/`](product/)：运行时文件、测试、`package.json`、`cordis.patch.yml`、`locale/`、`icon.svg`。
 - AECW 结构只在 [`aecw/`](aecw/)：`STATUS.md`、`BLUEPRINT.md`、`ledger.md`、`human/`、`cluster/`、`workspace/`、`gates/`、`inbox/`、CLI/模板、探针。
 - 不要把治理文档放进 `product/`，也不要把产品源码/测试放进 `aecw/`。
-- 开始任何治理/开发工作前：读 [`aecw/STATUS.md`](aecw/STATUS.md) 与 [`aecw/AGENTS.md`](aecw/AGENTS.md)；治理规则以 `aecw/AGENTS.md` 为准。
+- 开始任何治理/开发工作前：读 [`PROJECT.json`](PROJECT.json) → [`aecw/STATUS.md`](aecw/STATUS.md) → [`aecw/state.json`](aecw/state.json) → [`aecw/criteria.md`](aecw/criteria.md) → [`aecw/AGENTS.md`](aecw/AGENTS.md)；治理规则以 `aecw/AGENTS.md` 为准。
 
 ## 命令位置
 

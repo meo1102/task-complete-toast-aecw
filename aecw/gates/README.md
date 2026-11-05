@@ -1,5 +1,8 @@
 # gates
 
+> 状态：historical｜最后核对：2026-11-05
+> 说明：历史记录，不参与当前结论；当前以 `aecw/STATUS.md` 为准。
+
 每道门一页；用 `node bin/aecw.mjs gate <dir> --name <name>` 生成。没有关键事实不开门。
 
 | 文件 | 日期 | 门 | 决策 | 说明 |
