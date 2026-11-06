@@ -101,7 +101,7 @@
     "attestation": "workspace/evidence/attestations/VA-20261106071124-fd647e.json",
     "note": "P0-6 安全收口；有条件通过；阶段视图同步修复后重新 verify；客户端浏览器保存/307/routePath/限速为发布后条件",
     "conditions_due": "2026-11-20",
-    "commit": "eb6d80d"
+    "commit": "a005d27"
   },
   "evolution": {
     "EV-001": {
