@@ -24,7 +24,7 @@ const BASE_HEADERS = Object.freeze({
 test('health/token 只信任 loopback Host；health 不写配置', () => {
   const health = createHealthHandler({
     plugin: '@local/task-complete-toast',
-    version: '1.3.1',
+    version: '1.3.2',
     instance: 'instance-1',
     routePath: '/dsh-task-complete/outcome',
     capabilities: ['outcome', 'settings'],
@@ -34,7 +34,7 @@ test('health/token 只信任 loopback Host；health 不写配置', () => {
   assert.deepEqual(readResponseJson(ok), {
     schema: 1,
     plugin: '@local/task-complete-toast',
-    version: '1.3.1',
+    version: '1.3.2',
     instance: 'instance-1',
     routePath: '/dsh-task-complete/outcome',
     capabilities: ['outcome', 'settings'],
@@ -163,6 +163,20 @@ test('settings 限速在鉴权后：未认证请求不能耗尽合法用户配�
     });
     assert.equal(bad.statusCode, 403);
   }
+  for (let index = 0; index < 31; index += 1) {
+    const noToken = await requestJsonRoute(route, 'POST', '/dsh-task-complete/settings', body, {
+      ...BASE_HEADERS,
+      'x-aecw-csrf': undefined,
+    });
+    assert.equal(noToken.statusCode, 403);
+  }
+  for (let index = 0; index < 31; index += 1) {
+    const textPlain = await requestJsonRoute(route, 'POST', '/dsh-task-complete/settings', body, {
+      ...BASE_HEADERS,
+      'content-type': 'text/plain',
+    });
+    assert.equal(textPlain.statusCode, 415);
+  }
   const ok = await requestJsonRoute(route, 'POST', '/dsh-task-complete/settings', body, BASE_HEADERS);
   assert.equal(ok.statusCode, 200);
 });
@@ -192,7 +206,7 @@ test('JSON 响应安全头', () => {
   // 直接验证 handler 输出的 header，避免只断言状态码。
   const health = createHealthHandler({
     plugin: '@local/task-complete-toast',
-    version: '1.3.1',
+    version: '1.3.2',
     instance: 'i',
     routePath: '/x',
   });

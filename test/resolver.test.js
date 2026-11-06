@@ -184,6 +184,16 @@ test('R03 404/400/500 等非 2xx → completed + fallback', async (t) => {
   }
 });
 
+test('R-client guard：不安全 routePath 不进入客户端配置', () => {
+  const { readClientConfig } = factory.__test__;
+  const unsafe = readClientConfig({ __DSH_TASK_COMPLETE_TOAST__: { routePath: '//evil.example/x' } });
+  assert.equal(unsafe.routePath, undefined);
+  const reserved = readClientConfig({ __DSH_TASK_COMPLETE_TOAST__: { routePath: '/dsh-task-complete/health' } });
+  assert.equal(reserved.routePath, undefined);
+  const safe = readClientConfig({ __DSH_TASK_COMPLETE_TOAST__: { routePath: '/custom/outcome' } });
+  assert.equal(safe.routePath, '/custom/outcome');
+});
+
 test('R-unsafe routePath 外部/反斜杠 → 回退默认同源路径，不 fetch 外部', async () => {
   for (const routePath of ['//evil.example/x', '/\\evil.example/x', '/dsh-task-complete/health']) {
     const { env, calls } = createEnv({
@@ -194,6 +204,17 @@ test('R-unsafe routePath 外部/反斜杠 → 回退默认同源路径，不 fet
     assert.equal(result.outcome, 'completed');
     assert.equal(calls[0].url, `${DEFAULTS.routePath}?sessionId=s-unsafe`);
   }
+});
+
+test('R-redirect 3xx → 不跟随、降级；fetch 初始带有 redirect:error', async () => {
+  const { env, calls } = createEnv({
+    fetch: async () => ({ ok: false, status: 307, json: async () => ({ outcome: 'completed' }) }),
+  });
+  const resolver = createResolver(env, { routePath: DEFAULTS.routePath });
+  const result = await resolver.resolve('s-redirect');
+  assert.equal(result.outcome, 'completed');
+  assert.equal(result.source, 'fallback');
+  assert.equal(calls[0].init.redirect, 'error');
 });
 
 test('R04 200ms 预算超时 → completed + fallback，且 abort 被触发', async () => {

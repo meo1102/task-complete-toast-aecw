@@ -37,7 +37,7 @@ node --test --test-isolation=none aecw/test/*.test.mjs
 node aecw/bin/aecw.mjs check aecw
 node aecw/bin/aecw.mjs render aecw
 node aecw/bin/aecw.mjs verify aecw --reviewer "reviewer" --risk high
-node aecw/bin/aecw.mjs decide aecw --attestation <verify.json> --scope "release 1.3.1" --risk high --by meo1102 --decision "有条件接受"
+node aecw/bin/aecw.mjs decide aecw --attestation <verify.json> --scope "release 1.3.2" --risk high --by meo1102 --decision "有条件接受"
 node aecw/bin/aecw.mjs evolve aecw list
 ```
 
@@ -47,4 +47,4 @@ node aecw/bin/aecw.mjs evolve aecw list
 - 证据：日志/attestation 写进 `aecw/workspace/evidence/`；事实/决定写进 `aecw/workspace/decisions/`。
 - 状态：先 `render`，再 `check`；`STATUS.md`/`criteria.md` 必须与 state/decisions 一致。
 - 发布：`verify` → 人类 `decide` → `state.release.decision` 指向 decision；不手写 gate。
-- 当前发布口径：1.3.1 已发布（conditional）；**1.3.2 候选**（routePath/限速/G4 宽度修复）未发布；远程未推送；已知限制见 README。
+- 当前发布口径：1.3.1 已发布（conditional）；**1.3.2 conditional 发布**（routePath/限速/G4 宽度修复；tag `v1.3.2`）；远程未推送；已知限制见 README。

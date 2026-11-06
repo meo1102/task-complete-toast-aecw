@@ -1523,7 +1523,7 @@ window.__ModuleLoader__.load({
       async function readRoute(sessionId, since, controller, cancelPromise, cancelled) {
         try {
           const url = `${routePath}?sessionId=${encodeURIComponent(sessionId)}`;
-          const init = { cache: 'no-store' };
+          const init = { cache: 'no-store', redirect: 'error' };
           if (controller !== null) init.signal = controller.signal;
 
           const request = Promise.resolve()
@@ -1750,7 +1750,7 @@ window.__ModuleLoader__.load({
   align-items: flex-start;
   gap: 10px;
   width: var(--dtt-width, 360px);
-  min-width: max(280px, calc(var(--dtt-font-size, 12px) * 18));
+  min-width: min(max(280px, calc(var(--dtt-font-size, 12px) * 18)), calc(100vw - 48px));
   max-width: calc(100vw - 48px);
   padding: 12px 14px;
   border-radius: 12px;

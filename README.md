@@ -1,6 +1,6 @@
 # 任务完成提示（task-complete-toast）· AECW 精简化项目
 
-> 状态：current｜最后核对：2026-11-06｜版本：`1.3.2`（候选）｜人类所有者：meo1102
+> 状态：current｜最后核对：2026-11-06｜版本：`1.3.2`（conditional 发布）｜人类所有者：meo1102
 > 当前状态以 [`aecw/STATUS.md`](aecw/STATUS.md) 为准；该页由 `aecw render` 从 [`aecw/state.json`](aecw/state.json) 生成。
 > 产品代码在仓库根；治理只在 [`aecw/`](aecw/)；历史在 [`aecw/workspace/archive/`](aecw/workspace/archive/)。
 
@@ -9,9 +9,9 @@ DSH 持久化插件：当 Agent 从运行变为空闲时，在窗口右下角提
 | 项 | 值 |
 |---|---|
 | 包名 | `@local/task-complete-toast` |
-| 版本 | `1.3.2`（候选；1.3.1 为上一版；尚未发布/tag） |
+| 版本 | `1.3.2`（conditional 发布；tag `v1.3.2`；1.3.1 为上一版） |
 | 目标环境 | DSH Desktop `0.2.1-rc.3`（Cordis），Windows |
-| 自动化 | **176/176** 通过（2026-11-06） |
+| 自动化 | **178/178** 通过（2026-11-06） |
 | 治理工具 | AECW `0.10.0`（精简化：state + decision + verify + evolution） |
 | 安装 | desktop profile link/junction → `D:\DSH\task-complete-toast-aecw` |
 
@@ -58,7 +58,7 @@ DSH 持久化插件：当 Agent 从运行变为空闲时，在窗口右下角提
 | `appearance.durationMs` | `5000` | 完成卡 2000–15000 ms；G2 提醒不受影响 |
 | `appearance.showTitle` | `true` | 完成卡标题 |
 | `appearance.fontSize` | `12` | 字号 12–18 px |
-| `appearance.cardWidth` | `null` | `null` 跟随 size；或 280–480 px |
+| `appearance.cardWidth` | `null` | `null` 跟随 size；或 280–480 px，且 ≥ max(280, fontSize×18) |
 | `appearance.backgroundColor` | `null` | `null` 跟随主题；或 `#RRGGBB` |
 | `appearance.textColor` | `null` | `null` 跟随主题；或 `#RRGGBB` |
 
@@ -70,7 +70,7 @@ DSH 持久化插件：当 Agent 从运行变为空闲时，在窗口右下角提
 node --test --test-isolation=none test/*.test.js
 ```
 
-期望 `tests 176 / pass 176 / fail 0`。受限沙箱内必须用 `--test-isolation=none`。
+期望 `tests 178 / pass 178 / fail 0`。受限沙箱内必须用 `--test-isolation=none`。
 
 治理回归：
 
@@ -102,7 +102,7 @@ aecw/
 node aecw/bin/aecw.mjs check aecw
 node aecw/bin/aecw.mjs render aecw
 node aecw/bin/aecw.mjs verify aecw --reviewer "reviewer" --risk high
-node aecw/bin/aecw.mjs decide aecw --attestation <verify.json> --scope "release 1.3.1" --risk high --by meo1102 --decision "有条件接受" [--condition "文本|到期|负责人"] [--residual "..."]
+node aecw/bin/aecw.mjs decide aecw --attestation <verify.json> --scope "release 1.3.2" --risk high --by meo1102 --decision "有条件接受" [--condition "文本|到期|负责人"] [--residual "..."]
 node aecw/bin/aecw.mjs evolve aecw list
 ```
 

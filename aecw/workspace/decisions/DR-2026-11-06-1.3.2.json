@@ -1,0 +1,110 @@
+{
+  "id": "DR-2026-11-06-1.3.2",
+  "kind": "decision",
+  "scope": "release 1.3.2",
+  "risk": "high",
+  "facts": [
+    "check PASS",
+    "probe PASS",
+    "tests PASS（pass 178）",
+    "governance PASS（pass 10）",
+    "tree sha256:2D817AADC6514B87E8569EA12BBA03423B46739F736F0F6FD8498DEFF1F17B56",
+    "产品 1.3.2：routePath 同源校验、settings 限速后置、G4 auto 宽度 min-width；probe reserved 拒绝",
+    "产品 178/178；治理 10/10；check 0/0；probe 7/7；verify 2D817AAD…/product 9C85E4B1…",
+    "独立 review 结论 conditional；prefix reserved/G4 视口 cap/速率变体/resolver 3xx 已 follow-up 修复",
+    "1.3.2 仍为 local release；远程未推送；真机浏览器/307/live routePath/live 限速未做"
+  ],
+  "evidence": [
+    {
+      "path": "aecw/workspace/evidence/attestations/VA-20261106095521-fb09f8.json",
+      "sha256": "sha256:883EDA5EB333B0E43C64992A7ABD544102444569521699E8FDC4C339A75DD0B7"
+    },
+    {
+      "path": "aecw/workspace/evidence/attestations/VA-20261106095521-fb09f8-check.log",
+      "sha256": "sha256:AB32E0F808AB557D349AAFFBF3C005C643D973A965FCD5851A1350209FFDA1CD"
+    },
+    {
+      "path": "aecw/workspace/evidence/attestations/VA-20261106095521-fb09f8-probe.log",
+      "sha256": "sha256:22E8DFE1E517DC63C268DEE0597FD4C71835CEBCD275F579247A992228B577F2"
+    },
+    {
+      "path": "aecw/workspace/evidence/attestations/VA-20261106095521-fb09f8-test.log",
+      "sha256": "sha256:5F6148E09A02B15A1B49AB5908A85A3E4BFF3AD9E3B78F0F4C138344A572AF31"
+    },
+    {
+      "path": "aecw/workspace/evidence/attestations/VA-20261106095521-fb09f8-governance.log",
+      "sha256": "sha256:79FF2C194D8418134C78AF31F801C4E28AD1C48B5D204117C0D97DB1E958A8B7"
+    },
+    {
+      "path": "aecw/workspace/evidence/2026-11-06-product-1.3.2.md",
+      "sha256": "sha256:07FBAE726CD4368223DD15233EF294B804660B6A89D3742B41672AC8A8122A02"
+    },
+    {
+      "path": "aecw/workspace/evidence/2026-11-06-product-independent-review.md",
+      "sha256": "sha256:8ACA9D7A70B56339601F9A69F9F5174A54CEA13A8F25BB7244D4D73A7D2A26B5"
+    }
+  ],
+  "conditions": [
+    {
+      "text": "浏览器设置页保存真机复验",
+      "due": "2026-11-20",
+      "owner": "meo1102"
+    },
+    {
+      "text": "307 跨源重定向",
+      "due": "2026-11-20",
+      "owner": "meo1102"
+    },
+    {
+      "text": "自定义 routePath live",
+      "due": "2026-11-20",
+      "owner": "meo1102"
+    },
+    {
+      "text": "live 限速",
+      "due": "2026-11-20",
+      "owner": "meo1102"
+    },
+    {
+      "text": "G1-P95",
+      "due": "2026-11-20",
+      "owner": "meo1102"
+    },
+    {
+      "text": "WP-4-RELOAD",
+      "due": "2026-11-20",
+      "owner": "meo1102"
+    },
+    {
+      "text": "ED-003 adoption",
+      "due": "2026-11-12",
+      "owner": "meo1102"
+    },
+    {
+      "text": "ED-004 EV-001 OOD",
+      "due": "2026-11-19",
+      "owner": "meo1102"
+    },
+    {
+      "text": "远程 push main + v1.3.2",
+      "due": "2026-11-20",
+      "owner": "meo1102"
+    }
+  ],
+  "residual_risk": "独立 review 为 conditional；probe 仍独立实现 routePath validator；真机浏览器保存/307/自定义 routePath/live 限速未做；远程未推送；截图/录屏仍为历史 waived。",
+  "human": {
+    "name": "meo1102",
+    "decision": "发布（conditional：真机浏览器/307/live routePath/限速待复核）",
+    "at": "2026-11-06T09:55:38.833Z"
+  },
+  "attestation": {
+    "path": "aecw/workspace/evidence/attestations/VA-20261106095521-fb09f8.json",
+    "id": "VA-20261106095521-fb09f8",
+    "tree_hash": "sha256:2D817AADC6514B87E8569EA12BBA03423B46739F736F0F6FD8498DEFF1F17B56"
+  },
+  "created_at": "2026-11-06T09:55:38.834Z",
+  "independent_review": {
+    "path": "aecw/workspace/evidence/2026-11-06-product-independent-review.md",
+    "sha256": "sha256:8ACA9D7A70B56339601F9A69F9F5174A54CEA13A8F25BB7244D4D73A7D2A26B5"
+  }
+}

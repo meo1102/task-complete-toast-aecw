@@ -310,6 +310,8 @@ test('I10 Config：数值/路径越界被拒，边界值通过', () => {
     [{ bridge: { routePath: '/custom/outcome?x=1' } }, ['bridge', 'routePath']],
     [{ bridge: { routePath: '/dsh-task-complete/health' } }, ['bridge', 'routePath']],
     [{ bridge: { routePath: '/dsh-task-complete/settings' } }, ['bridge', 'routePath']],
+    [{ bridge: { routeKind: 'prefix', routePath: '/dsh-task' } }, ['bridge', 'routePath']],
+    [{ bridge: { routeKind: 'prefix', routePath: '/dsh-task-complete/h' } }, ['bridge', 'routePath']],
     [{ notify: 'auto' }, ['notify']],
     [{ notify: { awaiting: 'yes' } }, ['notify', 'awaiting']],
     [{ appearance: { position: 'top' } }, ['appearance', 'position']],

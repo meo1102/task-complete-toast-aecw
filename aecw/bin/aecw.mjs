@@ -513,7 +513,7 @@ function renderStatus(state, decisions) {
     '```powershell',
     'node aecw/bin/aecw.mjs check aecw',
     'node aecw/bin/aecw.mjs verify aecw --reviewer "reviewer" --risk high',
-    'node aecw/bin/aecw.mjs decide aecw --scope "release 1.3.1" --risk high --by meo1102 --decision "有条件接受" --attestation aecw/workspace/evidence/attestations/VA-....json',
+    'node aecw/bin/aecw.mjs decide aecw --scope "release <version>" --risk high --by meo1102 --decision "有条件接受" --attestation aecw/workspace/evidence/attestations/VA-....json',
     'node aecw/bin/aecw.mjs evolve aecw list',
     'node aecw/bin/aecw.mjs render aecw',
     '```',
