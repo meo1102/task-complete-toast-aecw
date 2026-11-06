@@ -27,6 +27,7 @@
 | 2026-11-05 | **按 REVIEW/PLAN v0.9 校准**：maintenance 泳道；加 PROJECT/state/criteria；修文档矛盾；升级 check；**不改产品行为/人类验收/发布决定** | 人类“先按照这两个文档校准项目” | 见 [`v0.9-calibration`](../workspace/evidence/2026-11-05-v09-calibration.md)；F-048；adoption 仍 provisional |
 | 2026-11-05 | **发布 v1.3.0**：G4 外观设置 + G2 遮挡推送修复；**截图/录屏要求全部挂起**（ED-001/ED-002 waived）；adoption 仍 provisional | 人类“截图/录屏的要求都挂起，发布新版本” | 见 [`release-v1.3.0`](../gates/2026-11-05-release-v1.3.0.md)、[`2026-11-05-release-v1.3.0.md`](../workspace/evidence/2026-11-05-release-v1.3.0.md)；F-049 |
 | 2026-11-06 | **取消 product 层**：产品代码放在项目根目录；AECW 仍在 `aecw/` | 人类“取消 product 层，产品代码放在项目根目录” | 布局 v3；profile 指向仓库根；见 [`layout-v3`](../workspace/evidence/2026-11-06-layout-v3.md)；F-051 |
+| 2026-11-06 | **按 `PLAN-v0.9.1-红队整改` 分阶段整改**；S1 完成并冻结基线后停，等人类同意再开 S2 | 人类原话：“按顺序整改，每完成一个阶段后冻结基线，等我同意下一轮后再继续” | 工具 0.9.3；S1 只改治理工具，不改产品行为；S2–S5 未开始；F-052 |
 
 ## 阶段外事项（已完成 / 待人类）
 

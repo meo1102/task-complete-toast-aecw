@@ -12,7 +12,8 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CORE = path.join(ROOT, 'core');
 const DATE = new Date().toISOString().slice(0, 10);
-const TOOL_VERSION = '0.9.2';
+const TOOL_VERSION = '0.9.3';
+const ATTESTATION_MAX_AGE_DAYS = 7;
 
 function usage() {
   console.log(`AECW 生态原型 v${TOOL_VERSION}
@@ -21,15 +22,15 @@ function usage() {
   node bin/aecw.mjs init <dir> --name <名字> --owner <人类所有者> [--goal <目标>]
   node bin/aecw.mjs blueprint <dir> [--stage <阶段>] [--force]
   node bin/aecw.mjs freeze <dir> --charter-confirmed --stage <阶段> --scope <范围> --budget <预算> --stop <停止> --acceptance <验收>
-  node bin/aecw.mjs start <dir> [--by <人类>] [--first-report <报告点>]
+  node bin/aecw.mjs start <dir> --by <人类所有者> [--first-report <报告点>]
   node bin/aecw.mjs change <dir> --type task|blueprint|charter --title <变更> [--reason <理由>] [--impact <影响>] [--by <提出者>] [--decision 接受|拒绝|挂起]
-  node bin/aecw.mjs change <dir> --id CR-001 --decision 接受|拒绝|挂起 [--reason <理由>]
+  node bin/aecw.mjs change <dir> --id CR-001 --decision 接受|拒绝|挂起 [--by <人类>] [--reason <理由>]
   node bin/aecw.mjs status <dir>
   node bin/aecw.mjs dissent <dir> --severity S1|S2|S3|S4 --type <类型> --claim <主张> [--evidence <证据>] [--route 本地|直达]
   node bin/aecw.mjs fact <dir> --statement <陈述> --source <来源> [--status 已捕获|已核验|有争议] [--verifier <核验人>]
-  node bin/aecw.mjs gate <dir> --name <门禁名> [--decision 通过|有条件通过|退回补证|暂停] [--host <主持人>]
-  node bin/aecw.mjs resolve <dir> --id DR-001 --decision <裁决> [--reason <理由>]
-  node bin/aecw.mjs accept <dir> --item <项> --decision <接受|有条件接受|拒绝> [--evidence <证据>] [--risk <剩余风险>] [--by <接受者>]
+  node bin/aecw.mjs gate <dir> --name <门禁名> [--decision 通过|有条件通过|退回补证|暂停] [--attestation <verify.json> --signed-by <人类>]
+  node bin/aecw.mjs resolve <dir> --id DR-001 --decision <裁决> [--by <人类>] [--reason <理由>]
+  node bin/aecw.mjs accept <dir> --item <项> --decision <接受|有条件接受|拒绝> --by <人类> [--evidence <证据>] [--risk <剩余风险>]
   node bin/aecw.mjs log <dir> --decision <决策> [--reason <理由>]
   node bin/aecw.mjs check <dir>
   node bin/aecw.mjs demo [--force]
@@ -40,6 +41,8 @@ function usage() {
   - 事实有来源/状态；模型输出默认是“主张”，不是事实。
   - STATUS.md 是唯一当前状态；旧文档标 SUPERSEDED。
   - 蓝图是“怎么做”的共享基线；开工令是人类的“现在开始”，两者都不是整个项目授权。
+  - check 只做结构/一致性检查，不是授权/发布证明；通过类门禁必须引用 verify attestation。
+  - S1/S2 裁决、人类验收、charter/blueprint 裁决必须由人类所有者具名执行。
 `);
 }
 
@@ -69,6 +72,260 @@ function fail(msg) {
   process.exit(1);
 }
 
+// ---------- v0.9.3 · 表格/身份/事务基础件（S1：P0-1 + P0-7） ----------
+
+const PLACEHOLDER = /^(?:-|—|–|无|待补|待定|待填|未填|未具名|todo|tbd|n\/a|（待填）|（未填）|（待补）)$/i;
+
+function isPlaceholder(value) {
+  const text = String(value ?? '').trim();
+  return !text || PLACEHOLDER.test(text) || /待补|未具名|TODO/i.test(text);
+}
+
+/** 单行化 + 转义 Markdown 表格分隔符；多行/控制字符替换为空格。 */
+function cleanCell(value) {
+  return String(value ?? '')
+    .replace(/\r\n?/g, ' ')
+    .replace(/[\u0000-\u001F\u007F]/g, ' ')
+    .replace(/\\/g, '\\\\')
+    .replace(/\|/g, '\\|')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function requireText(value, label) {
+  const text = String(value ?? '').trim();
+  if (isPlaceholder(text)) fail(`${label} 不能为空或占位符`);
+  return cleanCell(text);
+}
+
+/** 按未转义的 | 切分表格行；保留 \| 转义，重新 join 时不丢列。 */
+function splitRow(line) {
+  let text = String(line).trim();
+  if (text.startsWith('|')) text = text.slice(1);
+  if (text.endsWith('|')) text = text.slice(0, -1);
+  const cells = [];
+  let current = '';
+  let escaped = false;
+  for (const ch of text) {
+    if (escaped) {
+      current += `\\${ch}`;
+      escaped = false;
+      continue;
+    }
+    if (ch === '\\') {
+      escaped = true;
+      continue;
+    }
+    if (ch === '|') {
+      cells.push(current.trim());
+      current = '';
+      continue;
+    }
+    current += ch;
+  }
+  cells.push(current.trim());
+  return cells;
+}
+
+function joinRow(cells) {
+  return `| ${cells.join(' | ')} |`;
+}
+
+function sectionRange(text, heading) {
+  const start = text.indexOf(heading);
+  if (start < 0) return null;
+  const next = text.indexOf('\n## ', start + heading.length);
+  return { start, end: next < 0 ? text.length : next };
+}
+
+function tableRows(text, heading, prefix) {
+  const range = sectionRange(text, heading);
+  if (!range) return [];
+  const rows = [];
+  const idPattern = new RegExp(`^${prefix}-\\d+`);
+  for (const line of text.slice(range.start, range.end).split('\n')) {
+    if (!line.trimStart().startsWith('|')) continue;
+    const cells = splitRow(line);
+    if (!cells.length) continue;
+    if (cells[0] === 'ID' || /^-{3,}$/.test(cells[0])) continue;
+    if (!idPattern.test(cells[0])) continue;
+    rows.push({ cells, line });
+  }
+  return rows;
+}
+
+function nextIdInTable(text, heading, prefix) {
+  let max = 0;
+  for (const row of tableRows(text, heading, prefix)) {
+    const match = row.cells[0].match(new RegExp(`^${prefix}-(\\d+)`));
+    if (match) max = Math.max(max, Number(match[1]));
+  }
+  return `${prefix}-${String(max + 1).padStart(3, '0')}`;
+}
+
+function idMatchesCell(cell, id) {
+  return cell === id || cell.startsWith(`${id}（`) || cell.startsWith(`${id}(`);
+}
+
+function writeFileAtomic(file, content) {
+  ensureDir(path.dirname(file));
+  const temp = `${file}.tmp-${process.pid}-${crypto.randomBytes(4).toString('hex')}`;
+  fs.writeFileSync(temp, content, 'utf8');
+  try {
+    fs.renameSync(temp, file);
+  } catch (error) {
+    try { fs.rmSync(temp, { force: true }); } catch { /* ignore */ }
+    throw error;
+  }
+}
+
+function txnDirOf(dir) {
+  return path.join(dir, '.aecw-txn');
+}
+
+function recoverTxn(dir) {
+  const txnDir = txnDirOf(dir);
+  const journal = path.join(txnDir, 'journal.json');
+  if (!fs.existsSync(journal)) return;
+  try {
+    const entries = JSON.parse(fs.readFileSync(journal, 'utf8')).entries ?? [];
+    for (const entry of entries) {
+      if (entry.backup && fs.existsSync(entry.backup)) fs.copyFileSync(entry.backup, entry.target);
+      else if (entry.created) fs.rmSync(entry.target, { force: true });
+    }
+  } catch { /* 恢复尽力而为；下面是显式告警 */ }
+  fs.rmSync(txnDir, { recursive: true, force: true });
+  console.error('warn: 检测到未完成事务，已回滚到提交前状态');
+}
+
+/** 多文件提交：先备份 + journal，再原子替换；任一步失败回滚全部目标。 */
+function commitFiles(dir, files) {
+  recoverTxn(dir);
+  const txnDir = txnDirOf(dir);
+  ensureDir(txnDir);
+  const entries = [];
+  try {
+    for (const file of files) {
+      const exists = fs.existsSync(file.path);
+      const backup = path.join(txnDir, `b${entries.length}.bak`);
+      if (exists) fs.copyFileSync(file.path, backup);
+      entries.push({ target: file.path, backup: exists ? backup : null, created: !exists });
+    }
+    fs.writeFileSync(
+      path.join(txnDir, 'journal.json'),
+      JSON.stringify({ version: 1, at: new Date().toISOString(), entries }, null, 2),
+      'utf8',
+    );
+    for (const file of files) writeFileAtomic(file.path, file.content);
+    fs.rmSync(txnDir, { recursive: true, force: true });
+  } catch (error) {
+    for (const entry of [...entries].reverse()) {
+      try {
+        if (entry.backup && fs.existsSync(entry.backup)) fs.copyFileSync(entry.backup, entry.target);
+        else if (entry.created) fs.rmSync(entry.target, { force: true });
+      } catch { /* 回滚失败时保留 txn 目录，下一次命令会再次尝试 */ }
+    }
+    fs.rmSync(txnDir, { recursive: true, force: true });
+    throw error;
+  }
+}
+
+function readJsonMaybe(file) {
+  try {
+    return JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
+  } catch {
+    return null;
+  }
+}
+
+function readStateFile(dir) {
+  return readJsonMaybe(path.join(dir, 'state.json'));
+}
+
+function projectOf(dir) {
+  const parent = path.dirname(dir);
+  return String(readJsonMaybe(path.join(parent, 'PROJECT.json'))?.project ?? readStateFile(dir)?.project ?? path.basename(dir));
+}
+
+function ownerIdentity(dir) {
+  const state = readStateFile(dir);
+  if (state?.owner?.name) return String(state.owner.name).trim();
+  if (fs.existsSync(path.join(dir, 'STATUS.md'))) return ownerOf(fs.readFileSync(path.join(dir, 'STATUS.md'), 'utf8'));
+  return '';
+}
+
+function requireHuman(by, dir, action) {
+  const owner = ownerIdentity(dir);
+  if (isPlaceholder(owner)) fail(`${action} 被拒绝：人类所有者未具名（state.owner）`);
+  const who = String(by ?? '').trim();
+  if (!who) fail(`${action} 需要 --by <人类所有者>（${owner}）`);
+  if (/[\r\n|]/.test(who) || /[\r\n|]/.test(owner)) fail(`${action} 被拒绝：身份不得含换行或表格分隔符`);
+  const allowlist = readStateFile(dir)?.owner?.allowlist;
+  const allowed = Array.isArray(allowlist) && allowlist.map((x) => String(x)).includes(who);
+  if (who !== owner && !allowed) fail(`${action} 被拒绝：${who} 不是人类所有者（${owner}）`);
+  return who;
+}
+
+function stateSummary(state) {
+  const g4 = state?.features?.G4;
+  const ev = state?.evolution?.['EV-001'];
+  return {
+    stage: `${state?.stage?.name}/${state?.stage?.state}`,
+    release: `${state?.release?.version}/${state?.release?.state}`,
+    g4: g4 ? `${g4.state}/${g4.release}` : null,
+    evolution: ev ? `EV-001/${ev.state}` : null,
+    adoption: state?.adoption?.state ?? null,
+    evidence_debt: (state?.evidence_debt ?? []).map((row) => row.id),
+  };
+}
+
+function assertGateName(name) {
+  const text = String(name ?? '').trim();
+  if (text.length < 1 || text.length > 60) fail('gate --name 长度必须 1–60 字符');
+  if (/[\u0000-\u001F\u007F|\\/:*?"<>]/.test(text)) fail('gate --name 含非法字符（控制字符/路径/表格分隔符）');
+  if (/^[.\s]/.test(text)) fail('gate --name 不能以点或空白开头');
+  return text;
+}
+
+function normalizeGateDecision(raw) {
+  const value = String(raw ?? '').trim().toLowerCase();
+  if (['通过', 'pass', 'passed', 'approved'].includes(value)) return '通过';
+  if (['有条件通过', 'conditional', 'conditional-pass'].includes(value)) return '有条件通过';
+  if (['退回补证', '退回', 'rework'].includes(value)) return '退回补证';
+  if (['暂停', 'hold', 'blocked'].includes(value)) return '暂停';
+  if (['拒绝', 'reject', 'rejected'].includes(value)) return '拒绝';
+  return '';
+}
+
+function readAttestation(file, dir) {
+  if (!file || file === true) fail('通过类门禁必须提供 --attestation <verify 结果 json>；自由文本 --decision 不再放行');
+  const abs = path.resolve(String(file));
+  if (!fs.existsSync(abs)) fail(`attestation 不存在：${abs}`);
+  const data = readJsonMaybe(abs);
+  if (!data) fail(`attestation 无法解析：${abs}`);
+  if (data.kind !== 'verify' || data.ok !== true) fail('attestation 不是成功的 verify 结果');
+  if (data.open_s1s2 !== 0) fail(`attestation 记录开放 S1/S2=${data.open_s1s2}，不得通过`);
+  if (data.criteria?.failed || data.criteria?.['not-started'] || data.criteria?.not_started) {
+    fail('attestation 记录 criteria 存在 failed/not-started');
+  }
+  if (typeof data.tree_hash !== 'string' || data.tree_hash.length < 16) fail('attestation 缺少有效 tree_hash');
+  if (!/^(?:sha256:)?[0-9a-fA-F]{64}$/.test(data.tree_hash)) fail('attestation.tree_hash 必须是 sha256 十六进制');
+  if (data.id !== undefined && !/^[A-Za-z0-9][A-Za-z0-9._:-]{0,79}$/.test(String(data.id))) {
+    fail('attestation.id 含非法字符');
+  }
+  const project = projectOf(dir);
+  if (data.project && data.project !== project) fail(`attestation 项目不匹配：${data.project} vs ${project}`);
+  const expires = Date.parse(data.expires_at ?? '');
+  if (!Number.isFinite(expires)) fail('attestation 缺少有效 expires_at');
+  if (expires < Date.now()) fail('attestation 已过期');
+  const created = Date.parse(data.created_at ?? '');
+  if (Number.isFinite(created) && Date.now() - created > ATTESTATION_MAX_AGE_DAYS * 86400000) {
+    fail('attestation 过旧（超过 7 天）');
+  }
+  return data;
+}
+
+
 function ensureDir(p) {
   fs.mkdirSync(p, { recursive: true });
 }
@@ -87,49 +344,43 @@ function readTemplate(name, vars = {}) {
 }
 
 function appendTableRow(text, heading, row) {
-  const start = text.indexOf(heading);
-  if (start < 0) throw new Error(`section not found: ${heading}`);
-  const next = text.indexOf('\n## ', start + heading.length);
-  const end = next < 0 ? text.length : next;
-  const lines = text.slice(start, end).split('\n');
+  const range = sectionRange(text, heading);
+  if (!range) throw new Error(`section not found: ${heading}`);
+  const lines = text.slice(range.start, range.end).split('\n');
   let last = -1;
   for (let i = 0; i < lines.length; i++) if (lines[i].trimStart().startsWith('|')) last = i;
   if (last < 0) lines.push('', row);
   else lines.splice(last + 1, 0, row);
-  return text.slice(0, start) + lines.join('\n') + text.slice(end);
+  return text.slice(0, range.start) + lines.join('\n') + text.slice(range.end);
 }
 
-function appendLastTableRow(text, row) {
+/** 在指定表头之后的表格末尾追加一行；避免 appendLastTableRow 写错文件里的第二张表。 */
+function appendRowByHeader(text, headerMarker, row) {
   const lines = text.split('\n');
-  let last = -1;
-  for (let i = 0; i < lines.length; i++) if (lines[i].trimStart().startsWith('|')) last = i;
-  if (last < 0) lines.push('', row);
-  else lines.splice(last + 1, 0, row);
+  const start = lines.findIndex((line) => line.trimStart().startsWith(headerMarker));
+  if (start < 0) throw new Error(`table not found: ${headerMarker}`);
+  let last = start;
+  for (let i = start + 1; i < lines.length; i++) {
+    if (!lines[i].trimStart().startsWith('|')) break;
+    last = i;
+  }
+  lines.splice(last + 1, 0, row);
   return lines.join('\n');
 }
 
-function nextId(text, prefix) {
-  const re = new RegExp(`${prefix}-(\\d+)`, 'g');
-  let max = 0;
-  let m;
-  while ((m = re.exec(text))) max = Math.max(max, Number(m[1]));
-  return `${prefix}-${String(max + 1).padStart(3, '0')}`;
-}
-
 function openHigh(text) {
-  return text
-    .split('\n')
-    .filter((l) => l.startsWith('|') && /\|\s*(S1|S2)\s*\|/.test(l) && /\|\s*open\s*\|/.test(l)).length;
+  return tableRows(text, '## A. 异议台账', 'DR')
+    .filter((row) => /^(S1|S2)$/i.test(row.cells[2]) && /^open$/i.test(row.cells[7])).length;
 }
 
-function openChanges(text) {
-  const start = text.indexOf('## C. 变更台账');
-  if (start < 0) return [];
-  const next = text.indexOf('\n## ', start + 5);
-  const section = text.slice(start, next < 0 ? text.length : next);
-  return section
-    .split('\n')
-    .filter((l) => l.startsWith('| CR-') && /\|\s*open\s*\|/.test(l));
+function openChangeRows(text) {
+  return tableRows(text, '## C. 变更台账', 'CR')
+    .filter((row) => /^open$/i.test(row.cells[7]));
+}
+
+function openHighRows(text) {
+  return tableRows(text, '## A. 异议台账', 'DR')
+    .filter((row) => /^(S1|S2)$/i.test(row.cells[2]) && /^open$/i.test(row.cells[7]));
 }
 
 function slug(s) {
@@ -138,7 +389,7 @@ function slug(s) {
 
 function ownerOf(status) {
   const m = status.match(/人类所有者：([^\n|]+)/);
-  return m ? m[1].trim() : '';
+  return m ? cleanCell(m[1]) : '';
 }
 
 function stageOf(status) {
@@ -192,44 +443,171 @@ function projectPaths(dir) {
 
 function cmdInit(args, flags) {
   const target = args[0] || flags.dir;
-  if (!target) fail('init 需要一个目标目录：node bin/aecw.mjs init <dir> --name ... --owner ...');
+  if (!target) fail('init 需要一个治理目录：node bin/aecw.mjs init <dir> --name ... --owner ...');
   const dir = path.resolve(target);
-  const name = String(flags.name || path.basename(dir));
-  const owner = String(flags.owner || '待补');
-  const goal = String(flags.goal || '（待填）');
+  const projectRoot = path.dirname(dir);
+  const governance = path.basename(dir);
+  const name = cleanCell(flags.name || path.basename(projectRoot)) || 'project';
+  const owner = cleanCell(flags.owner || '');
+  if (isPlaceholder(owner)) fail('init 需要具名 --owner <人类所有者>；占位符不允许');
+  const goal = cleanCell(flags.goal || '（待填）');
   const p = projectPaths(dir);
-  const vars = { PROJECT: name, OWNER: owner, DATE, GOAL: goal, STAGE: 'seed' };
 
-  ensureDir(p.dir);
-  for (const d of [path.join(dir, 'human'), path.join(dir, 'cluster'), p.work, p.evidence, p.memory, p.landing, p.gates, p.inbox]) ensureDir(d);
+  const state = {
+    project: name,
+    updated: DATE,
+    owner: { name: owner },
+    layout: { root: '.', governance, since: DATE },
+    install: { target: '.', profile: '' },
+    stage: { name: 'seed', state: 'seed', gate: null },
+    features: {},
+    release: { version: '0.1.0', state: 'unreleased' },
+    evolution: {},
+    adoption: { state: 'pending' },
+    evidence_debt: [],
+  };
+  const summary = stateSummary(state);
+  const vars = { PROJECT: name, OWNER: owner, DATE, GOAL: goal, STAGE: 'seed', SUMMARY: JSON.stringify(summary) };
+
+  ensureDir(dir);
+  for (const folder of ['human', 'cluster', p.work, p.evidence, p.memory, p.landing, p.gates, p.inbox]) {
+    ensureDir(folder);
+  }
 
   const created = [];
+  const binTarget = path.join(dir, 'bin', 'aecw.mjs');
+  if (!fs.existsSync(binTarget) || flags.force) {
+    ensureDir(path.dirname(binTarget));
+    fs.copyFileSync(fileURLToPath(import.meta.url), binTarget);
+    created.push(binTarget);
+  }
+  const coreTarget = path.join(dir, 'core');
+  if (!fs.existsSync(coreTarget) || flags.force) {
+    fs.cpSync(CORE, coreTarget, { recursive: true });
+    created.push(coreTarget);
+  }
+
   const add = (file, content) => { if (writeIfAbsent(file, content, Boolean(flags.force))) created.push(file); };
+  const header = (title) => `# ${title}\n\n> 状态：current｜最后核对：${DATE}\n`;
 
   add(p.status, readTemplate('status.template.md', vars));
   add(p.direction, readTemplate('direction.template.md', vars));
   add(p.blueprint, readTemplate('blueprint.template.md', vars));
-  add(p.ledger, readTemplate('ledger.template.md', vars));
   add(p.acceptance, readTemplate('acceptance.template.md', vars));
 
-  add(p.decisions, `# 人类决策记录 · ${name}\n\n> 只记“决定 / 理由 / 影响”。S1/S2 见 ledger 与 inbox。\n\n| 日期 | 决策 | 理由 | 影响 |\n|---|---|---|---|\n| - | - | - | - |\n`);
-  add(p.roster, `# 集群名册 · ${name}\n\n> 默认是“单 agent + 人类”；角色是功能，不是必须新增的人头。\n\n| 角色 | 谁 | 职责 | 当前状态 |\n|---|---|---|---|\n| 人类方向所有者 | ${owner} | 方向/边界/S1/S2/最终验收 | active |\n| 集群管家 | （待填） | 路由、任务板、S3/S4、升级 | active |\n| 实现者 | （待填） | 实现/测试/事实记录 | active |\n| 验证者（可选/轮值） | （待填） | 高影响事实复核 | on-demand |\n| 工作区策展 | （待填） | STATUS/台账/证据/时效 | active |\n`);
-  add(p.board, `# 任务板 · ${name}\n\n| ID | 任务 | 负责人 | 状态 | 输入 | 输出 | 验收 |\n|---|---|---|---|---|---|---|\n| T-001 | （待填） | （待填） | todo | - | - | - |\n`);
-  add(p.runs, `# 运行记录 · ${name}\n\n| 时间 | agent | 任务 | 结果 | 证据 |\n|---|---|---|---|---|\n| - | - | - | - | - |\n`);
-  add(p.learning, `# 学习账 · ${name}\n\n> 观察/教训/候选；不自动晋升为规则。\n\n| 日期 | 观察 | 教训 | 状态 |\n|---|---|---|---|\n| - | - | - | - |\n`);
+  let ledger = readTemplate('ledger.template.md', vars);
+  ledger = ledger
+    .split('\n')
+    .filter((line) => !(line.trim().startsWith('|') && splitRow(line).every((cell) => /^(?:-|—)$/.test(cell))))
+    .join('\n');
+  ledger = appendTableRow(
+    ledger,
+    '## B. 事实台账',
+    joinRow(['F-001', DATE, '项目由 aecw init 生成（PROJECT/state/criteria/模板）', 'node bin/aecw.mjs init', '已捕获', 'agent', 'seed']),
+  );
+  add(p.ledger, ledger);
 
-  add(path.join(p.work, 'README.md'), `# workspace/work\n\n任务产物、草稿、候选。候选不得当作已验收事实；当前状态见 ../../STATUS.md。\n`);
-  add(path.join(p.evidence, 'README.md'), `# workspace/evidence\n\n原始证据：测试输出、日志、截图、复现步骤。E1 放这里；E2 人类目视要写清“无截图”或附截图。\n`);
-  add(path.join(p.memory, 'README.md'), `# workspace/memory\n\n项目记忆：决策、判例、负记忆、术语。判断/规范必须引用事实；过期条目标 SUPERSEDED。\n`);
-  add(path.join(p.landing, 'README.md'), `# workspace/landing\n\n落地清单/交接/退役：可用、可运维、可交接、可审计、成本、遗留接受、照护者。\n`);
-  add(path.join(p.gates, 'README.md'), `# gates\n\n每道门一页；用 \`node bin/aecw.mjs gate <dir> --name <name>\` 生成。没有关键事实不开门。\n`);
-  add(path.join(p.inbox, 'README.md'), `# inbox（S1/S2 与变更详情）\n\nS1/S2 的完整异议记录放这里，不能被集群管家过滤。人类必须回应；未回应默认暂停/缩小。\nblueprint/charter 变更的详情（CR-xxx）也放这里；裁决状态以 ledger C 表为准。\n`);
+  add(p.decisions, `${header(`人类决策记录 · ${name}`)}
+> 只记“决定 / 理由 / 影响”。S1/S2 见 \`ledger.md\` 与 \`inbox/\`。
+
+## 决策记录
+
+| 日期 | 决策 | 理由 | 影响 |
+|---|---|---|---|
+`);
+  add(p.roster, `${header(`集群名册 · ${name}`)}
+> 默认是“单 agent + 人类”；角色是功能，不是必须新增的人头。
+
+| 角色 | 谁 | 职责 | 当前状态 |
+|---|---|---|---|
+| 人类方向所有者 | ${cleanCell(owner)} | 方向/边界/S1/S2/最终验收 | active |
+| 集群管家 | 集群管家 | 路由、任务板、S3/S4、升级 | active |
+| 实现者 | 实现者 | 实现/测试/事实记录 | active |
+| 验证者（可选/轮值） | （按需） | 高影响事实复核 | on-demand |
+| 工作区策展 | 工作区策展 | STATUS/台账/证据/时效 | active |
+`);
+  add(p.board, `${header(`任务板 · ${name}`)}
+| ID | 任务 | 负责人 | 状态 | 输入 | 输出 | 验收 |
+|---|---|---|---|---|---|---|
+`);
+  add(p.runs, `${header(`运行记录 · ${name}`)}
+| 时间 | agent | 任务 | 结果 | 证据 |
+|---|---|---|---|---|
+`);
+  add(p.learning, `${header(`学习账 · ${name}`)}
+> 观察/教训/候选；不自动晋升为规则。
+
+| 日期 | 观察 | 教训 | 状态 |
+|---|---|---|---|
+`);
+  add(path.join(dir, 'cluster', 'evolution.md'), `${header(`进化台账 · ${name}`)}
+> 试验/激活/退役；不自动晋升为规则。
+
+| ID | 提案 | 状态 | 证据 |
+|---|---|---|---|
+`);
+  add(path.join(dir, 'cluster', 'maintenance.md'), `${header(`维护台账 · ${name}`)}
+| 日期 | 事项 | 结果 | 证据 |
+|---|---|---|---|
+`);
+  add(path.join(dir, 'cluster', 'release.md'), `${header(`发布台账 · ${name}`)}
+| 版本 | 日期 | 门禁 | 状态 |
+|---|---|---|---|
+`);
+
+  add(path.join(p.work, 'README.md'), `${header('workspace/work')}
+任务产物、草稿、候选。候选不得当作已验收事实；当前状态见 \`../../STATUS.md\`。
+`);
+  add(path.join(p.evidence, 'README.md'), `${header('workspace/evidence')}
+原始证据：测试输出、日志、截图、复现步骤。E1 放这里；E2 人类目视要写清“无截图”或附截图。
+`);
+  add(path.join(p.memory, 'README.md'), `${header('workspace/memory')}
+项目记忆：决策、判例、负记忆、术语。判断/规范必须引用事实；过期条目标 SUPERSEDED。
+`);
+  add(path.join(p.landing, 'README.md'), `${header('workspace/landing')}
+落地清单/交接/退役：可用、可运维、可交接、可审计、成本、遗留接受、照护者。
+`);
+  add(path.join(p.gates, 'README.md'), `${header('gates')}
+每道门一页；用 \`node bin/aecw.mjs gate <dir> --name <name>\` 生成。通过类门禁必须引用 verify attestation。
+`);
+  add(path.join(p.inbox, 'README.md'), `${header('inbox（S1/S2 与变更详情）')}
+S1/S2 的完整异议记录放这里，不能被集群管家过滤。人类必须回应；未回应默认暂停/缩小。
+blueprint/charter 变更的详情（CR-xxx）也放这里；裁决状态以 ledger C 表为准。
+`);
+
+  add(path.join(dir, 'criteria.md'), `${header(`验收矩阵 · ${name}`)}
+> 权威：本矩阵与 \`state.json\`；\`met\` 必须有证据；\`waived/deferred\` 必须有人类裁决/日期/影响门。
+
+| ID | 判据 | 状态 | 证据 | 核验人 | 人类裁决 | 影响门 |
+|---|---|---|---|---|---|---|
+| INIT-1 | 项目脚手架由 init 生成且结构检查通过 | met | F-001（init 运行记录） | agent | — | seed |
+`);
+
+  add(path.join(dir, 'state.json'), `${JSON.stringify(state, null, 2)}\n`);
+
+  const toolFile = fileURLToPath(import.meta.url);
+  const toolHash = crypto.createHash('sha256').update(fs.readFileSync(toolFile, 'utf8').replace(/\r\n/g, '\n')).digest('hex').toUpperCase();
+  const manifest = {
+    project: name,
+    roots: { product: '.', governance, workspace: `${governance}/workspace` },
+    install: { target: '.', profile: '' },
+    commands: { check: `node ${governance}/bin/aecw.mjs check ${governance}` },
+    tool: { name: 'aecw', version: TOOL_VERSION, mode: 'vendored', hash: toolHash },
+  };
+  const manifestPath = path.join(projectRoot, 'PROJECT.json');
+  if (fs.existsSync(manifestPath) && !flags.force) {
+    console.log(`warn: PROJECT.json 已存在，未覆盖：${manifestPath}`);
+  } else {
+    writeFileAtomic(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+    created.push(manifestPath);
+  }
 
   console.log(`AECW 项目已初始化：${dir}`);
   console.log(`  项目：${name}｜人类所有者：${owner}`);
+  console.log(`  项目根：${projectRoot}（PROJECT.json）`);
   console.log(`  当前状态：${p.status}`);
   console.log(`  已创建/跳过：${created.length} 个文件`);
-  console.log(`下一步：填 human/direction.md 和 BLUEPRINT.md，批准蓝图后 freeze，再 start`);
+  console.log(`下一步：node ${governance}/bin/aecw.mjs check ${governance} 应为 0 FAIL`);
   return dir;
 }
 
@@ -245,25 +623,48 @@ function cmdDissent(args, flags) {
   const p = projectPaths(dir);
   const severity = String(flags.severity || 'S3').toUpperCase();
   if (!['S1', 'S2', 'S3', 'S4'].includes(severity)) fail('severity 必须是 S1/S2/S3/S4');
-  const type = String(flags.type || 'risk');
-  const claim = String(flags.claim || '（未填主张）');
-  const evidence = String(flags.evidence || '-');
-  const route = String(flags.route || (severity === 'S1' || severity === 'S2' ? '直达' : '本地'));
-  const owner = String(flags.owner || '集群管家');
+  const type = requireText(flags.type || 'risk', 'dissent --type');
+  const claim = requireText(flags.claim, 'dissent --claim');
+  const evidence = cleanCell(flags.evidence ?? '-') || '-';
+  const route = cleanCell(flags.route || (severity === 'S1' || severity === 'S2' ? '直达' : '本地'));
+  const handler = cleanCell(flags.owner || '集群管家') || '集群管家';
   let ledger = fs.readFileSync(p.ledger, 'utf8');
-  const id = nextId(ledger, 'DR');
-  const row = `| ${id} | ${DATE} | ${severity} | ${type} | ${claim} | ${evidence} | ${owner} | open | - |`;
-  ledger = appendTableRow(ledger, '## A. 异议台账', row);
-  fs.writeFileSync(p.ledger, ledger, 'utf8');
+  const id = nextIdInTable(ledger, '## A. 异议台账', 'DR');
+  ledger = appendTableRow(ledger, '## A. 异议台账', joinRow([id, DATE, severity, type, claim, evidence, handler, 'open', '-']));
 
+  const files = [{ path: p.ledger, content: ledger }];
+  const inboxFile = path.join(p.inbox, `${id}.md`);
   if (severity === 'S1' || severity === 'S2') {
-    const detail = `# ${id} · ${severity} · ${type}\n\n- 日期：${DATE}\n- 路由：${route}\n- 提出者/角色：${owner}\n- 一句话主张：${claim}\n- 事实依据：${evidence}\n- 不确定性：\n- 影响（谁/什么/可逆性）：\n- 建议替代：\n- 什么会改变我的判断：\n- 请求动作：\n\n> S1/S2：人类必须在 SLA 内回应；未回应默认暂停/缩小。\n`;
-    writeIfAbsent(path.join(p.inbox, `${id}.md`), detail, true);
+    if (fs.existsSync(inboxFile)) fail(`${inboxFile} 已存在，拒绝覆盖历史异议记录`);
+    const detail = `# ${id} · ${severity} · ${type}
+
+> 状态：current｜最后核对：${DATE}
+
+- 日期：${DATE}
+- 路由：${route}
+- 提出者/角色：${handler}
+- 一句话主张：${claim}
+- 事实依据：${evidence}
+- 不确定性：
+- 影响（谁/什么/可逆性）：
+- 建议替代：
+- 什么会改变我的判断：
+- 请求动作：
+
+> S1/S2：人类必须在 SLA 内回应；未回应默认暂停/缩小。
+`;
+    files.push({ path: inboxFile, content: detail });
+  }
+
+  try {
+    commitFiles(dir, files);
+  } catch (error) {
+    fail(`异议写入失败，已回滚（ledger/inbox 均未提交）：${error.message}`);
   }
 
   console.log(`${id} 已记录（${severity} / ${type}）`);
   if (severity === 'S1' || severity === 'S2') {
-    console.log(`  → 直达人类：${path.join(p.inbox, `${id}.md`)}`);
+    console.log(`  → 直达人类：${inboxFile}`);
     console.log('  → 未解决前，高风险门禁应暂停/缩小；不要只留在聊天里。');
   } else {
     console.log('  → 本地处理；周会记录，人类抽样。');
@@ -273,16 +674,21 @@ function cmdDissent(args, flags) {
 function cmdFact(args, flags) {
   const dir = needDir(args, 'fact');
   const p = projectPaths(dir);
-  const statement = String(flags.statement || '（未填陈述）');
-  const source = String(flags.source || '-');
-  const status = String(flags.status || '已捕获');
-  const verifier = String(flags.verifier || '-');
-  const link = String(flags.link || '-');
-  let ledger = fs.readFileSync(p.ledger, 'utf8');
-  const id = nextId(ledger, 'F');
-  const row = `| ${id} | ${DATE} | ${statement} | ${source} | ${status} | ${verifier} | ${link} |`;
-  ledger = appendTableRow(ledger, '## B. 事实台账', row);
-  fs.writeFileSync(p.ledger, ledger, 'utf8');
+  const statement = requireText(flags.statement, 'fact --statement');
+  const source = requireText(flags.source, 'fact --source');
+  const status = String(flags.status || '已捕获').trim();
+  if (!['已捕获', '已核验', '有争议'].includes(status)) fail('fact --status 必须是 已捕获/已核验/有争议');
+  const verifier = cleanCell(flags.verifier ?? '-') || '-';
+  if (status === '已核验' && isPlaceholder(verifier)) fail('fact --status 已核验 时必须提供具名 --verifier');
+  const link = cleanCell(flags.link ?? '-') || '-';
+  const ledger = fs.readFileSync(p.ledger, 'utf8');
+  const id = nextIdInTable(ledger, '## B. 事实台账', 'F');
+  const next = appendTableRow(ledger, '## B. 事实台账', joinRow([id, DATE, statement, source, status, verifier, link]));
+  try {
+    commitFiles(dir, [{ path: p.ledger, content: next }]);
+  } catch (error) {
+    fail(`事实写入失败，已回滚：${error.message}`);
+  }
   console.log(`${id} 已记录（${status}）`);
   console.log('  模型输出默认是“主张”；高影响事实需非作者核验。');
 }
@@ -290,73 +696,121 @@ function cmdFact(args, flags) {
 function cmdGate(args, flags) {
   const dir = needDir(args, 'gate');
   const p = projectPaths(dir);
-  const name = String(flags.name || 'gate');
-  const decision = String(flags.decision || '有条件通过');
-  const host = String(flags.host || '集群管家');
+  const name = assertGateName(flags.name);
+  const decision = normalizeGateDecision(flags.decision ?? '退回补证');
+  if (!decision) fail('gate --decision 必须是 通过|有条件通过|退回补证|暂停|拒绝');
+  const host = requireText(flags.host || '集群管家', 'gate --host');
   const ledger = fs.existsSync(p.ledger) ? fs.readFileSync(p.ledger, 'utf8') : '';
-  const open = openHigh(ledger);
+  const openRows = openHighRows(ledger);
+  const open = openRows.length;
+
+  let attestation = null;
+  let signedBy = '';
+  if (decision === '通过' || decision === '有条件通过') {
+    if (open > 0) {
+      fail(`拒绝生成“${decision}”门禁：仍有 ${open} 条开放 S1/S2（${openRows.map((row) => row.cells[0]).join('、')}）`);
+    }
+    attestation = readAttestation(flags.attestation, dir);
+    signedBy = cleanCell(requireHuman(flags['signed-by'], dir, `gate --decision ${decision}`));
+  } else if (flags['signed-by']) {
+    signedBy = cleanCell(flags['signed-by']);
+  }
+
   const file = path.join(p.gates, `${DATE}-${slug(name)}.md`);
-  const vars = {
-    PROJECT: path.basename(dir),
+  if (fs.existsSync(file) && !flags.force) {
+    fail(`门禁文件已存在，拒绝覆盖历史：${file}（确需覆盖仅限 demo/迁移，显式 --force）`);
+  }
+  const content = readTemplate('gate.template.md', {
+    PROJECT: cleanCell(projectOf(dir)),
     GATE: name,
     DATE,
     HOST: host,
     DECISION: decision,
     OPEN_S1S2: open > 0 ? `${open} 条（阻断高风险）` : '0',
-  };
-  const content = readTemplate('gate.template.md', vars);
-  writeIfAbsent(file, content, true);
+    ATTESTATION: attestation
+      ? cleanCell(`${attestation.id ?? 'verify'}｜tree ${attestation.tree_hash}`)
+      : '—（非通过类门禁不需要）',
+    SIGNED_BY: signedBy || '—（非通过类门禁不需要）',
+  });
+  try {
+    commitFiles(dir, [{ path: file, content }]);
+  } catch (error) {
+    fail(`门禁写入失败，已回滚：${error.message}`);
+  }
   console.log(`门禁已生成：${file}`);
-  console.log(`  开放 S1/S2：${open}${open > 0 ? '（高风险动作应暂停/缩小）' : ''}`);
+  console.log(`  决策：${decision}｜开放 S1/S2：${open}`);
+  if (attestation) console.log(`  attestation：${attestation.id ?? 'verify'}｜人类签署：${signedBy}`);
 }
 
 function cmdResolve(args, flags) {
   const dir = needDir(args, 'resolve');
   const p = projectPaths(dir);
-  const id = String(flags.id || '');
-  const decision = String(flags.decision || '接受');
-  if (!id) fail('resolve 需要 --id DR-001');
+  const id = String(flags.id || '').trim();
+  if (!/^DR-\d{3}$/.test(id)) fail('resolve 只接受 DR-xxx（A. 异议台账）；CR/F 不得跨类型裁决');
   let ledger = fs.readFileSync(p.ledger, 'utf8');
-  const lines = ledger.split('\n');
-  let found = false;
-  for (let i = 0; i < lines.length; i++) {
-    if (!lines[i].startsWith(`| ${id} `)) continue;
-    const parts = lines[i].split('|');
-    if (parts.length < 10) continue;
-    parts[8] = ' closed ';
-    parts[9] = ` ${decision} `;
-    lines[i] = parts.join('|');
-    found = true;
-    break;
+  const rows = tableRows(ledger, '## A. 异议台账', 'DR');
+  const row = rows.find((item) => idMatchesCell(item.cells[0], id));
+  if (!row) fail(`未找到异议 ${id}（只查 A 表）`);
+  if (/^closed$/i.test(row.cells[7])) fail(`${id} 已关闭，拒绝重复裁决`);
+  const severity = String(row.cells[2] || '').toUpperCase();
+  let by;
+  if (severity === 'S1' || severity === 'S2') {
+    by = cleanCell(requireHuman(flags.by, dir, `resolve ${id}（${severity}）`));
+  } else {
+    by = cleanCell(flags.by || '集群管家') || '集群管家';
   }
-  if (!found) fail(`未找到异议 ${id}`);
-  fs.writeFileSync(p.ledger, lines.join('\n'), 'utf8');
-  console.log(`${id} 已关闭：${decision}`);
+  const decision = requireText(flags.decision, `resolve ${id} --decision`);
+  const reason = cleanCell(flags.reason ?? '') || '';
+  row.cells[6] = by;
+  row.cells[7] = 'closed';
+  row.cells[8] = reason ? `${decision}；${reason}` : decision;
+  const lines = ledger.split('\n');
+  const index = lines.indexOf(row.line);
+  if (index < 0) fail(`无法定位 ${id} 的原始行`);
+  lines[index] = joinRow(row.cells);
+  ledger = lines.join('\n');
+  try {
+    commitFiles(dir, [{ path: p.ledger, content: ledger }]);
+  } catch (error) {
+    fail(`裁决写入失败，已回滚：${error.message}`);
+  }
+  console.log(`${id} 已关闭：${decision}（${by}）`);
 }
 
 function cmdAccept(args, flags) {
   const dir = needDir(args, 'accept');
   const p = projectPaths(dir);
-  const item = String(flags.item || '（未填项）');
-  const decision = String(flags.decision || '接受');
-  const evidence = String(flags.evidence || '-');
-  const risk = String(flags.risk || '-');
-  const by = String(flags.by || '人类所有者（待补）');
+  const item = requireText(flags.item, 'accept --item');
+  const decision = String(flags.decision || '接受').trim();
+  if (!['接受', '有条件接受', '拒绝'].includes(decision)) fail('accept --decision 必须是 接受/有条件接受/拒绝');
+  const by = cleanCell(requireHuman(flags.by, dir, 'accept（人类验收）'));
+  const evidence = cleanCell(flags.evidence ?? '');
+  if (decision !== '拒绝' && isPlaceholder(evidence)) {
+    fail('accept 接受/有条件接受 必须提供 --evidence；不得无证据验收');
+  }
+  const risk = cleanCell(flags.risk ?? '-') || '-';
   let text = fs.readFileSync(p.acceptance, 'utf8');
-  text = appendLastTableRow(text, `| ${DATE} | ${item} | ${decision} | ${evidence} | ${risk} | ${by} |`);
-  fs.writeFileSync(p.acceptance, text, 'utf8');
+  text = appendRowByHeader(text, '| 日期 | 项 |', joinRow([DATE, item, decision, evidence || '-', risk, by]));
+  try {
+    commitFiles(dir, [{ path: p.acceptance, content: text }]);
+  } catch (error) {
+    fail(`验收写入失败，已回滚：${error.message}`);
+  }
   console.log(`验收已记录：${item} → ${decision}（${by}）`);
 }
 
 function cmdLog(args, flags) {
   const dir = needDir(args, 'log');
   const p = projectPaths(dir);
-  const decision = String(flags.decision || '（未填决策）');
-  const reason = String(flags.reason || '-');
+  const decision = requireText(flags.decision, 'log --decision');
+  const reason = cleanCell(flags.reason ?? '-') || '-';
   let text = fs.readFileSync(p.decisions, 'utf8');
-  const row = `| ${DATE} | ${decision} | ${reason} | - |`;
-  text = appendLastTableRow(text, row);
-  fs.writeFileSync(p.decisions, text, 'utf8');
+  text = appendRowByHeader(text, '| 日期 | 决策 |', joinRow([DATE, decision, reason, '-']));
+  try {
+    commitFiles(dir, [{ path: p.decisions, content: text }]);
+  } catch (error) {
+    fail(`决策写入失败，已回滚：${error.message}`);
+  }
   console.log(`决策已记录：${decision}`);
 }
 
@@ -365,7 +819,7 @@ function cmdBlueprint(args, flags) {
   const p = projectPaths(dir);
   const status = fs.readFileSync(p.status, 'utf8');
   const owner = ownerOf(status);
-  const stage = String(flags.stage || stageOf(status) || 'stage-1');
+  const stage = cleanCell(flags.stage || stageOf(status) || 'stage-1');
 
   if (fs.existsSync(p.blueprint) && !flags.force) {
     let text = fs.readFileSync(p.blueprint, 'utf8');
@@ -399,7 +853,7 @@ function cmdFreeze(args, flags) {
   const p = projectPaths(dir);
   const status = fs.readFileSync(p.status, 'utf8');
   const ownerMatch = status.match(/人类所有者：([^\n|]+)/);
-  const owner = ownerMatch ? ownerMatch[1].trim() : '';
+  const owner = ownerMatch ? cleanCell(ownerMatch[1]) : '';
   if (!owner || /待补|未具名|TODO/i.test(owner)) fail('人类所有者未具名；先补 owner 再冻结');
   if (!flags['charter-confirmed']) fail('freeze 需要 --charter-confirmed（人类确认宪章）');
 
@@ -417,19 +871,21 @@ function cmdFreeze(args, flags) {
   const open = openHigh(ledger);
   if (open > 0) fail(`还有 ${open} 条开放 S1/S2；先 resolve 再冻结阶段基线`);
 
-  const stage = String(flags.stage || 'stage-1');
+  const stage = cleanCell(String(flags.stage || 'stage-1'));
   const bpStageMatch = bp.text.match(/^- 阶段：([^\n]+)/m);
-  const bpStage = bpStageMatch ? bpStageMatch[1].trim() : '';
+  const bpStage = bpStageMatch ? cleanCell(bpStageMatch[1]) : '';
   if (bpStage && bpStage !== stage) {
     fail(`蓝图阶段（${bpStage}）与 freeze 阶段（${stage}）不一致；先改蓝图或用 blueprint --stage`);
   }
-  const scope = String(flags.scope || '（未填范围）');
-  const budget = String(flags.budget || '（未填预算）');
-  const stop = String(flags.stop || '（未填停止）');
-  const acceptance = String(flags.acceptance || '（未填验收）');
+  const scope = requireText(flags.scope, 'freeze --scope');
+  const budget = requireText(flags.budget, 'freeze --budget');
+  const stop = requireText(flags.stop, 'freeze --stop');
+  const acceptance = requireText(flags.acceptance, 'freeze --acceptance');
   const file = path.join(p.gates, `${DATE}-charter-freeze.md`);
 
   const content = `# 宪章冻结与阶段授权 · ${path.basename(dir)}
+
+> 状态：historical｜最后核对：${DATE}
 
 - 日期：${DATE}
 - 人类所有者：${owner}
@@ -480,11 +936,7 @@ function cmdStart(args, flags) {
   const dir = needDir(args, 'start');
   const p = projectPaths(dir);
   const status = fs.readFileSync(p.status, 'utf8');
-  const owner = ownerOf(status);
-  if (!owner || /待补|未具名|TODO/i.test(owner)) fail('人类所有者未具名；先补 owner 再下开工令');
-
-  const by = String(flags.by || owner);
-  if (!by || /待补|未具名|TODO/i.test(by)) fail('开工令下达人未具名');
+  const by = cleanCell(requireHuman(flags.by, dir, 'start（开工令）'));
 
   const freeze = latestGate(p, 'charter-freeze');
   if (!freeze) fail('没有 charter-freeze；先 freeze 阶段基线，再下开工令');
@@ -507,10 +959,12 @@ function cmdStart(args, flags) {
   if (bpStage && bpStage !== stage) {
     fail(`蓝图阶段（${bpStage}）与当前阶段（${stage}）不一致；先改蓝图或重新 freeze`);
   }
-  const firstReport = String(flags['first-report'] || '阶段结束、触发 S1/S2、或预算耗尽时');
+  const firstReport = cleanCell(flags['first-report'] || '阶段结束、触发 S1/S2、或预算耗尽时');
   const file = path.join(p.gates, `${DATE}-start-order.md`);
 
   const content = `# 开工令 · ${stage}
+
+> 状态：historical｜最后核对：${DATE}
 
 - 日期：${DATE}
 - 下达人：${by}
@@ -573,30 +1027,36 @@ function cmdChange(args, flags) {
   let ledger = fs.readFileSync(p.ledger, 'utf8');
 
   if (!ledger.includes('## C. 变更台账')) {
-    ledger = ledger.trimEnd() + `\n\n## C. 变更台账\n\n| ID | 日期 | 类型 | 变更 | 理由 | 影响 | 提出者 | 状态 | 裁决 |\n|---|---|---|---|---|---|---|---|---|\n| - | - | - | - | - | - | - | - | - |\n`;
+    ledger = ledger.trimEnd() + `\n\n## C. 变更台账\n\n| ID | 日期 | 类型 | 变更 | 理由 | 影响 | 提出者 | 状态 | 裁决 |\n|---|---|---|---|---|---|---|---|---|\n`;
   }
 
-  const id = String(flags.id || '');
+  const id = String(flags.id || '').trim();
   if (id) {
+    if (!/^CR-\d{3}$/.test(id)) fail('change --id 只接受 CR-xxx（C. 变更台账）；DR/F 不得跨类型裁决');
     const decision = normalizeDecision(flags.decision);
     if (!decision) fail('--decision 必须是 接受/拒绝/挂起');
-    const lines = ledger.split('\n');
-    let found = false;
-    let type = '';
-    for (let i = 0; i < lines.length; i++) {
-      if (!lines[i].startsWith(`| ${id} `)) continue;
-      const parts = lines[i].split('|');
-      if (parts.length < 11) continue;
-      type = parts[3].trim();
-      parts[8] = ` ${decision} `;
-      parts[9] = ` ${String(flags.reason || decision)} `;
-      lines[i] = parts.join('|');
-      found = true;
-      break;
+    const rows = tableRows(ledger, '## C. 变更台账', 'CR');
+    const row = rows.find((item) => idMatchesCell(item.cells[0], id));
+    if (!row) fail(`未找到变更 ${id}（只查 C 表）`);
+    if (!/^open$/i.test(row.cells[7])) fail(`${id} 已裁决（${row.cells[7]}），拒绝重复裁决`);
+    const type = row.cells[2].trim();
+    let by = cleanCell(flags.by || '') || '集群管家';
+    if (type === 'blueprint' || type === 'charter') {
+      by = cleanCell(requireHuman(flags.by, dir, `change ${id}（${type} 裁决）`));
     }
-    if (!found) fail(`未找到变更 ${id}`);
-    fs.writeFileSync(p.ledger, lines.join('\n'), 'utf8');
-    console.log(`${id} 已裁决：${decision}`);
+    row.cells[7] = decision;
+    row.cells[8] = cleanCell(flags.reason || decision) || decision;
+    const lines = ledger.split('\n');
+    const index = lines.indexOf(row.line);
+    if (index < 0) fail(`无法定位 ${id} 的原始行`);
+    lines[index] = joinRow(row.cells);
+    ledger = lines.join('\n');
+    try {
+      commitFiles(dir, [{ path: p.ledger, content: ledger }]);
+    } catch (error) {
+      fail(`变更裁决写入失败，已回滚：${error.message}`);
+    }
+    console.log(`${id} 已裁决：${decision}（${by}）`);
     if (decision === 'accepted' && (type === 'blueprint' || type === 'charter')) {
       console.log('  → 不得原地修改冻结基线：升蓝图版本，重新 freeze + start（charter 变更先停）。');
     }
@@ -605,18 +1065,27 @@ function cmdChange(args, flags) {
 
   const type = String(flags.type || 'task').toLowerCase();
   if (!['task', 'blueprint', 'charter'].includes(type)) fail('--type 必须是 task/blueprint/charter');
-  const title = String(flags.title || '（未填变更）');
-  const reason = String(flags.reason || '-');
-  const impact = String(flags.impact || '-');
-  const by = String(flags.by || '集群管家');
+  const title = requireText(flags.title, 'change --title');
+  const reason = cleanCell(flags.reason ?? '-') || '-';
+  const impact = cleanCell(flags.impact ?? '-') || '-';
+  const by = cleanCell(flags.by || '集群管家') || '集群管家';
   const decision = normalizeDecision(flags.decision);
-  const state = decision || 'open';
-  const crId = nextId(ledger, 'CR');
-  const row = `| ${crId} | ${DATE} | ${type} | ${title} | ${reason} | ${impact} | ${by} | ${state} | ${decision || '-'} |`;
-  ledger = appendTableRow(ledger, '## C. 变更台账', row);
-  fs.writeFileSync(p.ledger, ledger, 'utf8');
+  if (decision && type !== 'task') {
+    fail(`${type} 变更不得在提出命令里直接裁决；先记录为 open，再由人类所有者单独裁决（change --id CR-xxx）`);
+  }
+  const changeState = decision || 'open';
+  const crId = nextIdInTable(ledger, '## C. 变更台账', 'CR');
+  ledger = appendTableRow(
+    ledger,
+    '## C. 变更台账',
+    joinRow([crId, DATE, type, title, reason, impact, by, changeState, decision || '-']),
+  );
 
+  const inboxFile = path.join(p.inbox, `${crId}.md`);
+  if (fs.existsSync(inboxFile)) fail(`${inboxFile} 已存在，拒绝覆盖历史变更记录`);
   const detail = `# ${crId} · ${type} 变更
+
+> 状态：current｜最后核对：${DATE}
 
 - 日期：${DATE}
 - 提出者：${by}
@@ -624,7 +1093,7 @@ function cmdChange(args, flags) {
 - 变更：${title}
 - 理由：${reason}
 - 影响：${impact}
-- 状态：${state}
+- 状态：${changeState}
 - 裁决：${decision || '待人类裁决'}
 
 ## 影响分析（提出者填）
@@ -647,10 +1116,17 @@ function cmdChange(args, flags) {
 - 日期：
 - 理由：
 `;
-  writeIfAbsent(path.join(p.inbox, `${crId}.md`), detail, true);
+  try {
+    commitFiles(dir, [
+      { path: p.ledger, content: ledger },
+      { path: inboxFile, content: detail },
+    ]);
+  } catch (error) {
+    fail(`变更写入失败，已回滚（ledger/inbox 均未提交）：${error.message}`);
+  }
 
-  console.log(`${crId} 已记录（${type} / ${state}）`);
-  console.log(`  → 详情：${path.join(p.inbox, `${crId}.md`)}`);
+  console.log(`${crId} 已记录（${type} / ${changeState}）`);
+  console.log(`  → 详情：${inboxFile}`);
   if (type === 'task') {
     console.log('  → 阶段内处理；记 board/runs；若改验收/范围/预算，升级为 blueprint。');
   } else if (type === 'blueprint') {
@@ -666,7 +1142,7 @@ function cmdStatus(args) {
 }
 
 function readJson(file) {
-  return JSON.parse(fs.readFileSync(file, 'utf8'));
+  return JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
 }
 
 function gitOriginUrl(root) {
@@ -706,6 +1182,7 @@ function cmdCheck(args) {
   const missing = required.filter((x) => !fs.existsSync(x));
   let failCount = 0;
   let warnCount = 0;
+  console.log('说明：结构/一致性检查；不是授权/发布证明。通过类门禁必须引用 verify attestation。');
   console.log(`检查：${dir}`);
   if (missing.length) {
     failCount += missing.length;
@@ -726,17 +1203,17 @@ function cmdCheck(args) {
   }
 
   const ledger = fs.existsSync(p.ledger) ? fs.readFileSync(p.ledger, 'utf8') : '';
-  const open = openHigh(ledger);
-  if (open > 0) {
-    warnCount++;
-    console.log(`  WARN 开放 S1/S2：${open} 条（高风险门禁应暂停/缩小）`);
+  const openRows = openHighRows(ledger);
+  if (openRows.length) {
+    failCount++;
+    console.log(`  FAIL 开放 S1/S2：${openRows.length} 条（${openRows.map((row) => row.cells[0]).join('、')}）；高风险门禁必须暂停/缩小`);
   } else {
     console.log('  OK   无开放 S1/S2');
   }
 
-  const openCRs = openChanges(ledger);
+  const openCRs = openChangeRows(ledger);
   if (openCRs.length) {
-    const high = openCRs.filter((l) => /\|\s*(charter|blueprint)\s*\|/.test(l));
+    const high = openCRs.filter((row) => /^(charter|blueprint)$/i.test(row.cells[2]));
     if (high.length) {
       warnCount++;
       console.log(`  WARN 开放变更：${high.length} 条 charter/blueprint（未裁决前不得扩大范围）`);
@@ -848,15 +1325,27 @@ function cmdCheck(args) {
       console.log('  OK   PROJECT.json install.target 存在');
     }
 
-    const commandChecks = [
-      ['test', path.join(productDir, 'test')],
-      ['probe', path.join(governanceDir, 'scripts', 'probe.mjs')],
-      ['check', path.join(governanceDir, 'bin', 'aecw.mjs')],
-    ];
-    for (const [name, target] of commandChecks) {
-      if (!fs.existsSync(target)) {
+    const commandMap = manifest.commands && typeof manifest.commands === 'object' ? manifest.commands : null;
+    if (!commandMap || Object.keys(commandMap).length === 0) {
+      failCount++;
+      console.log('  FAIL PROJECT.json commands 为空；至少需要 check');
+    } else {
+      if (!('check' in commandMap)) {
         failCount++;
-        console.log(`  FAIL PROJECT.json commands.${name} 指向不存在：${target}`);
+        console.log('  FAIL PROJECT.json commands.check 缺失');
+      }
+      const commandTargets = {
+        test: path.join(productDir, 'test'),
+        governance: path.join(governanceDir, 'test'),
+        probe: path.join(governanceDir, 'scripts', 'probe.mjs'),
+        check: path.join(governanceDir, 'bin', 'aecw.mjs'),
+      };
+      for (const [name, target] of Object.entries(commandTargets)) {
+        if (!(name in commandMap)) continue;
+        if (!fs.existsSync(target)) {
+          failCount++;
+          console.log(`  FAIL PROJECT.json commands.${name} 指向不存在：${target}`);
+        }
       }
     }
 
@@ -897,9 +1386,13 @@ function cmdCheck(args) {
       } else {
         console.log('  OK   state.stage 与 STATUS 一致');
       }
-      const releaseValue = `${stateFile.release?.version}/${stateFile.release?.state}`;
-      const g4Value = `${stateFile.features?.G4?.state}/${stateFile.features?.G4?.release}`;
-      const evValue = `EV-001/${stateFile.evolution?.['EV-001']?.state}`;
+      if (stateFile.owner?.name !== owner) {
+        failCount++;
+        console.log(`  FAIL state.owner 与 STATUS 不一致：${stateFile.owner?.name ?? '（空）'} vs ${owner || '（空）'}`);
+      } else {
+        console.log('  OK   state.owner 与 STATUS 一致');
+      }
+      const canonicalSummary = stateSummary(stateFile);
       const summaryMatch = status.match(/<!--\s*AECW-STATE\s*(\{[\s\S]*?\})\s*-->/);
       if (!summaryMatch) {
         failCount++;
@@ -913,22 +1406,17 @@ function cmdCheck(args) {
           console.log(`  FAIL STATUS AECW-STATE 无法解析：${error.message}`);
         }
         if (summary) {
-          const pairs = [
-            ['stage', summary.stage, stageValue],
-            ['release', summary.release, releaseValue],
-            ['g4', summary.g4, g4Value],
-            ['evolution', summary.evolution, evValue],
-            ['adoption', summary.adoption, stateFile.adoption?.state],
-          ];
-          for (const [label, actual, expected] of pairs) {
-            if (actual !== expected) {
+          for (const [label, expected] of Object.entries(canonicalSummary)) {
+            if (JSON.stringify(summary[label]) !== JSON.stringify(expected)) {
               failCount++;
-              console.log(`  FAIL STATUS 摘要 ${label} 与 state 不一致：${actual} vs ${expected}`);
+              console.log(`  FAIL STATUS 摘要 ${label} 与 state 不一致：${JSON.stringify(summary[label])} vs ${JSON.stringify(expected)}`);
             }
           }
-          if (JSON.stringify(summary.evidence_debt) !== JSON.stringify((stateFile.evidence_debt ?? []).map((row) => row.id))) {
-            failCount++;
-            console.log('  FAIL STATUS 摘要 evidence_debt 与 state 不一致');
+          for (const key of Object.keys(summary)) {
+            if (!(key in canonicalSummary)) {
+              failCount++;
+              console.log(`  FAIL STATUS 摘要含未知字段：${key}`);
+            }
           }
         }
       }
@@ -998,13 +1486,19 @@ function cmdCheck(args) {
           console.log('  OK   state.remote.url 与 git origin 一致');
         }
       }
-      const evolutionText = fs.readFileSync(path.join(dir, 'cluster', 'evolution.md'), 'utf8');
+      const evolutionPath = path.join(dir, 'cluster', 'evolution.md');
       const evState = stateFile.evolution?.['EV-001']?.state;
-      if (evState && !evolutionText.includes(`**${evState}**`)) {
+      if (evState && !fs.existsSync(evolutionPath)) {
         failCount++;
-        console.log(`  FAIL state.evolution 与 cluster/evolution.md 不一致：${evState}`);
+        console.log('  FAIL 缺少 cluster/evolution.md，无法核对 state.evolution');
       } else if (evState) {
-        console.log('  OK   state.evolution 与进化台账一致');
+        const evolutionText = fs.readFileSync(evolutionPath, 'utf8');
+        if (!evolutionText.includes(`**${evState}**`)) {
+          failCount++;
+          console.log(`  FAIL state.evolution 与 cluster/evolution.md 不一致：${evState}`);
+        } else {
+          console.log('  OK   state.evolution 与进化台账一致');
+        }
       }
     } catch (error) {
       failCount++;
@@ -1029,13 +1523,13 @@ function cmdCheck(args) {
         failCount++;
         console.log(`  FAIL criteria ${id} 状态非法：${criterionStatus}`);
       }
-      if (criterionStatus === 'met' && (!evidence || /^(无|—|-)$/.test(evidence))) {
+      if (criterionStatus === 'met' && isPlaceholder(evidence)) {
         failCount++;
         console.log(`  FAIL criteria ${id} 为 met 但没有证据`);
       }
-      if ((criterionStatus === 'waived' || criterionStatus === 'deferred') && (!humanDecision || !impact)) {
+      if ((criterionStatus === 'waived' || criterionStatus === 'deferred') && (isPlaceholder(humanDecision) || isPlaceholder(impact))) {
         failCount++;
-        console.log(`  FAIL criteria ${id} 为 ${criterionStatus} 但缺少人类裁决/影响门`);
+        console.log(`  FAIL criteria ${id} 为 ${criterionStatus} 但缺少人类裁决/影响门（不得用 - 占位）`);
       }
       if (criterionStatus === 'failed' || criterionStatus === 'not-started') {
         failCount++;
@@ -1080,7 +1574,14 @@ function cmdCheck(args) {
     const linkPattern = /\]\((?!https?:|mailto:|#)([^)\s]+)\)/g;
     let match;
     while ((match = linkPattern.exec(text)) !== null) {
-      const target = decodeURIComponent(match[1].split('#')[0]);
+      let target;
+      try {
+        target = decodeURIComponent(match[1].split('#')[0]);
+      } catch {
+        failCount++;
+        console.log(`  FAIL 链接百分号编码非法：${rel} -> ${match[1]}`);
+        continue;
+      }
       if (!target) continue;
       const resolved = path.resolve(path.dirname(file), target);
       if (!fs.existsSync(resolved)) {
@@ -1109,6 +1610,7 @@ function cmdCheck(args) {
   console.log('  OK   当前文档关键词一致性');
 
   console.log(`结果：FAIL ${failCount}｜WARN ${warnCount}`);
+  console.log('说明：以上为结构/一致性检查；不是授权/发布证明。');
   if (failCount) process.exit(1);
 }
 

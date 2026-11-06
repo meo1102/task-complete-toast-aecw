@@ -74,6 +74,7 @@
 | F-049 | 2026-11-05 | 发布 v1.3.0：G4 外观设置 + G2 遮挡推送修复；package 1.3.0；tag `v1.3.0`；截图/录屏要求人类挂起（ED-001/002 waived） | `product/package.json`；`node --test`；`check`；`probe`；release gate | 已核验（E1 + 人类发布决定） | 人类本人 | [`release-v1.3.0`](gates/2026-11-05-release-v1.3.0.md)；[`2026-11-05-release-v1.3.0.md`](workspace/evidence/2026-11-05-release-v1.3.0.md) |
 | F-050 | 2026-11-05 | v0.9 校准验收（有条件通过）：13 处当前文档残留矛盾修复；check FAIL 0/WARN 0；probe 7/7；169/169；node --check 17/17；发现 check 关键词硬编码与 commands.test 不可执行两个缺口 | aecw/bin/aecw.mjs check aecw；aecw/scripts/probe.mjs；node --test；人工一致性核对 | 已核验 | 单代理 | workspace/evidence/2026-11-05-v09-acceptance.md |
 | F-051 | 2026-11-06 | 布局 v3：取消 product 层，产品代码回到仓库根；profile link/junction 重装指向仓库根；PROJECT roots.product/install.target 改为 .；state.layout/install 写回；probe 7/7、tests 169/169、check FAIL 0/WARN 0 | git mv；plugin_manager remove/install；node aecw/scripts/probe.mjs；node --test；check | 已核验 | 单代理 | workspace/evidence/2026-11-06-layout-v3.md |
+| F-052 | 2026-11-06 | 红队整改 S1（P0-1 + P0-7）完成：工具 0.9.3；开放 S1/S2 改为 FAIL（大小写统一）；通过类门禁拒绝自由文本，需 verify attestation + 人类签署；`init` 生成 PROJECT/state/criteria 并自检 0/0；表格字段转义、DR/CR 分表裁决、nextId 分表、accept/resolve/start 人类身份、dissent/change 多文件 journal 回滚；治理回归 10/10、产品 169/169、check 0/0 | `aecw/bin/aecw.mjs`、`aecw/test/cli-s1.test.mjs`；`node --test`；`node aecw/bin/aecw.mjs check aecw` | 已捕获（E1，作者自验） | 本会话 agent | workspace/evidence/2026-11-06-s1-redteam.md |
 
 ## C. 变更台账
 

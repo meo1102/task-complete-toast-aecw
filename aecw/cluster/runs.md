@@ -29,6 +29,7 @@
 | 2026-11-05 | 单代理 + 人类 | v0.9 校准（maintenance） | PROJECT/state/criteria；文档状态头；check 对账；负控三项通过；产品代码未改 | F-048；[`v0.9-calibration`](../workspace/evidence/2026-11-05-v09-calibration.md) |
 | 2026-11-05 | 单代理 + 人类 | v1.3.0 发布 | G4 + G2 遮挡修复；package 1.3.0；截图/录屏挂起；169/169 + probe 7/7 | F-049；[`release-v1.3.0`](../gates/2026-11-05-release-v1.3.0.md) |
 | 2026-11-06 | 单代理 + 人类 | 布局 v3：取消 product 层 + 状态写回 | 产品代码回仓库根；profile 重装；PROJECT/state/probe/check 同步；probe 7/7、169/169、check 0/0 | F-051；[`layout-v3`](../workspace/evidence/2026-11-06-layout-v3.md) |
+| 2026-11-06 | 单代理 + 人类指令 | 红队整改 S1（P0-1 + P0-7） | 工具 0.9.3：open S1/S2 = FAIL；通过类门禁需 attestation + 人类签署；init 生成 PROJECT/state/criteria 并自检 0/0；表格转义/分表 ID/半事务回滚；治理回归 10/10 | F-052；[`s1-redteam`](../workspace/evidence/2026-11-06-s1-redteam.md) |
 
 ## 未记录但已发生（避免“记录即完成”的错觉）
 

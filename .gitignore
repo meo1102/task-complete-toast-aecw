@@ -1,0 +1,4 @@
+# 本地/临时产物
+aecw/test/.tmp/
+aecw/.aecw-txn/
+*.tmp-*

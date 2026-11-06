@@ -29,9 +29,13 @@ node aecw/scripts/probe.mjs
 # 单测（从仓库根）
 node --test --test-isolation=none test/smoke.test.js test/integration.test.js test/store.test.js test/format.test.js test/dismiss.test.js test/notifier.test.js test/resolver.test.js test/wiring.test.js test/presentation.test.js test/interaction.test.js
 
+# AECW 治理回归（S1 红队；从仓库根）
+node --test --test-isolation=none aecw/test/cli-s1.test.mjs
+
 # AECW 检查（治理目录是 aecw/）
 node aecw/bin/aecw.mjs check aecw
 ```
 
+- `aecw` 工具版本 **0.9.3**（S1 整改：open S1/S2 = FAIL、通过类门禁需 attestation、表格转义/分表 ID/半事务回滚）。
 - 当前阶段 `grow-2` 已 closed；产品行为变更需新蓝图 + `freeze`/`start`，不得静默扩范围。
 - 当前发布口径 v1.3.0（G1/G2/G3 + G4 + G2 遮挡修复）；截图/录屏要求人类挂起；E2 证据（无截图）不得写成 E1。

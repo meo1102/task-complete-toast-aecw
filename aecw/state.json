@@ -28,33 +28,46 @@
       "state": "released",
       "release": "released",
       "version": "1.3.0",
-      "evidence": ["F-022"]
+      "evidence": [
+        "F-022"
+      ]
     },
     "G2": {
       "state": "released",
       "release": "released",
       "version": "1.3.0",
-      "evidence": ["F-026"],
+      "evidence": [
+        "F-026"
+      ],
       "waiver": "G2-8"
     },
     "G2-occlusion": {
       "state": "released",
       "release": "released",
       "version": "1.3.0",
-      "evidence": ["F-041", "F-042", "F-049"]
+      "evidence": [
+        "F-041",
+        "F-042",
+        "F-049"
+      ]
     },
     "G3": {
       "state": "released",
       "release": "released",
       "version": "1.3.0",
-      "evidence": ["F-027"],
+      "evidence": [
+        "F-027"
+      ],
       "waiver": "G3-4b"
     },
     "G4": {
       "state": "released",
       "release": "released",
       "version": "1.3.0",
-      "evidence": ["F-040", "F-049"]
+      "evidence": [
+        "F-040",
+        "F-049"
+      ]
     }
   },
   "release": {
@@ -67,7 +80,10 @@
   "evolution": {
     "EV-001": {
       "state": "active",
-      "evidence": ["F-044", "F-045"]
+      "evidence": [
+        "F-044",
+        "F-045"
+      ]
     }
   },
   "adoption": {
@@ -126,5 +142,16 @@
   "layout_baseline": {
     "commit": "4589b91",
     "tag": "aecw-layout-v2-2026-11-05"
+  },
+  "owner": {
+    "name": "meo1102",
+    "email": "meo1102@163.com",
+    "source": "git-committer",
+    "since": "2026-11-05"
+  },
+  "tool": {
+    "name": "aecw",
+    "version": "0.9.3",
+    "hash": "0EF0CC930FF3C94E08F652641209A4425D23B814ECAEA7380AE13B7883961124"
   }
 }

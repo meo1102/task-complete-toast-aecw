@@ -11,13 +11,14 @@
   },
   "commands": {
     "test": "node --test --test-isolation=none test/*.test.js",
+    "governance": "node --test --test-isolation=none aecw/test/*.test.mjs",
     "probe": "node aecw/scripts/probe.mjs",
     "check": "node aecw/bin/aecw.mjs check aecw"
   },
   "tool": {
     "name": "aecw",
-    "version": "0.9.2",
+    "version": "0.9.3",
     "mode": "vendored",
-    "hash": "06F16E9D2D764A8207A256B9B27DB223FB8BB7D439C191C6F2C8AB3B9CA0ECB8"
+    "hash": "0EF0CC930FF3C94E08F652641209A4425D23B814ECAEA7380AE13B7883961124"
   }
 }

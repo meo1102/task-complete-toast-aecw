@@ -10,6 +10,7 @@
 | 2026-11-05 | v0.9 校准 | `PROJECT.json`、`state.json`、`criteria.md`；当前文档矛盾修复；历史文档状态头；`check` 升级 | F-048；[`../workspace/evidence/2026-11-05-v09-calibration.md`](../workspace/evidence/2026-11-05-v09-calibration.md) |
 | 2026-11-05 | v0.9 校准验收 | 修复 13 处残留当前文档矛盾；G4-ENTRY 口径；`PROJECT.json` test 命令；`state.baseline`；验收报告 | F-050；[`../workspace/evidence/2026-11-05-v09-acceptance.md`](../workspace/evidence/2026-11-05-v09-acceptance.md) |
 | 2026-11-06 | 布局 v3（取消 product 层） | 产品代码 → 仓库根；profile → 根；`PROJECT.json`/`state.layout`/`state.install`/probe/check 同步 | F-051；[`../workspace/evidence/2026-11-06-layout-v3.md`](../workspace/evidence/2026-11-06-layout-v3.md) |
+| 2026-11-06 | 红队整改 **S1**（P0-1 + P0-7） | 治理工具 0.9.3：open S1/S2 = FAIL；通过类门禁拒绝自由文本；init 生成 PROJECT/state/criteria 并自检；表格转义/分表 ID/半事务 | F-052；[`../workspace/evidence/2026-11-06-s1-redteam.md`](../workspace/evidence/2026-11-06-s1-redteam.md) |
 
 ## 停止/回滚
 

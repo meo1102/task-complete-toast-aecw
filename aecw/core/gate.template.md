@@ -1,9 +1,13 @@
 # 门禁检查单 · {{GATE}}
 
+> 状态：historical｜最后核对：{{DATE}}
+
 - 项目：{{PROJECT}}
 - 日期：{{DATE}}
 - 主持人：{{HOST}}
 - 决策：{{DECISION}}
+- 验证 attestation：{{ATTESTATION}}
+- 人类签署：{{SIGNED_BY}}
 
 ## 1. 关键事实（3–5 条）
 
