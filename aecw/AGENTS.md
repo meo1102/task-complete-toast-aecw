@@ -3,7 +3,7 @@
 > 状态：current｜最后核对：2026-11-06
 
 本目录是 AECW 治理结构；**产品代码在仓库根 `../`（`package.json`/`index.js`/`client.js`/`lib/`/`locale/`/`test/`）**，不在这里。仓库级约定见 [`../AGENTS.md`](../AGENTS.md)。
-产品代码基线 = v1.3.0（已发布；当前工作树为 **1.3.1 安全候选**，未发布）；本项目于 2026-11-05 从原件复制并按 `agent-engineering-control/prototype` 结构重排，**产品逻辑未改**；同日按人类指令更新介绍文案与回归断言（F-031/F-032），后续在 `grow-2` 完成 G4 与 G2 遮挡修复并发布 1.3.0；当前阶段 `security-1` 做 P0-6 安全收口。
+产品代码基线 = v1.3.1（2026-11-06 发布；v1.3.0 为上一版；v1.2.0 为历史基线）；本项目于 2026-11-05 从原件复制并按 `agent-engineering-control/prototype` 结构重排，**产品逻辑未改**；同日按人类指令更新介绍文案与回归断言（F-031/F-032），后续在 `grow-2` 完成 G4 与 G2 遮挡修复并发布 1.3.0；`security-1` 完成 P0-6 安全收口并发布 1.3.1。
 
 ## 开工前
 
@@ -78,5 +78,5 @@ node bin/aecw.mjs close . --by meo1102 --decision 有条件通过 --gate gates/<
 - 行为变更：先改 [`workspace/memory/design-contract-v1.2.0.md`](workspace/memory/design-contract-v1.2.0.md) 与 [`workspace/memory/adr-001-023.md`](workspace/memory/adr-001-023.md)，再改代码与测试。
 - 证据：事实写进 `ledger.md`（F 编号）；阶段结束更新门禁；验收必须列失败/未测项。
 - 基线：阶段结束提交 commit/tag，记录源码/测试哈希与验收基线版本。
-- 当前发布口径：v1.3.0（G1/G2/G3 + G4 + G2 遮挡修复）；工作树为 **1.3.1 安全候选（未发布）**；截图/录屏要求人类挂起；G2-8、G3-4b 等已知未测见 `STATUS.md` §3/§4，不写「全绿」。
+- 当前发布口径：v1.3.1（G1/G2/G3 + G4 + G2 遮挡修复 + P0-6 安全收口；release gate 有条件通过）；截图/录屏要求人类挂起；G2-8、G3-4b 等已知未测见 `STATUS.md` §3/§4，不写「全绿」。
 - 每道门/发布先更新 `STATUS.md`，再更新其他文档；旧文档标 `SUPERSEDED`。
