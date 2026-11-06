@@ -1,0 +1,18 @@
+✔ init + check：state/STATUS/criteria 生成，旧当前路径不存在 (128.4293ms)
+✔ verify + decide：facts/evidence/human 完整，tree 绑定，check 通过 (613.7183ms)
+✔ 空 decision / 缺 facts / 缺 attestation → check FAIL (125.3604ms)
+✔ state/STATUS 漂移 → check FAIL；render 后恢复 (243.1378ms)
+✔ gate 是废弃别名：不生成空模板 (107.4347ms)
+✔ decide 拒绝 evidence/attestations 之外的 attestation (112.3939ms)
+✔ decide 负控：高风险缺 residual、11 个 conditions、tree 变化都拒绝 (579.5166ms)
+✔ L2：high 无 freeze 拒绝；freeze + start + independent verify 后接受 (1125.8475ms)
+✔ 32 路并发 evolve propose 不丢/不重/不截断 (884.6685ms)
+✔ E1 自动采纳、E2 必须人类、失败候选 retired (812.6895ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4762.4407

@@ -789,11 +789,25 @@ function checkEvolution(dir, state, errors) {
     if (!candidate) errors.push(`state.evolution.active 引用了不存在的 candidate：${id}`);
     else if (candidate.status !== 'adopted') errors.push(`active candidate ${id} 不是 adopted`);
     if (!adopted.has(id)) errors.push(`active candidate ${id} 没有 adopted ledger 记录`);
+    const version = state.evolution?.versions?.[id];
+    if (!version || version.version !== candidate?.artifact?.version || normalizeHash(version.sha256) !== normalizeHash(candidate?.artifact?.sha256)) {
+      errors.push(`active candidate ${id} 的 state.evolution.versions 与 artifact 不一致`);
+    }
   }
   for (const candidate of candidates.values()) {
     if (candidate.status === 'adopted' && !adopted.has(candidate.id)) errors.push(`candidate ${candidate.id} adopted 但 ledger 无记录`);
     if (!candidate.artifact || typeof candidate.artifact.path !== 'string' || typeof candidate.artifact.sha256 !== 'string' || typeof candidate.artifact.version !== 'string') {
       errors.push(`candidate ${candidate.id} 缺 artifact {path,sha256,version}`);
+    } else {
+      let artifactPath;
+      try {
+        artifactPath = safeInProject(p.project, candidate.artifact.path);
+      } catch (error) {
+        errors.push(`candidate ${candidate.id} artifact 路径：${error.message}`);
+      }
+      if (artifactPath && (!fs.existsSync(artifactPath) || normalizeHash(hashFile(artifactPath)) !== normalizeHash(candidate.artifact.sha256))) {
+        errors.push(`candidate ${candidate.id} artifact 缺失或哈希不匹配`);
+      }
     }
     if (!candidate.metric || typeof candidate.metric.name !== 'string' || !['lower', 'higher'].includes(candidate.metric.direction)) {
       errors.push(`candidate ${candidate.id} 缺 metric {name,direction}`);
@@ -804,7 +818,19 @@ function checkEvolution(dir, state, errors) {
         errors.push(`project candidate ${candidate.id} 缺 baseline/candidate/delta`);
       }
       if (candidate.evaluation?.improved !== true) errors.push(`project candidate ${candidate.id} adopted 但未标记 improved`);
-      if (!candidate.evaluation?.eval_log?.path || !candidate.evaluation?.eval_log?.sha256) errors.push(`project candidate ${candidate.id} 缺 eval_log`);
+      if (!candidate.evaluation?.eval_log?.path || !candidate.evaluation?.eval_log?.sha256) {
+        errors.push(`project candidate ${candidate.id} 缺 eval_log`);
+      } else {
+        let evalLogPath;
+        try {
+          evalLogPath = safeInProject(p.project, candidate.evaluation.eval_log.path);
+        } catch (error) {
+          errors.push(`project candidate ${candidate.id} eval_log 路径：${error.message}`);
+        }
+        if (evalLogPath && (!fs.existsSync(evalLogPath) || normalizeHash(hashFile(evalLogPath)) !== normalizeHash(candidate.evaluation.eval_log.sha256))) {
+          errors.push(`project candidate ${candidate.id} eval_log 缺失或哈希不匹配`);
+        }
+      }
       for (const key of ['tests', 'probe']) {
         const log = candidate.evaluation?.logs?.[key];
         if (!log || typeof log.path !== 'string' || typeof log.sha256 !== 'string') {
