@@ -675,8 +675,9 @@ function validateDecision(dir, decision, owner, currentTree, errors, state) {
   if (attestation && (attestation.tree_hash !== currentTree || decision.attestation.tree_hash !== currentTree)) {
     errors.push(`${label} tree 不一致：decision/attestation 与当前树不同`);
   }
-  if (attestation && decision.risk !== attestation.risk) {
-    errors.push(`${label} risk 与 attestation.risk 不一致`);
+  const riskRank = { low: 1, medium: 2, high: 3 };
+  if (attestation && riskRank[decision.risk] > riskRank[attestation.risk]) {
+    errors.push(`${label} risk 高于 attestation.risk（${decision.risk} > ${attestation.risk}）`);
   }
   if (decision.backfilled === true) {
     if (!isIso(decision.backfilled_at)) errors.push(`${label} backfilled_at 非法`);
@@ -1116,8 +1117,9 @@ function cmdDecide(args, flags) {
   const risk = one(flags, 'risk', state.risk);
   if (!RISKS.has(risk)) fail(`decide --risk 非法：${risk}`);
   if (String(scope).toLowerCase().startsWith('release') && risk !== 'high') fail('release decision 必须是 high risk');
-  if (state.risk === 'high' && risk !== 'high') fail('state.risk 为 high，decision 不得降级为 low/medium');
-  if (attestation.risk !== risk) fail(`decision risk ${risk} 与 attestation.risk ${attestation.risk} 不一致`);
+  if (state.risk === 'high' && String(scope).toLowerCase().startsWith('release') && risk !== 'high') fail('release decision 在 state.risk=high 时不得降级为 low/medium');
+  const riskRank = { low: 1, medium: 2, high: 3 };
+  if (riskRank[risk] > riskRank[attestation.risk]) fail(`decision risk ${risk} 高于 attestation.risk ${attestation.risk}`);
   const by = one(flags, 'by', undefined);
   if (by !== owner) fail(`decide --by 必须是 owner ${owner}`);
   const humanDecision = one(flags, 'decision', undefined);

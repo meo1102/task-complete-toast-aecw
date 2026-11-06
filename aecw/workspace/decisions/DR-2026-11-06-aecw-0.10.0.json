@@ -1,0 +1,61 @@
+{
+  "id": "DR-2026-11-06-aecw-0.10.0",
+  "kind": "decision",
+  "scope": "AECW 0.10.0 governance acceptance",
+  "risk": "medium",
+  "facts": [
+    "AECW 0.10.0 精简化结构已落地：state 单源、STATUS/criteria 生成、decisions 唯一门、verify/evolution",
+    "产品 174/174；治理 10/10；check 0/0；probe 7/7；verify 22f506（tree 27062119…）",
+    "L2 非回填 freeze/independent 路径已测；32 路并发通过",
+    "1.3.1 是显式 backfilled 例外，不是新的 L2 freeze",
+    "人类 meo1102 于 2026-11-06 会话明确“接手/接受”"
+  ],
+  "evidence": [
+    {
+      "path": "aecw/workspace/evidence/attestations/VA-20261106092535-22f506.json",
+      "sha256": "sha256:2E6ED406027D49B85845C571D34CB1518445C331033B82425BAF846EE4571FA7"
+    },
+    {
+      "path": "aecw/workspace/evidence/attestations/VA-20261106092535-22f506-check.log",
+      "sha256": "sha256:DB5F98C94826924D805BA984F0280BBAD1BAB802C99DFB2D4684581A69FB53A7"
+    },
+    {
+      "path": "aecw/workspace/evidence/attestations/VA-20261106092535-22f506-probe.log",
+      "sha256": "sha256:0D9B97F8472F30E566A213AC7C19411D96BA0232386DE1403BE869ABF1CFFDF7"
+    },
+    {
+      "path": "aecw/workspace/evidence/attestations/VA-20261106092535-22f506-test.log",
+      "sha256": "sha256:2D4824D81E39BFEE72FCA31F967F3ED0A1681E7BEEDE9A63F05F35586CC6AE20"
+    },
+    {
+      "path": "aecw/workspace/evidence/attestations/VA-20261106092535-22f506-governance.log",
+      "sha256": "sha256:9BF0032962C4EC15972F00244F55B4C87E225D213117A460778735963A4F9B94"
+    },
+    {
+      "path": "aecw/workspace/evidence/2026-11-06-independent-review.md",
+      "sha256": "sha256:EB436BB47CA9492604D799D22AFAB5F752621C5C16C4300071ED25F27323464C"
+    },
+    {
+      "path": "aecw/workspace/evidence/2026-11-06-simplify-result.md",
+      "sha256": "sha256:976CD269A7CC1778A0B557F9F8773EF1644E61605D9CFF738FA65A2FFA433EFF"
+    }
+  ],
+  "conditions": [],
+  "residual_risk": "W6 定量指标（人类分钟/L1 自主率）未测；产品 routePath/限速/G4 compact 宽度未修；remote 未推送；1.3.1 回填不是独立 L2 verify；归档仍有历史坏链。",
+  "human": {
+    "name": "meo1102",
+    "decision": "接受",
+    "at": "2026-11-06T09:26:02.026Z",
+    "source": "2026-11-06 会话：接手/接受"
+  },
+  "attestation": {
+    "path": "aecw/workspace/evidence/attestations/VA-20261106092535-22f506.json",
+    "id": "VA-20261106092535-22f506",
+    "tree_hash": "sha256:27062119939D91F3E65193F0894F52E70FB8A8EBCC73AF4C9BA2FA271FA70120"
+  },
+  "independent_review": {
+    "path": "aecw/workspace/evidence/2026-11-06-independent-review.md",
+    "sha256": "sha256:EB436BB47CA9492604D799D22AFAB5F752621C5C16C4300071ED25F27323464C"
+  },
+  "created_at": "2026-11-06T09:26:02.026Z"
+}
