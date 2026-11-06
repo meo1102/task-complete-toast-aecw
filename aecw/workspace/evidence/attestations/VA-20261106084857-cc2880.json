@@ -1,0 +1,60 @@
+{
+  "kind": "verify",
+  "version": 2,
+  "id": "VA-20261106084857-cc2880",
+  "ok": true,
+  "project": "task-complete-toast-aecw",
+  "risk": "high",
+  "created_at": "2026-11-06T08:48:58.362Z",
+  "expires_at": "2026-11-09T08:48:58.362Z",
+  "reviewer": {
+    "name": "aecw-simplify",
+    "session": "local-2026-11-06",
+    "independent": false
+  },
+  "git": {
+    "available": true,
+    "head": "e404106a2c7930892a465e428cfce4b56d1f1f5c",
+    "dirty": true
+  },
+  "tree_hash": "sha256:515504A4A7ED7BACF409AF1B1FAFCC2F727E4F60EB29DCD91EB49561876CD14D",
+  "state_hash": "sha256:D88A0314C1DEF4E9B64CE21B7A46E6FA656E254CFDE4687D655C0C3E16D53C21",
+  "product_hash": "sha256:EEB62D58CD871DA9B122DF8A719A67893978C1B7019AAEC8B73759F325C8BBE5",
+  "checks": {
+    "check": {
+      "status": "pass",
+      "exit": 0
+    },
+    "probe": {
+      "status": "pass",
+      "exit": 0
+    },
+    "tests": {
+      "status": "pass",
+      "exit": 0,
+      "pass": "174",
+      "fail": "0"
+    }
+  },
+  "logs": {
+    "check": {
+      "path": "aecw/workspace/evidence/attestations/VA-20261106084857-cc2880-check.log",
+      "sha256": "sha256:35E00D816BB4151378E213758AFBE5A316595039E59C8A67505A9B596AB991F8"
+    },
+    "probe": {
+      "path": "aecw/workspace/evidence/attestations/VA-20261106084857-cc2880-probe.log",
+      "sha256": "sha256:0D9B97F8472F30E566A213AC7C19411D96BA0232386DE1403BE869ABF1CFFDF7"
+    },
+    "tests": {
+      "path": "aecw/workspace/evidence/attestations/VA-20261106084857-cc2880-test.log",
+      "sha256": "sha256:351A325C94997F84080758F646E3B67587B82FC39812155D3B582B03ABD94DE5"
+    }
+  },
+  "facts": [
+    "check PASS",
+    "probe PASS",
+    "tests PASS（pass 174 / fail 0）",
+    "tree sha256:515504A4A7ED7BACF409AF1B1FAFCC2F727E4F60EB29DCD91EB49561876CD14D"
+  ],
+  "failures": []
+}

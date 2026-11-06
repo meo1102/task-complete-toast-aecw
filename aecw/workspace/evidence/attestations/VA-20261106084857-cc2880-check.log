@@ -1,0 +1,6 @@
+AECW 0.10.0 · check D:\DSH\task-complete-toast-aecw\aecw
+WARN  migration active：允许回填 1.3.1 decision；完成后必须清空
+  OK    state / STATUS / decisions / evolution / archive
+  OK    tree sha256:515504A4A7ED7BACF409AF1B1FAFCC2F727E4F60EB29DCD91EB49561876CD14D
+  OK    decisions 0｜conditions 0｜active evolution 0
+结果：FAIL 0｜WARN 1

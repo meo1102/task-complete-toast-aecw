@@ -13,7 +13,7 @@
   "release": {
     "version": "1.3.1",
     "state": "released",
-    "decision": null
+    "decision": "aecw/workspace/decisions/DR-2026-11-06-1.3.1.json"
   },
   "risk": "high",
   "evolution": {
@@ -24,9 +24,5 @@
     "evidence": "aecw/workspace/evidence",
     "decisions": "aecw/workspace/decisions"
   },
-  "migration": {
-    "active": true,
-    "reason": "回填 1.3.1 decision：旧 final gate 正文为空；先 verify 当前简化树，再由人类决定生成 decision",
-    "started": "2026-11-06"
-  }
+  "migration": null
 }
