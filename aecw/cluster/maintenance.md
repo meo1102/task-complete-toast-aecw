@@ -1,6 +1,6 @@
 # 维护泳道（maintenance）
 
-> 状态：current｜最后核对：2026-11-05
+> 状态：current｜最后核对：2026-11-06
 > 授权：人类一次性指令/校准指令；**不改产品行为、不改验收、不改人类决策**。超范围即停。
 
 | 日期 | 变更 | 范围 | 证据 |
@@ -9,9 +9,10 @@
 | 2026-11-05 | 布局 v2（产品/AECW 分层） | 产品 `product/`、治理 `aecw/`；profile 指向 `product/` | F-047；同一迁移记录 §1.1 |
 | 2026-11-05 | v0.9 校准 | `PROJECT.json`、`state.json`、`criteria.md`；当前文档矛盾修复；历史文档状态头；`check` 升级 | F-048；[`../workspace/evidence/2026-11-05-v09-calibration.md`](../workspace/evidence/2026-11-05-v09-calibration.md) |
 | 2026-11-05 | v0.9 校准验收 | 修复 13 处残留当前文档矛盾；G4-ENTRY 口径；`PROJECT.json` test 命令；`state.baseline`；验收报告 | F-050；[`../workspace/evidence/2026-11-05-v09-acceptance.md`](../workspace/evidence/2026-11-05-v09-acceptance.md) |
+| 2026-11-06 | 布局 v3（取消 product 层） | 产品代码 → 仓库根；profile → 根；`PROJECT.json`/`state.layout`/`state.install`/probe/check 同步 | F-051；[`../workspace/evidence/2026-11-06-layout-v3.md`](../workspace/evidence/2026-11-06-layout-v3.md) |
 
 ## 停止/回滚
 
-- 不修改 `product/` 产品行为；若必须改产品，升级为 stage（新蓝图 + freeze/start）。
+- 不修改产品行为（产品代码在仓库根）；若必须改产品，升级为 stage（新蓝图 + freeze/start）。
 - 文档变更可回滚到基线 commit/tag；不删除证据。
 - 维护工作超出一条指令范围即停，等人类裁决。

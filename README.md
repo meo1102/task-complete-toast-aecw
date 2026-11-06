@@ -1,55 +1,158 @@
-# task-complete-toast-aecw
+# 任务完成提示（task-complete-toast）· AECW 项目
 
-> 状态：current｜最后核对：2026-11-05
+> 状态：current｜最后核对：2026-11-06
 
-DSH 持久化插件（完成提示 / 授权提醒 / 外观设置）的独立项目。仓库按“产品代码”和“AECW 治理结构”分层，**两者不再混放**。
+> **当前状态：以 [`aecw/STATUS.md`](aecw/STATUS.md) 为准。** 本 README 是功能/安装说明，历史细节可能滞后；冲突时以 STATUS 为准。
+> **开发过程全记录**：[`aecw/workspace/evidence/2026-11-05-development-retrospective.md`](aecw/workspace/evidence/2026-11-05-development-retrospective.md)（需求追踪/时间线/决策/失败修正/未完成项）。
+> **项目位置**：`D:\DSH\task-complete-toast-aecw`（独立 Git 仓库）；**产品代码在仓库根目录**，AECW 治理在 `aecw/`。
+> **本项目来源**：2026-11-05 复制自 `DSH_end/插件/task-complete-toast` v1.2.0；随后更新介绍文案/回归断言（F-031/F-032），实现 G4 外观设置与 G2 遮挡修复，并发布 **v1.3.0**。
+> **安装状态**：desktop profile 的 link/junction 指向 **`D:\DSH\task-complete-toast-aecw`**；原件保留在 `DSH_end/插件/task-complete-toast`，可回滚。与原件同包名。
+> **开发约束**：先读 [`aecw/human/direction.md`](aecw/human/direction.md)（v1.2-aecw，含 G4）+ [`aecw/BLUEPRINT.md`](aecw/BLUEPRINT.md)（阶段 `grow-2`，closed）。**v1.3.0 发布**：G1/G2/G3 + G4 外观设置 + G2 遮挡修复；截图/录屏要求人类挂起；已知遗留见文末。
+
+DSH 持久化插件：当 Agent 从运行变为空闲时，在窗口右下角提示任务完成；当轮次等待人类授权/确认时，提示处理；当页面不可见或被遮挡时，改发 Windows 系统通知。
+
+| 项 | 值 |
+|---|---|
+| 包名 | `@local/task-complete-toast` |
+| 版本 | `1.3.0`（已发布；tag `v1.3.0`） |
+| 目标环境 | DSH Desktop `0.2.1-rc.3`（Cordis），Windows |
+| 代码状态 | G1/G2/G3 + G4 设置页 + G2 遮挡修复**已发布 1.3.0**；截图/录屏挂起；已知未测：G2-8、G3-4b |
+| 自动化 | **169/169** 通过，`node --check` 17/17（2026-11-06 本项目） |
+| 真机验收 | G1 5/5；G2 7/8（G2-8 挂起）；G3 6/6（G3-4b 未单独实测）；**G4 设置页人类验收（无截图）**；**G2 遮挡推送真机通过（最小化 → 通知 → 拒绝消失）** |
+| 治理结构 | AECW 三域：`human/`、`cluster/`、`workspace/`；门禁 `gates/`；异议/变更 `inbox/`；台账 `ledger.md` |
+
+## 项目结构
+
+```text
+task-complete-toast-aecw/
+├─ package.json / index.js / client.js / lib/ / locale/ / test/  # 产品代码（仓库根）
+├─ cordis.patch.yml / icon.svg / README.md                      # 产品包文件
+└─ aecw/                     # AECW 治理结构与工具
+   ├─ STATUS.md / state.json / criteria.md
+   ├─ BLUEPRINT.md           # 阶段 grow-2 施工蓝图（closed）
+   ├─ human/ / cluster/ / workspace/ / gates/ / inbox/
+   ├─ ledger.md              # 异议/事实/变更台账
+   ├─ bin/aecw.mjs           # 零依赖 CLI（复制自原型机）
+   ├─ core/                  # 六份模板（复制自原型机）
+   └─ scripts/probe.mjs      # EV-001 运行态探针
+```
+
+常用命令（在**仓库根**执行）：
+
+```powershell
+node aecw/scripts/probe.mjs
+node aecw/bin/aecw.mjs check aecw
+node --test --test-isolation=none test/*.test.js
+```
+
+**产品代码只改仓库根（`lib/`、`client.js` 等），治理文件只改 `aecw/`**；不要混放。
+
+### AECW 入口
+
+- 当前状态：[`aecw/STATUS.md`](aecw/STATUS.md)
+- 状态源：[`aecw/state.json`](aecw/state.json)；验收矩阵：[`aecw/criteria.md`](aecw/criteria.md)
+- 项目清单：[`PROJECT.json`](PROJECT.json)
+- 治理规则：[`aecw/AGENTS.md`](aecw/AGENTS.md)
+- 四条泳道：[`maintenance`](aecw/cluster/maintenance.md)、[`evolution`](aecw/cluster/evolution.md)、[`release`](aecw/cluster/release.md)、stage 门禁
+
+> **G4 状态（2026-11-05）**：设置页已由人类验收（E2，无截图），G2 遮挡推送真机通过；**随 v1.3.0 发布**；截图/录屏要求人类挂起。见 [`aecw/STATUS.md`](aecw/STATUS.md) 与 [`design-contract`](aecw/workspace/memory/design-contract-v1.2.0.md) §16。
+
+## 功能
+
+- **完成判定**：`api-session/status` 的 `running: true → false`，经 250 ms 观察窗确认（不看 Goal、不等后台 job）。
+- **文案**：两行；标题（任务完成/失败/已停止/已中断/被阻止）+ 明细 `<工作区>[<会话>] · 待执行`。
+- **结果桥**：区分完成 / 失败 / 中断 / 被阻止 / 停止；用户主动取消不提示。宿主记录 `turn/end`，客户端按需拉取。
+- **自动消失**：默认 5 s；鼠标移入或焦点进入取消计时，移出/失焦后**重新完整 5 s**（ADR-013）。
+- **系统通知**：页面不可见或被遮挡时发送；每条唯一 `tag`（≤34 字符）；点击尝试聚焦/打开，最小化时不还原（平台限制，已接受）。
+- **多标签**：80 ms 认领窗，`tabId` 字典序最小胜出；认领未决时等窗口结束再判定（ADR-015）。
+- **G2 授权/确认提醒（v1.2.0）**：只读 `uiSession.sessionStatus` 的 `pendingInteraction`；等待授权/回答时显示提醒，进入会话/解决/关闭后收起；页面不可见时发系统通知。不拦截 waterfall、不代替人类回答。**G2-8（双会话上限）未测，已接受为已知遗留。**
+- **G3 弹窗样式自定义（v1.2.0）**：`appearance.position` 四角、`theme` 跟随/亮/暗、`size` 紧凑/标准、`durationMs` 2–15 s、`showTitle`；纯 token，无任意 CSS。**G3-4b（提醒卡不受时长影响）未单独真机实测，已接受为已知遗留。**
+- **G4 外观设置（grow-2，v1.3.0 已发布）**：设置 → 插件 → “任务完成提示设置”，可调字号 12–18 px、卡片宽度 280–480 px（最小宽度随字号联动）、背景色/文字色（`#RRGGBB`，对比度 <4.5:1 拒绝），即时预览；字体固定跟随系统正文字体。保存经宿主 `configEditor` 写入 Config（A 方案，已 live 验证）。截图/录屏要求人类挂起（ED-001 waived）。
+- **语言**：跟随 DSH 当前语言（内置 zh / en，其他回退 en）。
+
+## 安装
+
+任选其一（**本项目已安装**：profile link/junction → `D:\DSH\task-complete-toast-aecw`）：
+
+1. **界面**：插件页 → 添加 → 从文件夹安装 → 选本目录。
+2. **plugin_manager**：`install_bundle`，`target` 传本目录绝对路径。
+3. **手工 link**：在 `<DSH_HOME>/profiles/<profile>/package.json` 中：
+
+```json
+{
+  "dependencies": { "@local/task-complete-toast": "link:<本目录绝对路径，正斜杠>" },
+  "dsh": { "profile": { "bundles": [
+    "@deepseek-ai/dsh-base",
+    "@deepseek-ai/dsh-web-app",
+    "@local/task-complete-toast"
+  ] } }
+}
+```
+
+生效规则：客户端改动刷新页面即生效；宿主改动与替换包需**重启应用**。
+
+> **同包名冲突**：本项目与原件包名相同。若要安装本项目，先卸载/移除原件，或先改 `package.json` 的 `name` 与 `cordis.patch.yml` 的 `name`（同时需调整测试夹具中的包名断言）。
+
+**2026-11-04 接管复核（原件历史）**：目录搬动后 junction 仍指向旧路径、bundle 列表也缺条目，插件曾静默消失。用 `plugin_manager` `remove_bundle` + `install_bundle` 重新安装后：junction 指向本目录，`include:task-complete-toast` 为 `active`，客户端 `shell.overlay` 有 `task-complete-toast`（order 100），`GET /dsh-task-complete/outcome` 返回预期 400/404。证据见 [`stage-0 门禁`](aecw/gates/2026-11-04-stage-0.md)。
+
+## 配置
+
+宿主 `Config`（写入 `cordis.patch.yml` 对应 entry 的 `config`）：
+
+| 字段 | 默认 | 说明 |
+|---|---|---|
+| `enabled` | `true` | 总开关；关时客户端完全不启动 |
+| `notify.awaiting` | `true` | G2 授权/确认提醒开关；关时不订阅 `pendingInteraction` |
+| `bridge.enabled` | `true` | 关时客户端只走启发式（不拉结果） |
+| `bridge.routePath` | `/dsh-task-complete/outcome` | 结果路由 |
+| `bridge.routeKind` | `exact` | `exact` / `prefix` |
+| `bridge.ringSize` | `256` | 结果表容量（32–1024） |
+| `bridge.entryTtlMs` | `600000` | 结果表 TTL |
+| `bridge.exposeReason` | `true` | 关时响应只含 `sessionId/outcome/at` |
+| `appearance.position` | `bottom-right` | `top-left` / `top-right` / `bottom-left` / `bottom-right` |
+| `appearance.theme` | `system` | `system` 跟随；`light` / `dark` 只作用于弹窗 |
+| `appearance.size` | `standard` | `compact` / `standard` |
+| `appearance.durationMs` | `5000` | 完成卡停留 2000–15000 ms；G2 提醒不受影响 |
+| `appearance.showTitle` | `true` | 完成卡标题；G2 提醒始终显示标题 |
+| `appearance.fontSize` | `12` | 字号 12–18 px；标题 = 字号 +1；compact 明细 = −1 |
+| `appearance.cardWidth` | `null` | `null` 跟随 `size`；或 280–480 px；最小宽度随字号联动 `max(280, fontSize×18)` |
+| `appearance.backgroundColor` | `null` | `null` 跟随主题；或 `#RRGGBB`；与文字色对比度须 ≥4.5:1 |
+| `appearance.textColor` | `null` | `null` 跟随主题；或 `#RRGGBB`；同上 |
+
+客户端侧（`maxVisible`、`minRunMs`、`coalesceMs`、`cooldownMs`、`systemNotification`、`suppressWhenFocused`、`maxPerMinute`、`resolveBudgetMs`、`claimWindowMs`）仍为内置默认值，不支持经 patch 调整；G2/G3 的 `appearance` 已由宿主 `Config` 投影。**G3 无任意 CSS/主题引擎/配置面板**；这些需另行过门禁。
+
+## 测试
+
+在本目录执行：
+
+```powershell
+node --test --test-isolation=none test/smoke.test.js test/integration.test.js test/store.test.js test/format.test.js test/dismiss.test.js test/notifier.test.js test/resolver.test.js test/wiring.test.js test/presentation.test.js test/interaction.test.js
+```
+
+期望 `tests 169 / pass 169 / fail 0`。在受限沙箱内**必须**用 `--test-isolation=none`（默认模式 spawn 子进程会 `spawn EPERM`）。
+
+## 已知限制
+
+- 点击**系统通知**不会激活/还原最小化窗口（Electron + Windows；已接受为已知限制，见验收结果 §5-B）；应用内浮层点击可正常置前。
+- `Notification.permission` 在 Electron 恒为 `granted`，`denied → deferred` 分支仅由单测覆盖。
+- 状态行固定「待执行」（完成瞬间 Agent 空闲）；动态状态（执行中/等待回答）留待后续版本。
+- **G2（基线 v1.2.0；遮挡修复 v1.3.0）**：进入会话即收起卡片；**页面不可见/被遮挡时仍发系统通知**（2026-11-05 真机通过：最小化 → 通知 → 拒绝后消失）；G2-8 双会话上限未测（已接受）；多标签浮层各显示一次、系统通知已认领单发；可用 `notify.awaiting:false` 单独关闭。
+- **G3 v1.2.0**：改 `appearance` 需重启宿主（config 半区）；显式 light/dark 是作用域调色板，不改变全局主题；G3-4b 未单独真机实测（已接受，结构由 `sticky`/不传 `durationMs` 保证）。
+- 13 项历史真机验收未做（V05/V08/V09/V10/V14/V16/V18/V20/V22/V24/V25/V26/V27），逐项原因见 `aecw/workspace/memory/v-baseline-v01-v28.md`。
+- 原生 `Config` 表单不支持（手写 Standard Schema，属已知限制）；**G4 设置页** 通过 `settings.plugins.tab` 提供，不依赖原生表单。
+- **G4 设置（grow-2，v1.3.0）**：**已由人类验收（E2，无截图）并随 1.3.0 发布**。设置页在 **设置 → 插件 → 任务完成提示设置**（侧边栏“插件”页的插件卡片只显示插件信息，不是设置页）。保存依赖宿主 `configEditor`，不可用时提示“无法保存”。截图/录屏要求人类挂起（ED-001 waived）。
+- 2026-11-04 G3 真机验收后 profile patch 已还原；若当前进程仍显示最后一轮的 `compact/无标题`，重启一次回到默认。
 
 ## 目录
 
 ```text
-.
-├─ PROJECT.json # 项目清单：两个根/安装目标/命令/工具版本
-├─ product/     # 产品代码（可安装包；package.json 在此）
-│  ├─ index.js / client.js / lib/ / locale/ / test/
-│  ├─ package.json / cordis.patch.yml / icon.svg
-│  └─ README.md              # 功能、安装、已知限制
-└─ aecw/        # AECW 治理结构与工具（不参与插件运行）
-   ├─ STATUS.md / state.json / criteria.md
-   ├─ BLUEPRINT.md / ledger.md
+task-complete-toast-aecw/
+├─ README.md  AGENTS.md  PROJECT.json
+├─ package.json / index.js / client.js / lib/ / locale/ / test/  # 产品代码（根）
+├─ cordis.patch.yml / icon.svg
+└─ aecw/                    # AECW 治理
+   ├─ STATUS.md / state.json / criteria.md / BLUEPRINT.md / ledger.md
    ├─ human/ / cluster/ / workspace/ / gates/ / inbox/
-   ├─ bin/aecw.mjs + core/    # AECW CLI/模板（v0.9）
-   ├─ scripts/probe.mjs       # EV-001 运行态探针
-   └─ AGENTS.md               # 治理/开发规则
+   ├─ bin/aecw.mjs  core/
+   └─ scripts/probe.mjs
 ```
-
-## 入口
-
-- 当前状态：[`aecw/STATUS.md`](aecw/STATUS.md)
-- 状态源：[`aecw/state.json`](aecw/state.json)；验收矩阵：[`aecw/criteria.md`](aecw/criteria.md)
-- 开发/治理规则：[`aecw/AGENTS.md`](aecw/AGENTS.md)
-- 产品说明：[`product/README.md`](product/README.md)
-- 四条泳道：[`maintenance`](aecw/cluster/maintenance.md)、[`evolution`](aecw/cluster/evolution.md)、[`release`](aecw/cluster/release.md)、stage 门禁
-- 独立目录迁移：[`aecw/workspace/evidence/2026-11-05-standalone-migration.md`](aecw/workspace/evidence/2026-11-05-standalone-migration.md)
-- v0.9 校准：[`aecw/workspace/evidence/2026-11-05-v09-calibration.md`](aecw/workspace/evidence/2026-11-05-v09-calibration.md)
-- 开发过程全记录：[`aecw/workspace/evidence/2026-11-05-development-retrospective.md`](aecw/workspace/evidence/2026-11-05-development-retrospective.md)
-
-## 常用命令
-
-```powershell
-# 运行态探针（门禁/交付前）
-node aecw/scripts/probe.mjs
-
-# 单测（在 product/ 内）
-cd product
-node --test --test-isolation=none test/smoke.test.js test/integration.test.js test/store.test.js test/format.test.js test/dismiss.test.js test/notifier.test.js test/resolver.test.js test/wiring.test.js test/presentation.test.js test/interaction.test.js
-
-# AECW 结构检查（治理目录是 aecw/）
-cd ..
-node aecw/bin/aecw.mjs check aecw
-```
-
-## 安装
-
-profile 的 bundle 指向 **`D:\DSH\task-complete-toast-aecw\product`**（不是仓库根）；`package.json`、`cordis.patch.yml`、`locale/` 等都在 `product/`。迁移/回滚见 [`aecw/workspace/evidence/2026-11-05-standalone-migration.md`](aecw/workspace/evidence/2026-11-05-standalone-migration.md)。
-
-> 当前版本 **`1.3.0`**（已发布）；G4 设置页与 G2 遮挡修复包含在内；截图/录屏要求人类挂起；已知遗留以 [`aecw/STATUS.md`](aecw/STATUS.md) 为准。

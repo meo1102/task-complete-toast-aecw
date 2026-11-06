@@ -173,7 +173,7 @@ D:\DSH\task-complete-toast-aecw\        # 独立项目 / 独立 git 仓库
 - 阶段门禁：[`../../gates/2026-11-05-grow-2.md`](../../gates/2026-11-05-grow-2.md)
 - 基线：[`baseline-2026-11-05-grow-2.md`](baseline-2026-11-05-grow-2.md)
 - 独立迁移：[`2026-11-05-standalone-migration.md`](2026-11-05-standalone-migration.md)
-- 产品说明：[`../../../product/README.md`](../../../product/README.md)
+- 产品说明：[`../../../README.md`](../../../README.md)
 - 设置契约：[`../memory/design-contract-v1.2.0.md`](../memory/design-contract-v1.2.0.md) §16
 - 进化：[`../../cluster/evolution.md`](../../cluster/evolution.md)；[`../memory/ev-001-runtime-probe.md`](../memory/ev-001-runtime-probe.md)
 

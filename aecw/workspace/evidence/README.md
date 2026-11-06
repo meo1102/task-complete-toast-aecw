@@ -26,8 +26,9 @@
 | [`2026-11-05-G4-live-host.md`](2026-11-05-G4-live-host.md) | G4 替换安装、live 设置路由、A 方案持久化验证（host 部分） | 历史（设置页后已验收） | E1 |
 | [`2026-11-05-standalone-migration.md`](2026-11-05-standalone-migration.md) | 从 `DSH_end/插件` 迁到独立目录/独立仓库；布局 v2：产品 `product/`、AECW `aecw/`；迁移后探针 7/7 | 历史（迁移已完成） | E1 |
 | [`2026-11-05-v09-calibration.md`](2026-11-05-v09-calibration.md) | v0.9 校准：PROJECT/state/criteria、文档状态头、check 对账、负控 | 历史（校准当时；随后 1.3.0 发布） | E1 |
-| [`2026-11-05-release-v1.3.0.md`](2026-11-05-release-v1.3.0.md) | v1.3.0 发布：版本/tag/哈希/校验/截图挂起 | 当前 | E1/E2 |
-| [`2026-11-05-v09-acceptance.md`](2026-11-05-v09-acceptance.md) | v0.9 校准验收：10 组残留修复；check/probe/tests；已知 check 缺口 | 当前 | E1/E2 |
+| [`2026-11-05-release-v1.3.0.md`](2026-11-05-release-v1.3.0.md) | v1.3.0 发布：版本/tag/哈希/校验/截图挂起 | 历史（发布时布局 v2） | E1/E2 |
+| [`2026-11-05-v09-acceptance.md`](2026-11-05-v09-acceptance.md) | v0.9 校准验收：13 处残留修复；check/probe/tests；已知 check 缺口 | 当前 | E1/E2 |
+| [`2026-11-06-layout-v3.md`](2026-11-06-layout-v3.md) | 布局 v3：取消 `product/` 层，产品代码回仓库根；profile/清单/状态/探针写回 | 当前 | E1 |
 | [`2026-11-05-development-retrospective.md`](2026-11-05-development-retrospective.md) | **开发过程全记录**：需求追踪、时间线、决策、失败/修正、证据、未完成项 | 历史（复盘） | E3（叙述）/引用 E1/E2 |
 
 ## 规则

@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CORE = path.join(ROOT, 'core');
 const DATE = new Date().toISOString().slice(0, 10);
-const TOOL_VERSION = '0.9.0';
+const TOOL_VERSION = '0.9.2';
 
 function usage() {
   console.log(`AECW 生态原型 v${TOOL_VERSION}
@@ -669,6 +669,14 @@ function readJson(file) {
   return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
 
+function gitOriginUrl(root) {
+  const config = path.join(root, '.git', 'config');
+  if (!fs.existsSync(config)) return '';
+  const text = fs.readFileSync(config, 'utf8');
+  const match = text.match(/\[remote "origin"\][\s\S]*?url\s*=\s*([^\n]+)/);
+  return match ? match[1].trim() : '';
+}
+
 function walkMarkdown(dir) {
   const out = [];
   if (!fs.existsSync(dir)) return out;
@@ -817,8 +825,11 @@ function cmdCheck(args) {
     }
   }
 
+  const roots = manifest?.roots ?? {};
+  const productDir = path.join(projectRoot, roots.product ?? 'product');
+  const governanceDir = path.join(projectRoot, roots.governance ?? 'aecw');
+
   if (manifest) {
-    const roots = manifest.roots ?? {};
     let rootsOk = true;
     for (const key of ['product', 'governance', 'workspace']) {
       if (typeof roots[key] !== 'string' || !fs.existsSync(path.join(projectRoot, roots[key]))) {
@@ -837,8 +848,6 @@ function cmdCheck(args) {
       console.log('  OK   PROJECT.json install.target 存在');
     }
 
-    const productDir = path.join(projectRoot, roots.product ?? 'product');
-    const governanceDir = path.join(projectRoot, roots.governance ?? 'aecw');
     const commandChecks = [
       ['test', path.join(productDir, 'test')],
       ['probe', path.join(governanceDir, 'scripts', 'probe.mjs')],
@@ -861,7 +870,8 @@ function cmdCheck(args) {
       failCount++;
       console.log('  FAIL PROJECT.json tool.hash 未填');
     } else {
-      const toolHash = crypto.createHash('sha256').update(fs.readFileSync(path.join(governanceDir, 'bin', 'aecw.mjs'))).digest('hex').toUpperCase();
+      const toolText = fs.readFileSync(path.join(governanceDir, 'bin', 'aecw.mjs'), 'utf8').replace(/\r\n/g, '\n');
+      const toolHash = crypto.createHash('sha256').update(toolText).digest('hex').toUpperCase();
       if (toolHash !== String(manifest.tool.hash).toUpperCase()) {
         failCount++;
         console.log(`  FAIL 工具哈希漂移：manifest ${manifest.tool.hash} vs ${toolHash}`);
@@ -950,14 +960,42 @@ function cmdCheck(args) {
         failCount++;
         console.log(`  FAIL release.state 非法：${stateFile.release?.state}`);
       }
-      const productPkgPath = path.join(projectRoot, 'product', 'package.json');
+      const productPkgPath = path.join(productDir, 'package.json');
       if (fs.existsSync(productPkgPath)) {
         const productVersion = readJson(productPkgPath).version;
         if (productVersion !== stateFile.release?.version) {
           failCount++;
-          console.log(`  FAIL release.version 与 product/package.json 不一致：${stateFile.release?.version} vs ${productVersion}`);
+          console.log(`  FAIL release.version 与产品 package.json 不一致：${stateFile.release?.version} vs ${productVersion}`);
         } else {
           console.log('  OK   release.version 与产品版本一致');
+        }
+      }
+      if (manifest) {
+        const expectedLayoutRoot = roots.product ?? 'product';
+        const expectedGovernance = roots.governance ?? 'aecw';
+        if (stateFile.layout?.root !== expectedLayoutRoot) {
+          failCount++;
+          console.log(`  FAIL state.layout.root 未写回：${stateFile.layout?.root ?? '（空）'} vs PROJECT.json ${expectedLayoutRoot}`);
+        } else if (stateFile.layout?.governance !== expectedGovernance) {
+          failCount++;
+          console.log(`  FAIL state.layout.governance 未写回：${stateFile.layout?.governance ?? '（空）'} vs PROJECT.json ${expectedGovernance}`);
+        } else {
+          console.log('  OK   state.layout 与 PROJECT.json 一致');
+        }
+        if (stateFile.install?.target !== (manifest.install?.target ?? 'product')) {
+          failCount++;
+          console.log(`  FAIL state.install.target 未写回：${stateFile.install?.target ?? '（空）'} vs PROJECT.json ${manifest.install?.target ?? 'product'}`);
+        } else {
+          console.log('  OK   state.install.target 与 PROJECT.json 一致');
+        }
+      }
+      if (stateFile.remote?.url) {
+        const actualRemote = gitOriginUrl(projectRoot);
+        if (actualRemote && actualRemote !== stateFile.remote.url) {
+          failCount++;
+          console.log(`  FAIL state.remote.url 未写回：${stateFile.remote.url} vs git origin ${actualRemote}`);
+        } else if (actualRemote) {
+          console.log('  OK   state.remote.url 与 git origin 一致');
         }
       }
       const evolutionText = fs.readFileSync(path.join(dir, 'cluster', 'evolution.md'), 'utf8');
@@ -1022,7 +1060,7 @@ function cmdCheck(args) {
     ...walkMarkdown(dir),
     path.join(projectRoot, 'README.md'),
     path.join(projectRoot, 'AGENTS.md'),
-    path.join(projectRoot, 'product', 'README.md'),
+    path.join(productDir, 'README.md'),
   ];
   let docCount = 0;
   for (const file of [...new Set(docFiles)]) {
@@ -1056,8 +1094,8 @@ function cmdCheck(args) {
   const contradictionChecks = [
     [p.status, /客户端 UI 未确认/, 'STATUS 仍写“客户端 UI 未确认”'],
     [p.status, /EV-001[^\n]*trial/, 'STATUS 仍把 EV-001 写成 trial'],
-    [path.join(projectRoot, 'product', 'README.md'), /本副本未安装/, '产品 README 仍写“本副本未安装”'],
-    [path.join(projectRoot, 'product', 'README.md'), /G2 遮挡推送修复待真机/, '产品 README 仍写“G2 待真机”'],
+    [path.join(productDir, 'README.md'), /本副本未安装/, '产品 README 仍写“本副本未安装”'],
+    [path.join(productDir, 'README.md'), /G2 遮挡推送修复待真机/, '产品 README 仍写“G2 待真机”'],
     [p.board, /已冻结\/已开工|UI 待确认/, '任务板仍写阶段/设置页未完成'],
     [path.join(dir, 'workspace', 'memory', 'README.md'), /trial（试用通过，未激活）/, 'memory README 仍写 EV-001 trial'],
     [path.join(dir, 'workspace', 'memory', 'ev-001-runtime-probe.md'), /结论：[\s\S]{0,60}未激活/, 'EV-001 提案仍写“未激活”'],

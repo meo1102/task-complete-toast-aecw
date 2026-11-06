@@ -26,6 +26,7 @@
 | 2026-11-05 | **产品/AECW 分层**：产品代码统一 `product/`，AECW 治理统一 `aecw/`，不混放；profile 指向 `product/` | 人类“AECW 结构的文件和产品代码不要混杂在一起，产品代码统一放置” | 见 [`standalone-migration`](../workspace/evidence/2026-11-05-standalone-migration.md) §1.1；F-047 |
 | 2026-11-05 | **按 REVIEW/PLAN v0.9 校准**：maintenance 泳道；加 PROJECT/state/criteria；修文档矛盾；升级 check；**不改产品行为/人类验收/发布决定** | 人类“先按照这两个文档校准项目” | 见 [`v0.9-calibration`](../workspace/evidence/2026-11-05-v09-calibration.md)；F-048；adoption 仍 provisional |
 | 2026-11-05 | **发布 v1.3.0**：G4 外观设置 + G2 遮挡推送修复；**截图/录屏要求全部挂起**（ED-001/ED-002 waived）；adoption 仍 provisional | 人类“截图/录屏的要求都挂起，发布新版本” | 见 [`release-v1.3.0`](../gates/2026-11-05-release-v1.3.0.md)、[`2026-11-05-release-v1.3.0.md`](../workspace/evidence/2026-11-05-release-v1.3.0.md)；F-049 |
+| 2026-11-06 | **取消 product 层**：产品代码放在项目根目录；AECW 仍在 `aecw/` | 人类“取消 product 层，产品代码放在项目根目录” | 布局 v3；profile 指向仓库根；见 [`layout-v3`](../workspace/evidence/2026-11-06-layout-v3.md)；F-051 |
 
 ## 阶段外事项（已完成 / 待人类）
 

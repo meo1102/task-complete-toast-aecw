@@ -1,8 +1,8 @@
 # 任务板 · task-complete-toast
 
-> 状态：current｜最后核对：2026-11-05
+> 状态：current｜最后核对：2026-11-06
 > 当前阶段：`grow-2`（**closed**，2026-11-05，有条件通过）。阶段外维持/进化/发布走独立泳道（见 §泳道）。
-> 产品代码在 `../product/`；本阶段不做 G2-8/G3-4b/V 项（见积压）。
+> 产品代码在仓库根（`../`）；本阶段不做 G2-8/G3-4b/V 项（见积压）。
 
 | ID | 任务 | 负责人 | 状态 | 输入 | 输出 | 验收 |
 |---|---|---|---|---|---|---|
@@ -20,6 +20,7 @@
 | T-011 | 产品/AECW 分层（阶段外） | 单代理 + 人类 | done | 人类“产品代码统一放置” | `product/`、`aecw/`、profile 指向 product | F-047；探针 7/7、169/169 |
 | T-012 | v0.9 校准（maintenance） | 单代理 + 人类 | done | 人类“按 REVIEW/PLAN 校准” | PROJECT/state/criteria；check 升级；文档真话修复 | F-048；`v0.9-calibration`；check FAIL 0 |
 | T-013 | v1.3.0 发布（release） | 单代理 + 人类 | done | G4 + G2 修复；截图挂起指令 | package 1.3.0、tag `v1.3.0`、发布门 | F-049；`release-v1.3.0`；ED-001/002 waived |
+| T-014 | 布局 v3：取消 product 层（maintenance） | 单代理 + 人类 | done | 人类“产品代码放在项目根目录” | 产品代码回根、profile 重装、PROJECT/state/probe 同步 | F-051；probe 7/7、169/169、check 0/0 |
 
 ## 积压（不进 `grow-2`，后续阶段处理）
 

@@ -18,7 +18,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const PRODUCT = path.resolve(ROOT, '..', 'product');
+const PRODUCT = path.resolve(ROOT, '..');
 const args = process.argv.slice(2);
 const arg = (name, fallback) => {
   const index = args.indexOf(`--${name}`);
@@ -56,7 +56,7 @@ await check('profile dependency link', () => {
   const link = pkg.dependencies?.['@local/task-complete-toast'];
   if (typeof link !== 'string') throw new Error('dependency missing');
   const normalized = link.replace(/\\/g, '/').replace(/\/+$/, '');
-  if (!/task-complete-toast-aecw\/product$/.test(normalized)) throw new Error(`not pointing to product/: ${link}`);
+  if (!/task-complete-toast-aecw$/.test(normalized)) throw new Error(`not pointing to repo root: ${link}`);
   return link;
 });
 
@@ -71,7 +71,7 @@ await check('junction target', () => {
   const link = path.join(profileDir, 'node_modules', '@local', 'task-complete-toast');
   const target = fs.realpathSync(link);
   const normalized = target.replace(/\\/g, '/').replace(/\/+$/, '');
-  if (!/task-complete-toast-aecw\/product$/.test(normalized)) throw new Error(`unexpected target: ${target}`);
+  if (!/task-complete-toast-aecw$/.test(normalized)) throw new Error(`unexpected target: ${target}`);
   return target;
 });
 

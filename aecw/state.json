@@ -1,6 +1,21 @@
 {
   "project": "task-complete-toast-aecw",
-  "updated": "2026-11-05",
+  "updated": "2026-11-06",
+  "layout": {
+    "root": ".",
+    "governance": "aecw",
+    "since": "2026-11-06",
+    "evidence": "workspace/evidence/2026-11-06-layout-v3.md"
+  },
+  "install": {
+    "target": ".",
+    "profile": "desktop"
+  },
+  "remote": {
+    "name": "origin",
+    "url": "https://github.com/meo1102/task-complete-toast-aecw.git",
+    "branch": "main"
+  },
   "stage": {
     "name": "grow-2",
     "state": "closed",

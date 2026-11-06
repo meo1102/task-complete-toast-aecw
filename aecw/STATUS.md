@@ -1,14 +1,14 @@
 # STATUS · task-complete-toast（独立项目）
 
-> 状态：current｜最后核对：2026-11-05
+> 状态：current｜最后核对：2026-11-06
 <!-- AECW-STATE {"stage":"grow-2/closed","release":"1.3.0/released","g4":"released/released","evolution":"EV-001/active","adoption":"provisional","evidence_debt":["ED-001","ED-002","ED-003","ED-004"]} -->
 > **状态摘要（`state.json` 对账）**：stage `grow-2/closed`；release `1.3.0/released`；G4 `released/released`；EV-001 `active`；adoption `provisional`；证据债 `ED-001/002`（挂起）、`ED-003/004`（open）。验收矩阵见 [`criteria.md`](criteria.md)。
 
-> **唯一当前状态页。** 最后更新：2026-11-05｜版本：1.3.0｜人类所有者：meo1102
+> **唯一当前状态页。** 最后更新：2026-11-06｜版本：1.3.0｜人类所有者：meo1102
 > 所有者口径：按 **Git 提交人**记录（`meo1102@163.com`，2026-11-05 人类指令）。
 > 规则：本页是当前状态；其他文档是证据/历史。冲突以本页为准；每次门禁/冻结/发布先更新本页。
 > 证据等级：**E1** 运行事实（可复现）｜**E2** 人类目视（无截图）｜**E3** 文档主张（未复核）。
-> **项目说明**：项目位于 **`D:\DSH\task-complete-toast-aecw`**（独立仓库；历史归档在 `DSH_end`）。**布局：产品代码 `../product/`；AECW 治理 `../aecw/`**，两者不混放。本项目基于 `task-complete-toast` v1.2.0 复制；**当前发布 1.3.0**（G1/G2/G3 + G4 + G2 遮挡修复）。**已替换安装**：desktop profile 的 link/junction 指向 `../product/`；原件保留在原路径，可回滚。结构迁移见 [`workspace/landing/migration-aecw-2026-11-05.md`](workspace/landing/migration-aecw-2026-11-05.md)；独立目录迁移见 [`workspace/evidence/2026-11-05-standalone-migration.md`](workspace/evidence/2026-11-05-standalone-migration.md)。
+> **项目说明**：项目位于 **`D:\DSH\task-complete-toast-aecw`**（独立仓库；历史归档在 `DSH_end`）。**布局 v3：产品代码在仓库根（`../`）；AECW 治理在 `aecw/`**，两者不混放。本项目基于 `task-complete-toast` v1.2.0 复制；**当前发布 1.3.0**（G1/G2/G3 + G4 + G2 遮挡修复）。**已替换安装**：desktop profile 的 link/junction 指向 **`D:\DSH\task-complete-toast-aecw`**；原件保留在原路径，可回滚。结构迁移见 [`workspace/landing/migration-aecw-2026-11-05.md`](workspace/landing/migration-aecw-2026-11-05.md)；布局 v3 见 [`workspace/evidence/2026-11-06-layout-v3.md`](workspace/evidence/2026-11-06-layout-v3.md)。
 
 ---
 
@@ -17,14 +17,14 @@
 - 阶段：grow-2（closed）
 - 阶段状态：closed
 - 版本：1.3.0（已发布；G4/G2 修复包含在内）
-- 当前目标：`grow-2` 已关闭；**布局 v2：产品 `product/`、AECW `aecw/`**；EV-001 运行态探针已激活（门禁/交付前必跑）；**1.3.0 已发布**；等人类决定下一阶段
+- 当前目标：`grow-2` 已关闭；**布局 v3：产品在仓库根、AECW `aecw/`**；EV-001 运行态探针已激活（门禁/交付前必跑）；**1.3.0 已发布**；等人类决定下一阶段
 - 当前门禁：2026-11-05-release-v1.3.0（发布通过）；阶段门禁 `grow-2` 为历史
 
 ## 2. 当前证据
 
 ### 2.1 E1（运行事实，可复现）
 
-> 2026-11-05 在本副本复跑（作者自验；只表示可复现，不表示独立复核）：
+> 2026-11-06 在布局 v3（产品在仓库根）复跑（作者自验；只表示可复现，不表示独立复核）：
 
 - 自动化：10 个测试文件 → **tests 169 / pass 169 / fail 0**；`node --check` **17/17**；含介绍文案回归断言、G4 边界/联动/对比度/设置页/`configEditor` 合并测试、G2 遮挡推送（W16/W17）。
 - G4 改动后源码哈希（2026-11-05）：
@@ -37,7 +37,7 @@
 - 设置探针：客户端有 `settings.plugins.tab` 槽；宿主有 `configEditor`（A 方案）；Theme tokens 只有颜色、无字体 token（F-033/F-036）。
 - 编码：全项目 `.md/.js/.json/.yml/.svg` 无 `U+FFFD`。
 - 结构：`node aecw/bin/aecw.mjs check aecw` → **FAIL 0｜WARN 0**（v0.9 对账见下）。
-- 安装态：**已替换安装**（2026-11-05）：profile link/junction → **`D:\DSH\task-complete-toast-aecw\product`**；plugin `include:task-complete-toast` active；live 设置路由校验 200/400/422 符合预期；A 方案写入 `profiles/desktop/cordis.patch.yml`（F-038/F-047）。
+- 安装态：**已替换安装并随布局 v3 重装**（2026-11-06）：profile link/junction → **`D:\DSH\task-complete-toast-aecw`**；plugin `include:task-complete-toast` active；live 设置路由校验 200/400/422 符合预期；A 方案写入 `profiles/desktop/cordis.patch.yml`（F-038/F-047/F-051）。
 - **G4 客户端 UI 已验收**：设置页入口/控件/预览/保存由人类目视接受（2026-11-05，E2，F-040）；`settings.plugins.tab` occupant 已确认（F-039）。截图缺口见 ED-001。
 
 ### 2.2 E2（人类目视，无截图）
@@ -75,7 +75,7 @@
 | 7 | `notify.awaiting:false` 真机效果 | 仅单测 | 重启 + 真机一次 |
 | 8 | G2 多标签浮层各显示一条 | 设计接受，未真机 | 双标签一次 |
 | 9 | G3 窄窗 <300 px | 未测（只到 360 px） | 与 G4 设置页/预览一起窄窗验证 |
-| 10 | 本项目安装/回滚 | **已替换安装**（profile link/junction → `...\product`） | 回滚 = remove_bundle 后 install_bundle 指向原件；已验证 host 路由 |
+| 10 | 本项目安装/回滚 | **已替换安装**（profile link/junction → 仓库根） | 回滚 = remove_bundle 后 install_bundle 指向原件；已验证 host 路由 |
 | 11 | 设置页在旧版 DSH 无 `settings.plugins.tab` 时 | 代码上不影响浮层主功能 | 真机/版本探针；文档写明版本要求 |
 
 **已闭合**：
@@ -110,16 +110,17 @@
 | `workspace/evidence/` | 证据 | 原始记录与历史快照；单份文件头标 SUPERSEDED/HISTORICAL |
 | [`workspace/evidence/2026-11-05-development-retrospective.md`](workspace/evidence/2026-11-05-development-retrospective.md) | 历史（复盘） | 本次开发过程全记录：需求/时间线/决策/失败/证据/未完成 |
 | [`workspace/evidence/2026-11-05-v09-calibration.md`](workspace/evidence/2026-11-05-v09-calibration.md) | 历史 | v0.9 校准当时证据：PROJECT/state/criteria、check 对账、负控；随后 1.3.0 发布 |
-| [`workspace/evidence/2026-11-05-release-v1.3.0.md`](workspace/evidence/2026-11-05-release-v1.3.0.md) | 当前 | v1.3.0 发布证据：版本/tag/哈希/校验/豁免 |
-| [`workspace/evidence/2026-11-05-v09-acceptance.md`](workspace/evidence/2026-11-05-v09-acceptance.md) | 当前 | v0.9 校准验收：10 组残留修复；check/probe/tests；两个已知 check 缺口 |
+| [`workspace/evidence/2026-11-05-release-v1.3.0.md`](workspace/evidence/2026-11-05-release-v1.3.0.md) | 历史（发布时布局 v2） | v1.3.0 发布证据：版本/tag/哈希/校验/豁免；v3 后路径以 STATUS 为准 |
+| [`workspace/evidence/2026-11-05-v09-acceptance.md`](workspace/evidence/2026-11-05-v09-acceptance.md) | 当前 | v0.9 校准验收：13 处残留修复；check/probe/tests；两个已知 check 缺口 |
+| [`workspace/evidence/2026-11-06-layout-v3.md`](workspace/evidence/2026-11-06-layout-v3.md) | 当前 | 布局 v3：取消 product 层，产品在仓库根；profile/清单/状态/探针写回 |
 | `workspace/memory/` | 当前/参考 | 设计契约（§16 G4）、ADR、历史映射、V 项对账、设置方案 |
 | `workspace/landing/` | 当前/历史 | 落地清单、交接说明、迁移说明 |
-| [`../product/README.md`](../product/README.md) | 当前摘要 + 历史细节 | 产品功能/安装说明；状态以本页为准 |
+| [`../README.md`](../README.md) | 当前摘要 + 历史细节 | 产品功能/安装说明；状态以本页为准 |
 | `AGENTS.md` | 当前 | AECW 治理/开发约定；仓库级见 [`../AGENTS.md`](../AGENTS.md) |
 
 ## 6. 下一步
 
-**阶段 `grow-2` 已关闭（2026-11-05，有条件通过）。布局 v2：产品 `product/`、AECW `aecw/`，profile 指向 `product/`。历史基线 commit `4aff41a` / tag `aecw-grow-2-2026-11-05`（`DSH_end` 归档）；独立仓库 initial `67809d0` / tag `aecw-standalone-2026-11-05`；**1.3.0 已发布**（tag `v1.3.0`）。停在这里，等人类决定下一阶段。**
+**阶段 `grow-2` 已关闭（2026-11-05，有条件通过）。布局 v3：产品在仓库根、AECW `aecw/`，profile 指向仓库根。历史基线 commit `4aff41a` / tag `aecw-grow-2-2026-11-05`（`DSH_end` 归档）；独立仓库 initial `67809d0` / tag `aecw-standalone-2026-11-05`；**1.3.0 已发布**（tag `v1.3.0`）。停在这里，等人类决定下一阶段。**
 
 1. **v0.9 校准已验收（有条件通过）**（maintenance）：`PROJECT.json`、`state.json`、`criteria.md`；13 处残留当前文档矛盾修复；历史文档加状态头；`check` 增加路径/命令/状态/围栏/文档头检查。**未改产品行为。** 验收见 [`2026-11-05-v09-acceptance.md`](workspace/evidence/2026-11-05-v09-acceptance.md)，F-050。已知缺口：`check` 关键词硬编码、`commands.test` 只验路径不执行（已修为 `test/*.test.js`）。
 2. **EV-001 已激活**：`node aecw/scripts/probe.mjs` 写入 AGENTS，门禁/交付前必跑；正控 7/7、负控 fail。分布外验证/真实回滚演练仍待做。
@@ -130,6 +131,7 @@
    - adoption 仍 provisional（ED-003）；EV-001 分布外/回滚演练（ED-004）。
 5. **下一阶段**：由人类决定；若进入下一阶段，先写新 `BLUEPRINT` 版本、`freeze`、`start`；不得沿用本阶段授权自动续跑。
 6. **1.3.0 已发布**，但仍不得把“零截图/多标签未验”说成“全部通过”。
+7. **布局 v3 已写回**（2026-11-06，maintenance）：取消 `product/` 层，产品代码回到仓库根；profile 指向仓库根；`PROJECT.json`/`state.layout`/`state.install`/`state.remote`/probe 已同步；`check` 会校验 layout/install/remote 与 `PROJECT.json`、git origin 一致。见 [`2026-11-06-layout-v3.md`](workspace/evidence/2026-11-06-layout-v3.md)，F-051。
 
 ## 7. 阶段授权（冻结）
 

@@ -1,8 +1,8 @@
 # AGENTS.md · task-complete-toast（AECW 治理）
 
-> 状态：current｜最后核对：2026-11-05
+> 状态：current｜最后核对：2026-11-06
 
-本目录是 AECW 治理结构；**产品代码在 `../product/`**，不在这里。仓库级约定见 [`../AGENTS.md`](../AGENTS.md)。
+本目录是 AECW 治理结构；**产品代码在仓库根 `../`（`package.json`/`index.js`/`client.js`/`lib/`/`locale/`/`test/`）**，不在这里。仓库级约定见 [`../AGENTS.md`](../AGENTS.md)。
 产品代码基线 = v1.3.0（当前发布；v1.2.0 为历史基线）；本项目于 2026-11-05 从原件复制并按 `agent-engineering-control/prototype` 结构重排，**产品逻辑未改**；同日按人类指令更新介绍文案与回归断言（F-031/F-032），后续在 `grow-2` 完成 G4 与 G2 遮挡修复并发布 1.3.0。
 
 ## 开工前
@@ -16,7 +16,7 @@
 
 ## 硬约束
 
-- **产品/治理分离**：产品代码只改 `../product/`；本目录只放治理/工具。不要把产品源码/测试放进 `aecw/`。
+- **产品/治理分离**：产品代码只改仓库根（`../`）；本目录只放治理/工具。不要把产品源码/测试放进 `aecw/`。
 - **只告知**：不批准/拒绝/确认/回复，不点击工具，不改会话状态，不向 agent 注入消息或信号。
 - **只读最小元数据**：显示名、会话 id、状态、outcome、时间；不读消息正文、工具参数、文件内容、模型输出、密钥。
 - **零第三方运行时依赖、无构建链**；不修改 DSH 源码/安装目录；不联网外发、不做遥测。
@@ -28,6 +28,7 @@
 - **UTF-8 纪律**：改文件用编辑器或显式 UTF-8；写回后断言无 `U+FFFD`。不要用 PowerShell 默认编码改写中文文件。
 - **测试桩按真实签名抛错**：不得比真实宿主宽松（历史两次真机崩溃的教训）。
 - **未测就写未测**：E2 不得写成 E1；禁止「全绿」话术；没有截图就标“证据缺口”。
+- **动作完成 = 状态写回**：任何改变布局/安装/版本/tag/发布/远程/配置的动作，完成后先更新 `state.json` + `STATUS` + 证据，再回复；只做动作不写回视为未完成。`state.layout` / `state.install` 与 `PROJECT.json` 不一致时 `check` FAIL。
 
 ## 测试
 
@@ -35,10 +36,10 @@
 # 门禁前运行态探针（EV-001，只读；从 aecw/ 运行）
 node scripts/probe.mjs
 
-# 全量单测（产品代码在 ../product/）
-cd ../product
+# 全量单测（产品代码在仓库根）
+cd ..
 node --test --test-isolation=none test/smoke.test.js test/integration.test.js test/store.test.js test/format.test.js test/dismiss.test.js test/notifier.test.js test/resolver.test.js test/wiring.test.js test/presentation.test.js test/interaction.test.js
-cd ../aecw
+cd aecw
 ```
 
 期望 `tests 169 / pass 169 / fail 0`。受限沙箱内**必须** `--test-isolation=none`（默认模式 spawn EPERM）。
