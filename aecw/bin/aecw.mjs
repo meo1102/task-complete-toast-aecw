@@ -1039,6 +1039,9 @@ function cmdCheck(args, flags) {
   if (actualCriteria !== expectedCriteria) errors.push('criteria.md 与 conditions 生成结果不一致（运行 render）');
   const conditionCount = collectConditions(conditionRecords).length;
   if (conditionCount > MAX_CRITERIA) errors.push(`criteria 行数 ${conditionCount} 超过上限 ${MAX_CRITERIA}`);
+  if (conditionCount > 0 && state.release?.state === 'released') {
+    errors.push('存在 open conditions，release.state 必须是 conditional（不能写 released）');
+  }
 
   const readme = fs.existsSync(path.join(project, 'README.md')) ? fs.readFileSync(path.join(project, 'README.md'), 'utf8') : '';
   if (state.release?.version && !readme.includes(String(state.release.version))) errors.push('README.md 未包含当前版本号');
@@ -1322,7 +1325,7 @@ function cmdDecide(args, flags) {
   try {
     writeJson(decisionPath, decision);
     if (String(scope).toLowerCase().startsWith('release')) {
-      state.release = { ...(state.release ?? {}), state: conditions.length > 0 ? 'conditional' : 'released', decision: rel(project, decisionPath) };
+      state.release = { ...(state.release ?? {}), state: (conditions.length + conditionIds.length) > 0 ? 'conditional' : 'released', decision: rel(project, decisionPath) };
       state.migration = null;
     } else if (String(scope).toLowerCase().startsWith('stage')) {
       state.stage = { ...(state.stage ?? {}), decision: rel(project, decisionPath) };

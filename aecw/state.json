@@ -13,8 +13,8 @@
   },
   "release": {
     "version": "1.3.2",
-    "state": "released",
-    "decision": "aecw/workspace/decisions/DR-2026-11-06-1.3.2.json"
+    "state": "unreleased",
+    "decision": null
   },
   "risk": "high",
   "evolution": {
@@ -24,7 +24,7 @@
     "versions": {
       "EV-2026-11-06-01": {
         "path": "aecw/bin/aecw.mjs",
-        "sha256": "sha256:301956BAAB5FB0702991B651C3EFB0F25A8FF1633486A05A70A4073657783F49",
+        "sha256": "sha256:3C2B2FC6191DE9C7C8F6E3D27391E80CCB5305EA5C565ACACC104570F1F23F17",
         "version": "0.10.0+condition-lifecycle"
       }
     }
