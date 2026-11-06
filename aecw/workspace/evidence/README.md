@@ -1,6 +1,6 @@
 # workspace/evidence
 
-> 状态：current｜最后核对：2026-11-05
+> 状态：current｜最后核对：2026-11-06
 
 原始证据：测试输出、日志、截图、真机记录、历史快照。E1 放这里；E2 人类目视要写清“无截图”或附截图；E3 只是主张，不能单独当通过。
 
@@ -29,6 +29,9 @@
 | [`2026-11-05-release-v1.3.0.md`](2026-11-05-release-v1.3.0.md) | v1.3.0 发布：版本/tag/哈希/校验/截图挂起 | 历史（发布时布局 v2） | E1/E2 |
 | [`2026-11-05-v09-acceptance.md`](2026-11-05-v09-acceptance.md) | v0.9 校准验收：13 处残留修复；check/probe/tests；已知 check 缺口 | 当前 | E1/E2 |
 | [`2026-11-06-layout-v3.md`](2026-11-06-layout-v3.md) | 布局 v3：取消 `product/` 层，产品代码回仓库根；profile/清单/状态/探针写回 | 当前 | E1 |
+| [`2026-11-06-s1-redteam.md`](2026-11-06-s1-redteam.md) | 红队整改 S1：P0-1（check/gate/init）+ P0-7（表格/ID/半事务）；工具 0.9.3 | 当前（阶段证据） | E1 |
+| [`2026-11-06-s2-redteam.md`](2026-11-06-s2-redteam.md) | 红队整改 S2：P0-2 verify attestation + P0-3 状态机/冻结哈希；工具 0.9.4 | 当前（阶段证据） | E1 |
+| [`attestations/`](attestations/) | `verify` 生成的 `VA-*.json` 与 check/probe/test 原始日志 | 当前 | E1 |
 | [`2026-11-05-development-retrospective.md`](2026-11-05-development-retrospective.md) | **开发过程全记录**：需求追踪、时间线、决策、失败/修正、证据、未完成项 | 历史（复盘） | E3（叙述）/引用 E1/E2 |
 
 ## 规则
