@@ -40,8 +40,8 @@
 # 门禁前运行态探针（EV-001，只读；从 aecw/ 运行）
 node scripts/probe.mjs
 
-# 治理 CLI 回归（S1+S2+S3 红队；从 aecw/ 运行）
-node --test --test-isolation=none test/cli-s1.test.mjs test/cli-s2.test.mjs test/cli-s3.test.mjs
+# 治理 CLI 回归（S1+S2+S3+S5 红队；从 aecw/ 运行）
+node --test --test-isolation=none test/cli-s1.test.mjs test/cli-s2.test.mjs test/cli-s3.test.mjs test/cli-s5.test.mjs
 
 # 全量单测（产品代码在仓库根）
 cd ..
@@ -49,7 +49,7 @@ node --test --test-isolation=none test/smoke.test.js test/integration.test.js te
 cd aecw
 ```
 
-期望 `tests 174 / pass 174 / fail 0`（产品）+ `tests 20 / pass 20`（治理 S1+S2+S3）。受限沙箱内**必须** `--test-isolation=none`（默认模式 spawn EPERM）。
+期望 `tests 174 / pass 174 / fail 0`（产品）+ `tests 25 / pass 25`（治理 S1+S2+S3+S5）。受限沙箱内**必须** `--test-isolation=none`（默认模式 spawn EPERM）。
 
 ## AECW CLI
 

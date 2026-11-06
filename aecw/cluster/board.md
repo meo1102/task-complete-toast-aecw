@@ -25,7 +25,8 @@
 | T-016 | 红队整改 **S2**：P0-2 verify + P0-3 状态机/冻结哈希 | 单代理 + 人类 | done（基线冻结） | S1 基线；人类“开始 s2” | `verify` attestation；`freeze/start` payload hash；closed 终态；唯一门禁名；治理回归 17/17 | F-053；[`s2-redteam`](../workspace/evidence/2026-11-06-s2-redteam.md) |
 | T-017 | 红队整改 **S3**：P0-4 原子台账 + 32 路并发 | 单代理 + 人类 | done（基线冻结） | 人类“开始 s3 和 s4” | 锁/CAS/原子 rename/唯一 ID；32 路回归 | F-054；[`s3-redteam`](../workspace/evidence/2026-11-06-s3-redteam.md) |
 | T-018 | 红队整改 **S4**：P0-6 探针/写路由安全 + EV-001 激活 | 单代理 + 人类 | done（阶段 closed，有条件通过） | 人类“开始 s3 和 s4”；S3 基线 | health/token；settings Host/Origin/CSRF/Content-Type/非空/限速；probe 改版；EV-001 复核 | F-055；`security-1` 门禁；[`s4-security`](../workspace/evidence/2026-11-06-s4-security.md) |
-| T-019 | 红队整改 **S5**：P1 SSOT/引用/字节/独立 reviewer/判据修正 | 单代理 + 人类 | **pending（等人类同意）** | S4 基线；人类批准 | 状态生成视图、引用校验、EOL、reviewer、文档漂移 | 未开始；不得提前改 |
+| T-019 | 红队整改 **S5**：P1 SSOT/引用/字节/判据修正 | 单代理 + 人类 | done（基线冻结） | 人类“开始后面的改造” | 机器状态块、引用/路径校验、.gitattributes、G1-P95/WP-4-RELOAD waived、CR-006、漂移清理 | F-056；[`s5-redteam`](../workspace/evidence/2026-11-06-s5-redteam.md) |
+| T-020 | 发布 **1.3.1**（release） | 单代理 + 人类 | **in_progress** | S5 基线；人类“全部完成后发布新版本” | release verify、release gate、tag v1.3.1、状态写回 | 发布证据未完成前不称已发布 |
 
 ## 积压（不进 `grow-2`，后续阶段处理）
 
@@ -34,7 +35,7 @@
 | B-001 | G2-8 双会话并发/上限/顺序 | 已接受遗留（F-028） | 后续补真机 |
 | B-002 | G3-4b 提醒卡时长未单独真机 | 已接受遗留（F-028） | 后续补真机 |
 | B-003 | 13 项历史 V 项 + V01/V04/V23 | 未裁决 | 需人类逐项做/接受/删除 |
-| B-004 | 真机截图/录屏 | **deferred（ED-001/ED-002）** | 阶段已关闭；不再写“WP-5 会补”，按证据债到期处理 |
+| B-004 | 真机截图/录屏 | **waived（ED-001/ED-002，2026-11-05 人类指令）** | 不再作为本轮发布条件；需要时再补 |
 
 ## 泳道（阶段外）
 
@@ -50,3 +51,15 @@
 - 任务级变更（同一工作包内换实现/补测试）记 `cluster/runs.md`；改验收/范围/顺序必须走 `change --type blueprint`。
 - S1/S2 一出现就停高风险动作，先 `dissent` 进 `inbox/`，再等人类裁决。
 - 本阶段的前置：charter 级变更（G4/约束放宽）+ 蓝图 v2 批准 + `freeze` + `start`，四者缺一不可。
+
+<!-- AECW-GENERATED BEGIN -->
+> **机器状态**（由 `state.json` 生成；勿手改；`node bin/aecw.mjs render <dir>` 更新）
+| 项 | 值 |
+|---|---|
+| 阶段 | `security-1/closed` |
+| 发布 | `1.3.1/release-candidate` |
+| 功能 | G1 released/released；G2 released/released；G2-occlusion released/released；G3 released/released；G4 released/released |
+| 进化 | EV-001 active |
+| adoption | `provisional` |
+| 证据债 | ED-001、ED-002、ED-003、ED-004 |
+<!-- AECW-GENERATED END -->

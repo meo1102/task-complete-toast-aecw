@@ -51,6 +51,7 @@ function usage() {
   node bin/aecw.mjs accept <dir> --item <项> --decision <接受|有条件接受|拒绝> --by <人类> [--evidence <证据>] [--risk <剩余风险>]
   node bin/aecw.mjs log <dir> --decision <决策> [--reason <理由>]
   node bin/aecw.mjs check <dir>
+  node bin/aecw.mjs render <dir>
   node bin/aecw.mjs demo [--force]
 
 原则：
@@ -709,6 +710,18 @@ function openHighRows(text) {
     .filter((row) => /^(S1|S2)$/i.test(row.cells[2]) && /^open$/i.test(row.cells[7]));
 }
 
+/** 台账里实际存在的 F/DR/CR 基号（去掉“（原 …）”后缀）。 */
+function ledgerIdSet(text) {
+  const ids = new Set();
+  for (const [heading, prefix] of [['## A. 异议台账', 'DR'], ['## B. 事实台账', 'F'], ['## C. 变更台账', 'CR']]) {
+    for (const row of tableRows(text, heading, prefix)) {
+      const match = row.cells[0].match(new RegExp(`^${prefix}-\\d+`));
+      if (match) ids.add(match[0]);
+    }
+  }
+  return ids;
+}
+
 function slug(s) {
   return String(s || 'gate').toLowerCase().replace(/[^a-z0-9\u4e00-\u9fff-]+/g, '-').replace(/^-+|-+$/g, '') || 'gate';
 }
@@ -787,7 +800,15 @@ function cmdInit(args, flags) {
     evidence_debt: [],
   };
   const summary = stateSummary(state);
-  const vars = { PROJECT: name, OWNER: owner, DATE, GOAL: goal, STAGE: 'seed', SUMMARY: JSON.stringify(summary) };
+  const vars = {
+    PROJECT: name,
+    OWNER: owner,
+    DATE,
+    GOAL: goal,
+    STAGE: 'seed',
+    SUMMARY: JSON.stringify(summary),
+    STATE_BLOCK: stateBlock(state),
+  };
 
   ensureDir(dir);
   for (const folder of ['human', 'cluster', p.work, p.evidence, p.memory, p.landing, p.gates, p.inbox]) {
@@ -849,6 +870,7 @@ function cmdInit(args, flags) {
   add(p.board, `${header(`任务板 · ${name}`)}
 | ID | 任务 | 负责人 | 状态 | 输入 | 输出 | 验收 |
 |---|---|---|---|---|---|---|
+${stateBlock(state)}
 `);
   add(p.runs, `${header(`运行记录 · ${name}`)}
 | 时间 | agent | 任务 | 结果 | 证据 |
@@ -873,6 +895,7 @@ function cmdInit(args, flags) {
   add(path.join(dir, 'cluster', 'release.md'), `${header(`发布台账 · ${name}`)}
 | 版本 | 日期 | 门禁 | 状态 |
 |---|---|---|---|
+${stateBlock(state)}
 `);
 
   add(path.join(p.work, 'README.md'), `${header('workspace/work')}
@@ -1245,6 +1268,62 @@ function syncStatusSummary(status, state) {
     return status.replace(/<!--\s*AECW-STATE\s*\{[\s\S]*?\}\s*-->/, `<!-- AECW-STATE ${summary} -->`);
   }
   return status;
+}
+
+/** 由 state.json 生成的机器状态块；禁止手改，`render` 覆盖。 */
+function stateBlock(state) {
+  const featureText = Object.entries(state.features ?? {})
+    .map(([id, feature]) => `${id} ${feature.state}/${feature.release ?? '-'}`)
+    .join('；') || '—';
+  const evolutionText = Object.entries(state.evolution ?? {})
+    .map(([id, item]) => `${id} ${item.state}`)
+    .join('；') || '—';
+  const debtText = (state.evidence_debt ?? []).map((item) => item.id).join('、') || '—';
+  return [
+    '<!-- AECW-GENERATED BEGIN -->',
+    '> **机器状态**（由 `state.json` 生成；勿手改；`node bin/aecw.mjs render <dir>` 更新）',
+    '| 项 | 值 |',
+    '|---|---|',
+    `| 阶段 | \`${state.stage?.name ?? '?'}/${state.stage?.state ?? '?'}\` |`,
+    `| 发布 | \`${state.release?.version ?? '?'}/${state.release?.state ?? '?'}\` |`,
+    `| 功能 | ${featureText} |`,
+    `| 进化 | ${evolutionText} |`,
+    `| adoption | \`${state.adoption?.state ?? '?'}\` |`,
+    `| 证据债 | ${debtText} |`,
+    '<!-- AECW-GENERATED END -->',
+  ].join('\n');
+}
+
+function upsertStateBlock(text, block) {
+  const marker = /<!-- AECW-GENERATED BEGIN -->[\s\S]*?<!-- AECW-GENERATED END -->/;
+  if (marker.test(text)) return text.replace(marker, block);
+  return `${text.trimEnd()}\n\n${block}\n`;
+}
+
+function cmdRender(args) {
+  const dir = needDir(args, 'render');
+  const state = readStateFile(dir);
+  if (!state) fail('render 需要 state.json');
+  const p = projectPaths(dir);
+  const block = stateBlock(state);
+  const files = [p.status, p.board, path.join(dir, 'cluster', 'release.md'), path.join(dir, 'workspace', 'landing', 'manifest.md')];
+  withLock(dir, () => {
+    const writes = [];
+    for (const file of files) {
+      if (!fs.existsSync(file)) continue;
+      const before = fs.readFileSync(file, 'utf8');
+      let after = before;
+      if (file === p.status) after = syncStatusSummary(after, state);
+      after = upsertStateBlock(after, block);
+      if (after !== before) writes.push({ path: file, content: after });
+    }
+    if (writes.length === 0) {
+      console.log('机器状态块已是最新');
+      return;
+    }
+    commitFiles(dir, writes);
+    console.log(`机器状态块已更新：${writes.length} 份文档`);
+  });
 }
 
 function relGate(dir, file) {
@@ -1936,6 +2015,7 @@ function cmdCheck(args, flags = {}) {
   }
 
   const ledger = fs.existsSync(p.ledger) ? fs.readFileSync(p.ledger, 'utf8') : '';
+  const ledgerIds = ledgerIdSet(ledger);
   const openRows = openHighRows(ledger);
   if (openRows.length) {
     failCount++;
@@ -2046,16 +2126,31 @@ function cmdCheck(args, flags = {}) {
         rootsOk = false;
         failCount++;
         console.log(`  FAIL PROJECT.json roots.${key} 不存在：${roots[key] ?? '（空）'}`);
+        continue;
+      }
+      const resolved = path.resolve(projectRoot, roots[key]);
+      const rel = path.relative(projectRoot, resolved);
+      if (rel.startsWith('..') || path.isAbsolute(rel)) {
+        rootsOk = false;
+        failCount++;
+        console.log(`  FAIL PROJECT.json roots.${key} 逃逸项目根：${roots[key]}`);
       }
     }
-    if (rootsOk) console.log('  OK   PROJECT.json roots 存在');
+    if (rootsOk) console.log('  OK   PROJECT.json roots 存在且不逃逸');
 
     const installTarget = manifest.install?.target;
     if (typeof installTarget !== 'string' || !fs.existsSync(path.join(projectRoot, installTarget))) {
       failCount++;
       console.log(`  FAIL PROJECT.json install.target 不存在：${installTarget ?? '（空）'}`);
     } else {
-      console.log('  OK   PROJECT.json install.target 存在');
+      const resolved = path.resolve(projectRoot, installTarget);
+      const rel = path.relative(projectRoot, resolved);
+      if (rel.startsWith('..') || path.isAbsolute(rel)) {
+        failCount++;
+        console.log(`  FAIL PROJECT.json install.target 逃逸项目根：${installTarget}`);
+      } else {
+        console.log('  OK   PROJECT.json install.target 存在且不逃逸');
+      }
     }
 
     const commandMap = manifest.commands && typeof manifest.commands === 'object' ? manifest.commands : null;
@@ -2123,6 +2218,18 @@ function cmdCheck(args, flags = {}) {
         failCount++;
         console.log(`  FAIL state.stage.gate 不存在：${stateFile.stage.gate}`);
       }
+      for (const [id, feature] of Object.entries(stateFile.features ?? {})) {
+        for (const ref of feature.evidence ?? []) {
+          if (/^(?:F|DR|CR)-\d{3}$/.test(String(ref)) && !ledgerIds.has(ref)) {
+            failCount++;
+            console.log(`  FAIL feature ${id} 引用不存在的台账 ID：${ref}`);
+          }
+        }
+      }
+      if (stateFile.release?.gate && !fs.existsSync(path.join(dir, stateFile.release.gate))) {
+        failCount++;
+        console.log(`  FAIL state.release.gate 不存在：${stateFile.release.gate}`);
+      }
       if (stateFile.owner?.name !== owner) {
         failCount++;
         console.log(`  FAIL state.owner 与 STATUS 不一致：${stateFile.owner?.name ?? '（空）'} vs ${owner || '（空）'}`);
@@ -2155,6 +2262,26 @@ function cmdCheck(args, flags = {}) {
               console.log(`  FAIL STATUS 摘要含未知字段：${key}`);
             }
           }
+        }
+      }
+      const expectedBlock = stateBlock(stateFile);
+      const blockFiles = [
+        p.status,
+        p.board,
+        path.join(dir, 'cluster', 'release.md'),
+        path.join(dir, 'workspace', 'landing', 'manifest.md'),
+      ];
+      for (const file of blockFiles) {
+        if (!fs.existsSync(file)) continue;
+        const text = fs.readFileSync(file, 'utf8');
+        const match = text.match(/<!-- AECW-GENERATED BEGIN -->[\s\S]*?<!-- AECW-GENERATED END -->/);
+        const rel = path.relative(dir, file).replace(/\\/g, '/');
+        if (!match) {
+          failCount++;
+          console.log(`  FAIL 缺少机器状态块：${rel}（运行 render）`);
+        } else if (match[0].replace(/\r\n/g, '\n').trim() !== expectedBlock.trim()) {
+          failCount++;
+          console.log(`  FAIL 机器状态块漂移：${rel}（state.json 已变，运行 render）`);
         }
       }
       if (!STATE_ENUM.stage.has(stateFile.stage?.state)) {
@@ -2259,6 +2386,12 @@ function cmdCheck(args, flags = {}) {
       if (!STATE_ENUM.criteria.has(criterionStatus)) {
         failCount++;
         console.log(`  FAIL criteria ${id} 状态非法：${criterionStatus}`);
+      }
+      for (const ref of `${evidence} ${humanDecision} ${impact}`.match(/\b(?:F|DR|CR)-\d{3}\b/g) ?? []) {
+        if (!ledgerIds.has(ref)) {
+          failCount++;
+          console.log(`  FAIL criteria ${id} 引用不存在的台账 ID：${ref}`);
+        }
       }
       if (criterionStatus === 'met' && isPlaceholder(evidence)) {
         failCount++;
@@ -2710,6 +2843,7 @@ function main() {
     case 'accept': return cmdAccept(args, flags);
     case 'log': return cmdLog(args, flags);
     case 'check': return cmdCheck(args, flags);
+    case 'render': return cmdRender(args);
     case 'demo': return cmdDemo(args, flags);
     default: return fail(`未知命令：${cmd}（用 help 查看）`);
   }

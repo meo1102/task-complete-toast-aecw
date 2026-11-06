@@ -9,7 +9,7 @@
 |---|---|
 | 版本 | `1.3.0`（tag `v1.3.0`，本独立仓库发布；旧 `v1.2.0` 为原件基线） |
 | 候选 | `1.3.1`（P0-6 安全收口；已安装 desktop profile；**未发布/未打 tag**；`state.release=release-candidate`） |
-| 治理工具 | AECW `0.9.6`（S1+S2+S3+S4 红队整改，tag `aecw-s4-2026-11-06`；S4 改产品安全行为，未发布） |
+| 治理工具 | AECW `0.9.6`（S1–S5 红队整改，tag `aecw-s5-2026-11-06`；S4 改产品安全行为） |
 | 位置 | `D:\DSH\task-complete-toast-aecw`（独立仓库，initial `67809d0`）；**产品代码在仓库根，AECW `aecw/`**；历史归档在 `DSH_end`（`4aff41a`/tag `aecw-grow-2-2026-11-05`） |
 | 安装目标 | profile bundle 指向 **`D:\DSH\task-complete-toast-aecw`** |
 | 可用 | v1.3.0：G1 5/5；G2 7/8（G2-8 遗留）；G3 6/6（G3-4b 遗留）；**G4 设置页（E2）**；**G2 遮挡推送（E2）**；截图/录屏挂起 |
@@ -24,3 +24,15 @@
 | 退役 | 从 profile 移除 link/junction 与 bundles 条目 → 卸载 bundle → 删除本目录；不改 DSH 源码/安装目录；`cordis.patch.yml` 无残留配置 |
 | 未证明（不得外推） | 外部用户、其他 Windows/DSH 版本、多 agent 场景、100 次压测、G2-8 上限/顺序、G3-4b 时长 |
 | 项目边界 | **已替换安装**（2026-11-05）：desktop profile link/junction → 本项目仓库根；原件保留在原路径可回滚；与原件同包名 |
+
+<!-- AECW-GENERATED BEGIN -->
+> **机器状态**（由 `state.json` 生成；勿手改；`node bin/aecw.mjs render <dir>` 更新）
+| 项 | 值 |
+|---|---|
+| 阶段 | `security-1/closed` |
+| 发布 | `1.3.1/release-candidate` |
+| 功能 | G1 released/released；G2 released/released；G2-occlusion released/released；G3 released/released；G4 released/released |
+| 进化 | EV-001 active |
+| adoption | `provisional` |
+| 证据债 | ED-001、ED-002、ED-003、ED-004 |
+<!-- AECW-GENERATED END -->

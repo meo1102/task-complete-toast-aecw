@@ -17,3 +17,15 @@
 - 发布门：[`../gates/2026-11-05-release-v1.3.0.md`](../gates/2026-11-05-release-v1.3.0.md)；证据：[`../workspace/evidence/2026-11-05-release-v1.3.0.md`](../workspace/evidence/2026-11-05-release-v1.3.0.md)。
 
 > 当前结论：**1.3.0 已发布**；截图/录屏挂起；adoption provisional；不称“全部通过”。
+
+<!-- AECW-GENERATED BEGIN -->
+> **机器状态**（由 `state.json` 生成；勿手改；`node bin/aecw.mjs render <dir>` 更新）
+| 项 | 值 |
+|---|---|
+| 阶段 | `security-1/closed` |
+| 发布 | `1.3.1/release-candidate` |
+| 功能 | G1 released/released；G2 released/released；G2-occlusion released/released；G3 released/released；G4 released/released |
+| 进化 | EV-001 active |
+| adoption | `provisional` |
+| 证据债 | ED-001、ED-002、ED-003、ED-004 |
+<!-- AECW-GENERATED END -->
