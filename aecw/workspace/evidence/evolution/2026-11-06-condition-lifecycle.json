@@ -1,0 +1,8 @@
+﻿{
+  "metric": "open-conditions",
+  "direction": "lower",
+  "baseline": 9,
+  "candidate": 8,
+  "note": "condition lifecycle + remote close with evidence; 1 less open blocker",
+  "measured_at": "2026-11-06"
+}

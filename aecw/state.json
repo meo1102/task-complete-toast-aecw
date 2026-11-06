@@ -1,11 +1,38 @@
-﻿{
+{
   "project": "task-complete-toast-aecw",
   "updated": "2026-11-06",
-  "owner": { "name": "meo1102", "email": "meo1102@163.com", "source": "git-committer" },
-  "stage": { "name": "product-hardening", "state": "active", "freeze": "aecw/workspace/decisions/FREEZE-product-hardening.json" },
-  "release": { "version": "1.3.2", "state": "unreleased", "decision": null },
+  "owner": {
+    "name": "meo1102",
+    "email": "meo1102@163.com",
+    "source": "git-committer"
+  },
+  "stage": {
+    "name": "product-hardening",
+    "state": "active",
+    "freeze": "aecw/workspace/decisions/FREEZE-product-hardening.json"
+  },
+  "release": {
+    "version": "1.3.2",
+    "state": "released",
+    "decision": "aecw/workspace/decisions/DR-2026-11-06-1.3.2.json"
+  },
   "risk": "high",
-  "evolution": { "active": [], "versions": {} },
-  "links": { "product": ".", "evidence": "aecw/workspace/evidence", "decisions": "aecw/workspace/decisions" },
+  "evolution": {
+    "active": [
+      "EV-2026-11-06-01"
+    ],
+    "versions": {
+      "EV-2026-11-06-01": {
+        "path": "aecw/bin/aecw.mjs",
+        "sha256": "sha256:301956BAAB5FB0702991B651C3EFB0F25A8FF1633486A05A70A4073657783F49",
+        "version": "0.10.0+condition-lifecycle"
+      }
+    }
+  },
+  "links": {
+    "product": ".",
+    "evidence": "aecw/workspace/evidence",
+    "decisions": "aecw/workspace/decisions"
+  },
   "migration": null
 }

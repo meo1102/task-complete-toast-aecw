@@ -1,0 +1,52 @@
+{
+  "id": "EV-2026-11-06-01",
+  "type": "workflow",
+  "scope": "project",
+  "observation": "conditions were permanent open; remote done still blocked",
+  "evidence": [],
+  "artifact": {
+    "path": "aecw/bin/aecw.mjs",
+    "sha256": "sha256:301956BAAB5FB0702991B651C3EFB0F25A8FF1633486A05A70A4073657783F49",
+    "version": "0.10.0+condition-lifecycle"
+  },
+  "metric": {
+    "name": "open-conditions",
+    "direction": "lower"
+  },
+  "change": "condition lifecycle store + close with evidence + decision baseline",
+  "expected": "open blockers decrease without regressions",
+  "risk": "low",
+  "rollback": "revert conditions/CLI; restore previous decision",
+  "run": "review-2026-11-06",
+  "status": "adopted",
+  "created_at": "2026-11-06T10:34:18.591Z",
+  "evaluation": {
+    "at": "2026-11-06T10:34:18.703Z",
+    "tests_pass": true,
+    "probe_pass": true,
+    "logs": {
+      "tests": {
+        "path": "aecw/workspace/evidence/evolution/EV-2026-11-06-01-tests.log",
+        "sha256": "sha256:5F32A5BBCDAA4661F94FF0A788DF0C0AB7F7CD95C4635D1C89FDC403C593E5B9"
+      },
+      "probe": {
+        "path": "aecw/workspace/evidence/evolution/EV-2026-11-06-01-probe.log",
+        "sha256": "sha256:3703A640A85AEAA89257E760156FAB293FFC0E85E1DEE1F342CA63778347B53B"
+      }
+    },
+    "baseline": 9,
+    "candidate": 8,
+    "metric": {
+      "name": "open-conditions",
+      "direction": "lower"
+    },
+    "delta": -1,
+    "improved": true,
+    "eval_log": {
+      "path": "aecw/workspace/evidence/evolution/2026-11-06-condition-lifecycle.json",
+      "sha256": "sha256:EE9345DB3E451EC3A83480E34E87D96DF3B0D846C28D59D4C53386F5D803D12B"
+    },
+    "e1": true
+  },
+  "adopted_at": "2026-11-06T10:34:28.180Z"
+}

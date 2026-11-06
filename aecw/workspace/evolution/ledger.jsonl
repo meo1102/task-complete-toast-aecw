@@ -1,0 +1,3 @@
+{"at":"2026-11-06T10:34:18.591Z","event":"proposed","id":"EV-2026-11-06-01","scope":"project","risk":"low","run":"review-2026-11-06"}
+{"at":"2026-11-06T10:34:19.054Z","event":"evaluated","id":"EV-2026-11-06-01","e1":true,"e2":null}
+{"at":"2026-11-06T10:34:28.181Z","event":"adopted","id":"EV-2026-11-06-01","scope":"project"}

@@ -1,0 +1,9 @@
+PASS  宿主 package.json — @local/task-complete-toast@1.3.2 (D:\DSH\task-complete-toast-aecw)
+PASS  profile dependency link — link:D:/DSH/task-complete-toast-aecw
+PASS  profile bundles — @local/task-complete-toast
+PASS  junction target — D:\DSH\task-complete-toast-aecw
+PASS  profile patch config — task-complete-toast + appearance + /dsh-task-complete/outcome
+PASS  HTTP health identity — @local/task-complete-toast@1.3.2 · cf3522df…
+PASS  HTTP outcome route (expect 400 + invalid-session-id) — 400 invalid-session-id
+
+AECW EV-001 probe: 7/7 passed · http://127.0.0.1:36137
