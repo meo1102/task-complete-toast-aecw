@@ -131,7 +131,7 @@
    - adoption 仍 provisional（ED-003）；EV-001 分布外/回滚演练（ED-004）。
 5. **下一阶段**：由人类决定；若进入下一阶段，先写新 `BLUEPRINT` 版本、`freeze`、`start`；不得沿用本阶段授权自动续跑。
 6. **1.3.0 已发布**，但仍不得把“零截图/多标签未验”说成“全部通过”。
-7. **布局 v3 已写回**（2026-11-06，maintenance）：取消 `product/` 层，产品代码回到仓库根；profile 指向仓库根；`PROJECT.json`/`state.layout`/`state.install`/`state.remote`/probe 已同步；`check` 会校验 layout/install/remote 与 `PROJECT.json`、git origin 一致。见 [`2026-11-06-layout-v3.md`](workspace/evidence/2026-11-06-layout-v3.md)，F-051。
+7. **布局 v3 已写回并推送**（2026-11-06，maintenance）：取消 `product/` 层，产品代码回到仓库根；profile 指向仓库根；`PROJECT.json`/`state.layout`/`state.install`/`state.remote`/probe 已同步；已推送 `origin/main` + tag `aecw-layout-v3-2026-11-06`。`check` 会校验 layout/install/remote 与 `PROJECT.json`、git origin 一致。见 [`2026-11-06-layout-v3.md`](workspace/evidence/2026-11-06-layout-v3.md)，F-051。
 
 ## 7. 阶段授权（冻结）
 
