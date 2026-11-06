@@ -180,7 +180,7 @@
     "hash": "5C8FEF6BABC233EA9CE411848282526F0848EFDCC96B8343D83B13D4A2E8BBD5"
   },
   "governance_baseline": {
-    "commit": "pending",
+    "commit": "8b4eda7",
     "tag": "aecw-s5-2026-11-06",
     "tool": "0.9.6",
     "plan": "agent-engineering-control/PLAN-v0.9.1-红队整改.md",
