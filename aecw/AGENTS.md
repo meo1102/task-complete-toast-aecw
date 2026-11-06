@@ -30,7 +30,9 @@
 - **未测就写未测**：E2 不得写成 E1；禁止「全绿」话术；没有截图就标“证据缺口”。
 - **动作完成 = 状态写回**：任何改变布局/安装/版本/tag/发布/远程/配置的动作，完成后先更新 `state.json` + `STATUS` + 证据，再回复；只做动作不写回视为未完成。`state.layout` / `state.install` 与 `PROJECT.json` 不一致时 `check` FAIL。
 - **check 不是授权**：`check` 只做结构/一致性检查；开放 S1/S2 现在直接 FAIL。不得把 `check` 0/0 当作门禁/发布可靠证明。
-- **人类身份最小绑定（L 模式）**：S1/S2 的 `resolve`、`accept`、charter/blueprint 裁决、`start` 必须由 `state.owner` 具名执行（`--by`）；这是记录边界，不宣称抗伪造。agent 不得代写人类验收或自批 charter。
+- **verify 是唯一通过类证据**：`verify` 跑 `check --strict`、probe、完整测试、criteria、开放 S1/S2、按 impact 分类的证据债，并写 `workspace/evidence/attestations/VA-*.json`；attestation 失败/过期/tree 不一致时 `gate` 拒绝。通过类门禁只能引用 attestation。
+- **冻结/开工是哈希边界**：`freeze` 写 direction/blueprint/criteria/product 的 canonical hash；`start` 重算并逐项比对，任一字节变化即拒绝。`closed` 是终态，重开必须新 stage id + 新 freeze。
+- **人类身份最小绑定（L 模式）**：S1/S2 的 `resolve`、`accept`、charter/blueprint 裁决、`start`、`pause/resume/close` 必须由 `state.owner` 具名执行（`--by`）；这是记录边界，不宣称抗伪造。agent 不得代写人类验收或自批 charter。
 
 ## 测试
 
@@ -38,8 +40,8 @@
 # 门禁前运行态探针（EV-001，只读；从 aecw/ 运行）
 node scripts/probe.mjs
 
-# 治理 CLI 回归（S1 红队；从 aecw/ 运行）
-node --test --test-isolation=none test/cli-s1.test.mjs
+# 治理 CLI 回归（S1 + S2 红队；从 aecw/ 运行）
+node --test --test-isolation=none test/cli-s1.test.mjs test/cli-s2.test.mjs
 
 # 全量单测（产品代码在仓库根）
 cd ..
@@ -47,22 +49,28 @@ node --test --test-isolation=none test/smoke.test.js test/integration.test.js te
 cd aecw
 ```
 
-期望 `tests 169 / pass 169 / fail 0`（产品）+ `tests 10 / pass 10`（治理 S1）。受限沙箱内**必须** `--test-isolation=none`（默认模式 spawn EPERM）。
+期望 `tests 169 / pass 169 / fail 0`（产品）+ `tests 17 / pass 17`（治理 S1+S2）。受限沙箱内**必须** `--test-isolation=none`（默认模式 spawn EPERM）。
 
 ## AECW CLI
 
 ```powershell
 node bin/aecw.mjs status .
 node bin/aecw.mjs check .
+node bin/aecw.mjs check . --strict
+# 唯一通过类证据：失败/过期/tree 变化都会被 gate 拒绝
+node bin/aecw.mjs verify . --reviewer <评审者> [--reviewer-session <id>] [--gate release|adoption|evolution|stage]
 # 阻断/补证类门禁：可直接生成
 node bin/aecw.mjs gate . --name <门禁名> --decision 退回补证
-# 通过类门禁：必须 verify attestation + 人类签署（S2 起由 verify 生成 attestation）
+# 通过类门禁：必须 verify attestation + 人类签署
 node bin/aecw.mjs gate . --name <门禁名> --decision 通过 --attestation <verify.json> --signed-by meo1102
 node bin/aecw.mjs fact . --statement "..." --source "..." --status 已核验 --verifier "..."
 node bin/aecw.mjs dissent . --severity S2 --type 风险 --claim "..." --evidence "..."
 node bin/aecw.mjs change . --type task|blueprint|charter --title "..." --reason "..." --impact "..."
-node bin/aecw.mjs freeze . --charter-confirmed --stage grow-2 --scope ... --budget ... --stop ... --acceptance ...
+node bin/aecw.mjs freeze . --charter-confirmed --stage <新阶段> --scope ... --budget ... --stop ... --acceptance ...
 node bin/aecw.mjs start . --by meo1102 --first-report "..."
+node bin/aecw.mjs pause . --by meo1102 --reason "..."
+node bin/aecw.mjs resume . --by meo1102
+node bin/aecw.mjs close . --by meo1102 --decision 有条件通过 --gate gates/<阶段门禁>.md --reason "..."
 ```
 
 ## 完成定义

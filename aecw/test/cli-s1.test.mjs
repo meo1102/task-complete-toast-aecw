@@ -2,13 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const CLI = path.resolve(HERE, '..', 'bin', 'aecw.mjs');
 const TMP_BASE = path.join(HERE, '.tmp');
-const TODAY = new Date().toISOString().slice(0, 10);
 let seq = 0;
 
 function run(cwd, args) {
@@ -39,13 +39,13 @@ function check(project) {
   return run(project.base, ['check', project.gov]);
 }
 
-function writeAttestation(file, overrides = {}) {
+function writeAttestation(file, treeHash, overrides = {}) {
   const data = {
     kind: 'verify',
     id: 'VA-TEST',
     ok: true,
     project: 'demo-s1',
-    tree_hash: `sha256:${'a'.repeat(64)}`,
+    tree_hash: treeHash,
     open_s1s2: 0,
     criteria: { failed: 0, not_started: 0 },
     created_at: new Date().toISOString(),
@@ -53,6 +53,33 @@ function writeAttestation(file, overrides = {}) {
     ...overrides,
   };
   fs.writeFileSync(file, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
+}
+
+function treeHashOf(root) {
+  const files = [];
+  const excluded = new Set(['aecw/workspace/evidence/attestations', 'aecw/test/.tmp']);
+  const walk = (abs, rel) => {
+    for (const entry of fs.readdirSync(abs, { withFileTypes: true })) {
+      const childAbs = path.join(abs, entry.name);
+      const childRel = rel ? `${rel}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) {
+        if (['.git', 'node_modules', '.aecw-txn'].includes(entry.name) || excluded.has(childRel)) continue;
+        walk(childAbs, childRel);
+      } else if (!/\.tmp-/.test(entry.name)) {
+        files.push(childRel);
+      }
+    }
+  };
+  walk(root, '');
+  files.sort();
+  const hash = crypto.createHash('sha256');
+  for (const rel of files) {
+    hash.update(rel);
+    hash.update('\0');
+    hash.update(fs.readFileSync(path.join(root, rel), 'utf8').replace(/\r\n/g, '\n'));
+    hash.update('\0');
+  }
+  return `sha256:${hash.digest('hex').toUpperCase()}`;
 }
 
 function markdownFiles(dir) {
@@ -114,7 +141,7 @@ test('开放 S1 使 check FAIL，且和通过类门禁被拒绝', () => {
 
   const gate = run(project.base, ['gate', project.gov, '--name', 's1-block', '--decision', '通过']);
   assert.equal(gate.status, 1, gate.output);
-  assert.equal(fs.existsSync(path.join(project.gov, 'gates', `${TODAY}-s1-block.md`)), false);
+  assert.equal(fs.readdirSync(path.join(project.gov, 'gates')).filter((name) => name.includes('s1-block')).length, 0);
 
   const rework = run(project.base, ['gate', project.gov, '--name', 's1-block', '--decision', '退回补证']);
   assert.equal(rework.status, 0, rework.output);
@@ -138,13 +165,13 @@ test('大写 OPEN 与全占位 deferred 都不能骗过 check', () => {
   const criteriaPath = path.join(other.gov, 'criteria.md');
   let criteria = fs.readFileSync(criteriaPath, 'utf8');
   criteria = criteria.replace(
-    '| INIT-1 | 项目脚手架由 init 生成且结构检查通过 | met | F-001（init 运行记录） | agent | — | seed |',
-    '| INIT-1 | 项目脚手架由 init 生成且结构检查通过 | deferred | F-001 | agent | - | - |',
+    '| INIT-1 | 项目脚手架由 init 生成且结构检查通过 | met | F-001（init 运行记录） | agent | — | — | seed |',
+    '| INIT-1 | 项目脚手架由 init 生成且结构检查通过 | deferred | F-001 | agent | - | - | - |',
   );
   fs.writeFileSync(criteriaPath, criteria, 'utf8');
   const deferred = check(other);
   assert.equal(deferred.status, 1, deferred.output);
-  assert.match(deferred.output, /缺少人类裁决\/影响门/);
+  assert.match(deferred.output, /缺少人类裁决\/到期\/影响门/);
 });
 
 test('resolve 只认 DR、S1/S2 必须人类；gate 通过必须有 attestation + 人类签署', () => {
@@ -164,7 +191,7 @@ test('resolve 只认 DR、S1/S2 必须人类；gate 通过必须有 attestation 
   assert.equal(noAttestation.status, 1, noAttestation.output);
 
   const attestation = path.join(project.base, 'attestation.json');
-  writeAttestation(attestation);
+  writeAttestation(attestation, treeHashOf(project.root));
   const wrongSigner = run(project.base, [
     'gate', project.gov, '--name', 'approve', '--decision', '通过',
     '--attestation', attestation, '--signed-by', 'agent',
@@ -176,14 +203,18 @@ test('resolve 只认 DR、S1/S2 必须人类；gate 通过必须有 attestation 
     '--attestation', attestation, '--signed-by', 'tester',
   ]);
   assert.equal(ok.status, 0, ok.output);
-  const gateFile = path.join(project.gov, 'gates', `${TODAY}-approve.md`);
-  const gateText = fs.readFileSync(gateFile, 'utf8');
+  const gateFiles = fs.readdirSync(path.join(project.gov, 'gates')).filter((name) => name.includes('approve'));
+  assert.equal(gateFiles.length, 1);
+  const gateText = fs.readFileSync(path.join(project.gov, 'gates', gateFiles[0]), 'utf8');
   assert.match(gateText, /决策：通过/);
   assert.match(gateText, /VA-TEST/);
   assert.match(gateText, /人类签署：tester/);
 
-  const duplicate = run(project.base, ['gate', project.gov, '--name', 'approve', '--decision', '暂停']);
-  assert.equal(duplicate.status, 1, duplicate.output);
+  const second = run(project.base, ['gate', project.gov, '--name', 'approve', '--decision', '暂停']);
+  assert.equal(second.status, 0, second.output);
+  const gateFiles2 = fs.readdirSync(path.join(project.gov, 'gates')).filter((name) => name.includes('approve'));
+  assert.equal(gateFiles2.length, 2);
+  assert.match(fs.readFileSync(path.join(project.gov, 'gates', gateFiles[0]), 'utf8'), /决策：通过/);
 });
 
 test('charter 不得自批准；跨类型裁决与重复裁决被拒绝', () => {
@@ -276,19 +307,10 @@ test('gate 名称注入与路径字符被拒绝', () => {
 
 test('start 只接受人类所有者', () => {
   const project = makeProject();
-  const blueprintPath = path.join(project.gov, 'BLUEPRINT.md');
-  let blueprint = fs.readFileSync(blueprintPath, 'utf8');
-  blueprint = blueprint.replace('- 状态：draft', '- 状态：approved').replace('- 批准人：（待批准）', '- 批准人：tester');
-  fs.writeFileSync(blueprintPath, blueprint, 'utf8');
-  fs.writeFileSync(
-    path.join(project.gov, 'gates', '2026-01-01-charter-freeze.md'),
-    '# 冻结（测试夹具）\n\n> 状态：historical\n',
-    'utf8',
-  );
   const notOwner = run(project.base, ['start', project.gov, '--by', 'red-team-not-owner']);
   assert.equal(notOwner.status, 1, notOwner.output);
-  const owner = run(project.base, ['start', project.gov, '--by', 'tester']);
-  assert.equal(owner.status, 0, owner.output);
-  const order = fs.readFileSync(path.join(project.gov, 'gates', `${TODAY}-start-order.md`), 'utf8');
-  assert.match(order, /^> 状态：historical/m);
+  assert.match(notOwner.output, /不是人类所有者/);
+  const ownerOnSeed = run(project.base, ['start', project.gov, '--by', 'tester']);
+  assert.equal(ownerOnSeed.status, 1, ownerOnSeed.output);
+  assert.match(ownerOnSeed.output, /只允许从 frozen 进入/);
 });

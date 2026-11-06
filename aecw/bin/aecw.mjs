@@ -7,12 +7,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CORE = path.join(ROOT, 'core');
 const DATE = new Date().toISOString().slice(0, 10);
-const TOOL_VERSION = '0.9.3';
+const TOOL_VERSION = '0.9.4';
 const ATTESTATION_MAX_AGE_DAYS = 7;
 
 function usage() {
@@ -23,12 +24,16 @@ function usage() {
   node bin/aecw.mjs blueprint <dir> [--stage <阶段>] [--force]
   node bin/aecw.mjs freeze <dir> --charter-confirmed --stage <阶段> --scope <范围> --budget <预算> --stop <停止> --acceptance <验收>
   node bin/aecw.mjs start <dir> --by <人类所有者> [--first-report <报告点>]
+  node bin/aecw.mjs pause <dir> --by <人类所有者> [--reason <理由>]
+  node bin/aecw.mjs resume <dir> --by <人类所有者>
+  node bin/aecw.mjs close <dir> --by <人类所有者> --decision 通过|有条件通过|退回补证|暂停|拒绝 --gate <门禁文件> [--reason <理由>]
   node bin/aecw.mjs change <dir> --type task|blueprint|charter --title <变更> [--reason <理由>] [--impact <影响>] [--by <提出者>] [--decision 接受|拒绝|挂起]
   node bin/aecw.mjs change <dir> --id CR-001 --decision 接受|拒绝|挂起 [--by <人类>] [--reason <理由>]
   node bin/aecw.mjs status <dir>
   node bin/aecw.mjs dissent <dir> --severity S1|S2|S3|S4 --type <类型> --claim <主张> [--evidence <证据>] [--route 本地|直达]
   node bin/aecw.mjs fact <dir> --statement <陈述> --source <来源> [--status 已捕获|已核验|有争议] [--verifier <核验人>]
   node bin/aecw.mjs gate <dir> --name <门禁名> [--decision 通过|有条件通过|退回补证|暂停] [--attestation <verify.json> --signed-by <人类>]
+  node bin/aecw.mjs verify <dir> --reviewer <评审者> [--reviewer-session <id>] [--gate release|adoption|evolution|stage]
   node bin/aecw.mjs resolve <dir> --id DR-001 --decision <裁决> [--by <人类>] [--reason <理由>]
   node bin/aecw.mjs accept <dir> --item <项> --decision <接受|有条件接受|拒绝> --by <人类> [--evidence <证据>] [--risk <剩余风险>]
   node bin/aecw.mjs log <dir> --decision <决策> [--reason <理由>]
@@ -322,7 +327,248 @@ function readAttestation(file, dir) {
   if (Number.isFinite(created) && Date.now() - created > ATTESTATION_MAX_AGE_DAYS * 86400000) {
     fail('attestation 过旧（超过 7 天）');
   }
+  if (data.git?.available && data.git?.dirty) fail('attestation 记录工作树不干净；不得用于通过类门禁');
   return data;
+}
+
+// ---------- v0.9.4 · verify / 冻结哈希 / 阶段状态机（S2：P0-2 + P0-3） ----------
+
+function projectRootOf(dir) {
+  return path.dirname(dir);
+}
+
+function projectManifest(dir) {
+  return readJsonMaybe(path.join(projectRootOf(dir), 'PROJECT.json'));
+}
+
+function rootsFor(dir) {
+  const manifest = projectManifest(dir) ?? {};
+  const governance = path.basename(dir);
+  return {
+    product: manifest.roots?.product ?? '.',
+    governance: manifest.roots?.governance ?? governance,
+    workspace: manifest.roots?.workspace ?? `${governance}/workspace`,
+  };
+}
+
+function listTreeFiles(root, { excludeDirs = [] } = {}) {
+  const out = [];
+  const excluded = new Set(excludeDirs);
+  const walk = (abs, rel) => {
+    if (!fs.existsSync(abs)) return;
+    for (const entry of fs.readdirSync(abs, { withFileTypes: true })) {
+      const childAbs = path.join(abs, entry.name);
+      const childRel = rel ? `${rel}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) {
+        if (entry.name === '.git' || entry.name === 'node_modules' || entry.name === '.aecw-txn' || entry.name.startsWith('.tmp')) continue;
+        if (excluded.has(childRel)) continue;
+        walk(childAbs, childRel);
+      } else {
+        if (/\.tmp-/.test(entry.name)) continue;
+        out.push(childRel);
+      }
+    }
+  };
+  walk(root, '');
+  return out.sort();
+}
+
+function treeHash(root, { excludeDirs = [] } = {}) {
+  const hash = crypto.createHash('sha256');
+  for (const rel of listTreeFiles(root, { excludeDirs })) {
+    hash.update(rel);
+    hash.update('\0');
+    const text = fs.readFileSync(path.join(root, rel), 'utf8').replace(/\r\n/g, '\n');
+    hash.update(text);
+    hash.update('\0');
+  }
+  return `sha256:${hash.digest('hex').toUpperCase()}`;
+}
+
+function attestationDir(dir) {
+  return path.join(dir, 'workspace', 'evidence', 'attestations');
+}
+
+function projectTreeHash(dir) {
+  const root = projectRootOf(dir);
+  const rel = (p) => path.relative(root, p).replace(/\\/g, '/');
+  return treeHash(root, { excludeDirs: [rel(attestationDir(dir)), rel(path.join(dir, 'test', '.tmp'))] });
+}
+
+function productTreeHash(dir) {
+  const root = projectRootOf(dir);
+  const productRoot = path.resolve(root, rootsFor(dir).product);
+  if (!fs.existsSync(productRoot)) throw new Error(`产品根不存在：${productRoot}`);
+  const excludeDirs = [];
+  if (path.resolve(productRoot) === path.resolve(root)) {
+    excludeDirs.push(rootsFor(dir).governance);
+    excludeDirs.push(path.relative(root, attestationDir(dir)).replace(/\\/g, '/'));
+    excludeDirs.push(path.relative(root, path.join(dir, 'test', '.tmp')).replace(/\\/g, '/'));
+  }
+  return treeHash(productRoot, { excludeDirs });
+}
+
+function hashFile(file) {
+  return `sha256:${crypto.createHash('sha256').update(fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n')).digest('hex').toUpperCase()}`;
+}
+
+function stableJson(value) {
+  if (Array.isArray(value)) return `[${value.map((item) => stableJson(item)).join(',')}]`;
+  if (value && typeof value === 'object') {
+    const keys = Object.keys(value).sort();
+    return `{${keys.map((key) => `${JSON.stringify(key)}:${stableJson(value[key])}`).join(',')}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function hashPayload(payload) {
+  return `sha256:${crypto.createHash('sha256').update(stableJson(payload)).digest('hex').toUpperCase()}`;
+}
+
+function stageGateFiles(p, needle) {
+  if (!fs.existsSync(p.gates)) return [];
+  return fs.readdirSync(p.gates).filter((name) => name.includes(needle)).sort();
+}
+
+function freezeMarker(text) {
+  const match = text.match(/<!--\s*AECW-FREEZE\s*(\{[\s\S]*?\})\s*-->/);
+  if (!match) return null;
+  try {
+    return JSON.parse(match[1]);
+  } catch {
+    return null;
+  }
+}
+
+function stageOfGateFile(file, text, kind) {
+  if (kind === 'charter-freeze') {
+    const marker = freezeMarker(text);
+    if (marker?.stage) return String(marker.stage);
+    const legacy = text.match(/^- 阶段：([^\n（(]+)/m);
+    return legacy ? legacy[1].trim() : '';
+  }
+  const match = text.match(/^# 开工令 · ([^\n（(]+)/m);
+  return match ? match[1].trim() : '';
+}
+
+function latestStageGate(p, stage, kind) {
+  const files = stageGateFiles(p, kind);
+  for (let i = files.length - 1; i >= 0; i--) {
+    const file = path.join(p.gates, files[i]);
+    let text;
+    try {
+      text = fs.readFileSync(file, 'utf8');
+    } catch {
+      continue;
+    }
+    if (stageOfGateFile(file, text, kind) === stage) return file;
+  }
+  return '';
+}
+
+function readStageInfo(dir) {
+  const state = readStateFile(dir);
+  const status = fs.existsSync(path.join(dir, 'STATUS.md')) ? fs.readFileSync(path.join(dir, 'STATUS.md'), 'utf8') : '';
+  const name = state?.stage?.name ?? stageOf(status);
+  const rawState = state?.stage?.state;
+  return {
+    name,
+    state: rawState ? String(rawState).toLowerCase() : (status.match(/- 阶段状态：([^\n]+)/) ? stageStateOf(status.match(/- 阶段状态：([^\n]+)/)[1]) : 'seed'),
+  };
+}
+
+function runCaptured(command, args, cwd, logFile, options = {}) {
+  ensureDir(path.dirname(logFile));
+  const fd = fs.openSync(logFile, 'w');
+  let result;
+  try {
+    result = spawnSync(command, args, {
+      cwd,
+      shell: Boolean(options.shell),
+      stdio: ['ignore', fd, fd],
+      windowsHide: true,
+      timeout: options.timeout ?? 600000,
+    });
+  } catch (error) {
+    result = { status: null, error };
+  } finally {
+    fs.closeSync(fd);
+  }
+  const output = fs.existsSync(logFile) ? fs.readFileSync(logFile, 'utf8') : '';
+  return {
+    status: typeof result.status === 'number' ? result.status : 1,
+    output,
+    error: result.error?.message ?? '',
+    logFile,
+    sha256: hashPayload(output),
+  };
+}
+
+function gitFacts(projectRoot, logDir, excludeRel = '') {
+  const top = runCaptured('git', ['rev-parse', '--show-toplevel'], projectRoot, path.join(logDir, 'git-top.log'), { timeout: 20000 });
+  if (top.status !== 0) return { available: false };
+  const topPath = top.output.trim();
+  if (!topPath || path.resolve(topPath).toLowerCase() !== path.resolve(projectRoot).toLowerCase()) {
+    return { available: false, reason: '项目根不是 Git 顶层（可能是外层仓库的子目录）' };
+  }
+  const head = runCaptured('git', ['rev-parse', 'HEAD'], projectRoot, path.join(logDir, 'git-head.log'), { timeout: 20000 });
+  const tree = runCaptured('git', ['rev-parse', 'HEAD^{tree}'], projectRoot, path.join(logDir, 'git-tree.log'), { timeout: 20000 });
+  const statusArgs = ['status', '--porcelain'];
+  if (excludeRel) statusArgs.push('--', '.', `:(exclude)${excludeRel}`);
+  const status = runCaptured('git', statusArgs, projectRoot, path.join(logDir, 'git-status.log'), { timeout: 20000 });
+  if (head.status !== 0) return { available: false };
+  return {
+    available: true,
+    head: head.output.trim(),
+    tree: tree.status === 0 ? tree.output.trim() : '',
+    dirty: status.status === 0 && status.output.trim().length > 0,
+  };
+}
+
+function readCriteria(dir) {
+  const file = path.join(dir, 'criteria.md');
+  if (!fs.existsSync(file)) return { ok: false, reason: '缺少 criteria.md' };
+  const lines = fs.readFileSync(file, 'utf8').split(/\r?\n/);
+  const headerIndex = lines.findIndex((line) => line.trimStart().startsWith('| ID | 判据 |'));
+  if (headerIndex < 0) return { ok: false, reason: 'criteria.md 缺少判据表头' };
+  const header = splitRow(lines[headerIndex]);
+  if (header.length !== 8) return { ok: false, reason: `criteria.md 表头应为 8 列（含到期），实际 ${header.length}` };
+  const rows = [];
+  for (let i = headerIndex + 1; i < lines.length && lines[i].trimStart().startsWith('|'); i++) {
+    const cells = splitRow(lines[i]);
+    if (cells[0] === 'ID' || /^-+$/.test(cells[0])) continue;
+    rows.push(cells);
+  }
+  return { ok: true, rows };
+}
+
+function currentFreezePayload(dir, stage) {
+  const p = projectPaths(dir);
+  if (!fs.existsSync(p.direction) || !fs.existsSync(p.blueprint) || !fs.existsSync(path.join(dir, 'criteria.md'))) {
+    fail('freeze 需要 human/direction.md、BLUEPRINT.md、criteria.md 都存在');
+  }
+  const bp = blueprintMeta(p);
+  return {
+    version: 1,
+    project: projectOf(dir),
+    stage,
+    blueprint_version: bp.version,
+    direction_hash: hashFile(p.direction),
+    blueprint_hash: hashFile(p.blueprint),
+    criteria_hash: hashFile(path.join(dir, 'criteria.md')),
+    product_hash: productTreeHash(dir),
+  };
+}
+
+function assertFreezePayload(dir, payload) {
+  const current = currentFreezePayload(dir, String(payload.stage));
+  const keys = ['direction_hash', 'blueprint_hash', 'criteria_hash', 'product_hash', 'blueprint_version'];
+  const changed = keys.filter((key) => current[key] !== payload[key]);
+  if (changed.length) {
+    fail(`冻结内容已变化（${changed.join('、')}）；start 拒绝。先走 change 升版本并重新 freeze`);
+  }
+  const expected = hashPayload(payload);
+  return expected;
 }
 
 
@@ -399,12 +645,6 @@ function stageOf(status) {
 
 function stageStateOf(raw) {
   return String(raw || '').trim().split(/[（(/]/)[0].trim().toLowerCase();
-}
-
-function latestGate(p, needle) {
-  if (!fs.existsSync(p.gates)) return '';
-  const files = fs.readdirSync(p.gates).filter((f) => f.includes(needle)).sort();
-  return files.length ? files[files.length - 1] : '';
 }
 
 function blueprintMeta(p) {
@@ -578,9 +818,9 @@ blueprint/charter 变更的详情（CR-xxx）也放这里；裁决状态以 ledg
   add(path.join(dir, 'criteria.md'), `${header(`验收矩阵 · ${name}`)}
 > 权威：本矩阵与 \`state.json\`；\`met\` 必须有证据；\`waived/deferred\` 必须有人类裁决/日期/影响门。
 
-| ID | 判据 | 状态 | 证据 | 核验人 | 人类裁决 | 影响门 |
-|---|---|---|---|---|---|---|
-| INIT-1 | 项目脚手架由 init 生成且结构检查通过 | met | F-001（init 运行记录） | agent | — | seed |
+| ID | 判据 | 状态 | 证据 | 核验人 | 人类裁决 | 到期 | 影响门 |
+|---|---|---|---|---|---|---|---|
+| INIT-1 | 项目脚手架由 init 生成且结构检查通过 | met | F-001（init 运行记录） | agent | — | — | seed |
 `);
 
   add(path.join(dir, 'state.json'), `${JSON.stringify(state, null, 2)}\n`);
@@ -711,14 +951,19 @@ function cmdGate(args, flags) {
       fail(`拒绝生成“${decision}”门禁：仍有 ${open} 条开放 S1/S2（${openRows.map((row) => row.cells[0]).join('、')}）`);
     }
     attestation = readAttestation(flags.attestation, dir);
+    const currentTree = projectTreeHash(dir);
+    if (attestation.tree_hash !== currentTree) {
+      fail(`attestation 树不一致：verify 后文件已变化（${attestation.tree_hash} vs ${currentTree}）；重新 verify 后再开门`);
+    }
     signedBy = cleanCell(requireHuman(flags['signed-by'], dir, `gate --decision ${decision}`));
   } else if (flags['signed-by']) {
     signedBy = cleanCell(flags['signed-by']);
   }
 
-  const file = path.join(p.gates, `${DATE}-${slug(name)}.md`);
-  if (fs.existsSync(file) && !flags.force) {
-    fail(`门禁文件已存在，拒绝覆盖历史：${file}（确需覆盖仅限 demo/迁移，显式 --force）`);
+  const stamp = `${new Date().toISOString().slice(11, 19).replace(/:/g, '')}${crypto.randomBytes(2).toString('hex')}`;
+  const file = path.join(p.gates, `${DATE}-${slug(name)}-${stamp}.md`);
+  if (fs.existsSync(file)) {
+    fail(`门禁文件已存在，拒绝覆盖历史：${file}`);
   }
   const content = readTemplate('gate.template.md', {
     PROJECT: cleanCell(projectOf(dir)),
@@ -848,14 +1093,93 @@ function cmdBlueprint(args, flags) {
   console.log('  蓝图未批准，freeze 会拒绝；没有 freeze/start，集群不开工。');
 }
 
+function stageLabel(state) {
+  return { seed: 'seed', frozen: 'baseline frozen', executing: 'executing', paused: 'paused', closed: 'closed' }[state] ?? state;
+}
+
+function statusWithStage(status, name, state, gateName) {
+  let text = status
+    .replace(/- 阶段：.*/, `- 阶段：${name}（${stageLabel(state)}）`)
+    .replace(/- 当前门禁：.*/, `- 当前门禁：${gateName || '-'}`);
+  if (/- 阶段状态：/.test(text)) text = text.replace(/- 阶段状态：.*/, `- 阶段状态：${state}`);
+  else text = text.replace(/(- 阶段：.*\n)/, `$1- 阶段状态：${state}\n`);
+  return text;
+}
+
+function replaceStatusSection(status, heading, block) {
+  const start = status.indexOf(heading);
+  if (start < 0) return `${status.trimEnd()}\n\n${block.trimEnd()}\n`;
+  const next = status.indexOf('\n## ', start + heading.length);
+  const tail = next < 0 ? '' : status.slice(next);
+  return `${status.slice(0, start)}${block.trimEnd()}\n${tail}`;
+}
+
+function removeStatusSection(status, heading) {
+  const start = status.indexOf(heading);
+  if (start < 0) return status;
+  const next = status.indexOf('\n## ', start + heading.length);
+  return next < 0 ? `${status.slice(0, start).trimEnd()}\n` : `${status.slice(0, start)}${status.slice(next + 1)}`;
+}
+
+function appendStageEvent(status, line) {
+  const heading = '## 9. 阶段事件';
+  let text = status;
+  if (!text.includes(heading)) text = `${text.trimEnd()}\n\n${heading}\n`;
+  return `${text.trimEnd()}\n- ${line}\n`;
+}
+
+function stampNow() {
+  return `${new Date().toISOString().slice(11, 19).replace(/:/g, '')}${crypto.randomBytes(2).toString('hex')}`;
+}
+
+function uniqueGatePath(p, base) {
+  let candidate = path.join(p.gates, `${base}.md`);
+  if (!fs.existsSync(candidate)) return candidate;
+  for (let i = 1; i < 1000; i++) {
+    candidate = path.join(p.gates, `${base}-${i}.md`);
+    if (!fs.existsSync(candidate)) return candidate;
+  }
+  fail('无法分配唯一门禁文件名');
+}
+
+function stateFileContent(dir, stagePatch) {
+  const state = readStateFile(dir) ?? { project: projectOf(dir) };
+  state.updated = DATE;
+  state.stage = stagePatch;
+  return `${JSON.stringify(state, null, 2)}\n`;
+}
+
+function syncStatusSummary(status, state) {
+  const summary = JSON.stringify(stateSummary(state));
+  if (/<!--\s*AECW-STATE\s*\{[\s\S]*?\}\s*-->/.test(status)) {
+    return status.replace(/<!--\s*AECW-STATE\s*\{[\s\S]*?\}\s*-->/, `<!-- AECW-STATE ${summary} -->`);
+  }
+  return status;
+}
+
+function relGate(dir, file) {
+  return path.relative(dir, file).replace(/\\/g, '/');
+}
+
 function cmdFreeze(args, flags) {
   const dir = needDir(args, 'freeze');
   const p = projectPaths(dir);
   const status = fs.readFileSync(p.status, 'utf8');
-  const ownerMatch = status.match(/人类所有者：([^\n|]+)/);
-  const owner = ownerMatch ? cleanCell(ownerMatch[1]) : '';
+  const owner = cleanCell(ownerOf(status));
   if (!owner || /待补|未具名|TODO/i.test(owner)) fail('人类所有者未具名；先补 owner 再冻结');
   if (!flags['charter-confirmed']) fail('freeze 需要 --charter-confirmed（人类确认宪章）');
+
+  const current = readStageInfo(dir);
+  if (['frozen', 'executing', 'paused'].includes(current.state)) {
+    fail(`当前阶段 ${current.name} 状态为 ${current.state}；不能重新 freeze。先 close 或继续执行`);
+  }
+  const stage = cleanCell(String(flags.stage || ''));
+  if (!stage) fail('freeze 需要 --stage <新阶段 id>');
+  if (stage === 'seed') fail('阶段 id 不能是 seed');
+  if (!/^[a-z0-9][a-z0-9._-]{0,39}$/.test(stage)) fail('阶段 id 必须匹配 [a-z0-9][a-z0-9._-]{0,39}');
+  if (current.state === 'closed' && current.name === stage) {
+    fail(`阶段 ${stage} 已 closed 且是终态；不能重开，新阶段必须使用新 stage id`);
+  }
 
   const direction = fs.readFileSync(p.direction, 'utf8');
   if (/（待填）|（明确不做|（待填：/.test(direction)) {
@@ -863,26 +1187,28 @@ function cmdFreeze(args, flags) {
   }
 
   const bp = blueprintMeta(p);
-  if (!bp.ok) {
-    fail(`蓝图未获人类批准：${p.blueprint}（需要 “- 状态：approved” 和具名批准人）`);
-  }
-
-  const ledger = fs.existsSync(p.ledger) ? fs.readFileSync(p.ledger, 'utf8') : '';
-  const open = openHigh(ledger);
-  if (open > 0) fail(`还有 ${open} 条开放 S1/S2；先 resolve 再冻结阶段基线`);
-
-  const stage = cleanCell(String(flags.stage || 'stage-1'));
+  if (!bp.ok) fail(`蓝图未获人类批准：${p.blueprint}（需要 “- 状态：approved” 和具名批准人）`);
   const bpStageMatch = bp.text.match(/^- 阶段：([^\n]+)/m);
   const bpStage = bpStageMatch ? cleanCell(bpStageMatch[1]) : '';
   if (bpStage && bpStage !== stage) {
     fail(`蓝图阶段（${bpStage}）与 freeze 阶段（${stage}）不一致；先改蓝图或用 blueprint --stage`);
   }
+
+  const ledger = fs.existsSync(p.ledger) ? fs.readFileSync(p.ledger, 'utf8') : '';
+  const openRows = openHighRows(ledger);
+  if (openRows.length) fail(`还有 ${openRows.length} 条开放 S1/S2（${openRows.map((row) => row.cells[0]).join('、')}）；先 resolve 再冻结阶段基线`);
+
   const scope = requireText(flags.scope, 'freeze --scope');
   const budget = requireText(flags.budget, 'freeze --budget');
   const stop = requireText(flags.stop, 'freeze --stop');
   const acceptance = requireText(flags.acceptance, 'freeze --acceptance');
-  const file = path.join(p.gates, `${DATE}-charter-freeze.md`);
+  const payload = currentFreezePayload(dir, stage);
+  payload.payload_hash = hashPayload(payload);
 
+  const base = `${DATE}-${stage}-charter-freeze-${stampNow()}`;
+  const file = uniqueGatePath(p, base);
+  const fileRel = relGate(dir, file);
+  const marker = JSON.stringify(payload);
   const content = `# 宪章冻结与阶段授权 · ${path.basename(dir)}
 
 > 状态：historical｜最后核对：${DATE}
@@ -897,6 +1223,13 @@ function cmdFreeze(args, flags) {
 - 预算：${budget}
 - 停止：${stop}
 - 验收：${acceptance}
+- 冻结 payload：${payload.payload_hash}
+- direction hash：${payload.direction_hash}
+- blueprint hash：${payload.blueprint_hash}
+- criteria hash：${payload.criteria_hash}
+- product hash：${payload.product_hash}
+
+<!-- AECW-FREEZE ${marker} -->
 
 ## 授权
 
@@ -908,6 +1241,7 @@ function cmdFreeze(args, flags) {
 - 宪章无开放 S1/S2；
 - 人类已确认宪章；
 - 阶段范围/预算/停止/验收已写明；
+- direction / BLUEPRINT / criteria / product 已写入 canonical hash；
 - 当前状态写入 STATUS.md，旧文档标 SUPERSEDED。
 
 ## 签署
@@ -916,52 +1250,88 @@ function cmdFreeze(args, flags) {
 - 集群管家：
 `;
 
-  fs.writeFileSync(file, content, 'utf8');
+  const section7 = `## 7. 阶段授权（冻结）
 
-  let s = status
-    .replace(/- 阶段：.*/, `- 阶段：${stage}（baseline frozen）`)
-    .replace(/- 当前门禁：.*/, `- 当前门禁：${DATE}-charter-freeze`);
-  s = s.replace(/- 阶段状态：.*/, '- 阶段状态：frozen');
-  if (!/- 阶段状态：/.test(s)) s = s.replace(/(- 阶段：.*\n)/, '$1- 阶段状态：frozen\n');
-  s = s.replace(/\n## 7\. 阶段授权（冻结）[\s\S]*$/, '');
-  s = s.trimEnd() + `\n\n## 7. 阶段授权（冻结）\n\n- 阶段：${stage}\n- 蓝图：${bp.version}（批准：${bp.approver}）\n- 范围：${scope}\n- 预算：${budget}\n- 停止：${stop}\n- 验收：${acceptance}\n- 冻结：${DATE}；宪章确认：${owner}\n- 集群只可执行本阶段；阶段结束必须停、报告、等下一道门。\n`;
-  fs.writeFileSync(p.status, s, 'utf8');
+- 阶段：${stage}
+- 蓝图：${bp.version}（批准：${bp.approver}）
+- 范围：${scope}
+- 预算：${budget}
+- 停止：${stop}
+- 验收：${acceptance}
+- payload：${payload.payload_hash}
+- 冻结：${DATE}；宪章确认：${owner}
+- 集群只可执行本阶段；阶段结束必须停、报告、等下一道门。
+`;
+
+  let nextStatus = statusWithStage(status, stage, 'frozen', path.basename(file));
+  nextStatus = replaceStatusSection(nextStatus, '## 7. 阶段授权（冻结）', section7);
+  nextStatus = removeStatusSection(nextStatus, '## 8. 开工令');
+  nextStatus = removeStatusSection(nextStatus, '## 9. 阶段事件');
+  nextStatus = removeStatusSection(nextStatus, '## 10. 阶段关闭');
+
+  const nextState = stateFileContent(dir, {
+    name: stage,
+    state: 'frozen',
+    gate: fileRel,
+    freeze: {
+      gate: fileRel,
+      payload_hash: payload.payload_hash,
+      direction_hash: payload.direction_hash,
+      blueprint_hash: payload.blueprint_hash,
+      criteria_hash: payload.criteria_hash,
+      product_hash: payload.product_hash,
+      blueprint_version: payload.blueprint_version,
+      frozen_at: new Date().toISOString(),
+    },
+  });
+  nextStatus = syncStatusSummary(nextStatus, JSON.parse(nextState));
+
+  commitFiles(dir, [
+    { path: file, content },
+    { path: path.join(dir, 'state.json'), content: nextState },
+    { path: p.status, content: nextStatus },
+  ]);
 
   console.log(`阶段基线已冻结：${file}`);
   console.log(`  阶段：${stage}｜范围：${scope}`);
+  console.log(`  payload：${payload.payload_hash}`);
   console.log('  集群只可执行本阶段；阶段结束必须停、报告、等下一道门。');
 }
 
 function cmdStart(args, flags) {
   const dir = needDir(args, 'start');
   const p = projectPaths(dir);
-  const status = fs.readFileSync(p.status, 'utf8');
   const by = cleanCell(requireHuman(flags.by, dir, 'start（开工令）'));
+  const info = readStageInfo(dir);
+  if (info.state !== 'frozen') {
+    fail(`start 只允许从 frozen 进入；当前 ${info.name}/${info.state}。已 closed 的阶段不能重开，需新 stage + 新 freeze`);
+  }
+  const stage = info.name;
 
-  const freeze = latestGate(p, 'charter-freeze');
-  if (!freeze) fail('没有 charter-freeze；先 freeze 阶段基线，再下开工令');
+  const freezeFile = latestStageGate(p, stage, 'charter-freeze');
+  if (!freezeFile) fail(`阶段 ${stage} 没有 charter-freeze；先 freeze 阶段基线`);
+  const freezeText = fs.readFileSync(freezeFile, 'utf8');
+  const marker = freezeMarker(freezeText);
+  if (!marker) fail(`冻结门禁缺少 AECW-FREEZE payload：${freezeFile}`);
+  const { payload_hash: recordedHash, ...payload } = marker;
+  if (!recordedHash || hashPayload(payload) !== recordedHash) fail('冻结 payload hash 不自洽；拒绝开工');
+  const currentHash = assertFreezePayload(dir, payload);
+  if (currentHash !== recordedHash) fail('冻结 payload hash 与当前内容不一致；拒绝开工');
 
   const bp = blueprintMeta(p);
   if (!bp.ok) fail('蓝图未获人类批准；先让人类批准 BLUEPRINT.md，再下开工令');
+  const bpStageMatch = bp.text.match(/^- 阶段：([^\n]+)/m);
+  const bpStage = bpStageMatch ? cleanCell(bpStageMatch[1]) : '';
+  if (bpStage && bpStage !== stage) fail(`蓝图阶段（${bpStage}）与当前阶段（${stage}）不一致`);
 
   const ledger = fs.existsSync(p.ledger) ? fs.readFileSync(p.ledger, 'utf8') : '';
-  const open = openHigh(ledger);
-  if (open > 0) fail(`还有 ${open} 条开放 S1/S2；先裁决再开工`);
+  const openRows = openHighRows(ledger);
+  if (openRows.length) fail(`还有 ${openRows.length} 条开放 S1/S2；先裁决再开工`);
 
-  const stateMatch = status.match(/- 阶段状态：([^\n]+)/);
-  const state = stateMatch ? stateMatch[1].trim() : '';
-  if (/executing|执行中/i.test(state)) fail('阶段已在执行；如需重开，先暂停/关闭或重新 freeze');
-
-  const stage = stageOf(status);
-  if (!stage) fail('STATUS.md 没有阶段名；先 freeze 或填写阶段');
-  const bpStageMatch = bp.text.match(/^- 阶段：([^\n]+)/m);
-  const bpStage = bpStageMatch ? bpStageMatch[1].trim() : '';
-  if (bpStage && bpStage !== stage) {
-    fail(`蓝图阶段（${bpStage}）与当前阶段（${stage}）不一致；先改蓝图或重新 freeze`);
-  }
   const firstReport = cleanCell(flags['first-report'] || '阶段结束、触发 S1/S2、或预算耗尽时');
-  const file = path.join(p.gates, `${DATE}-start-order.md`);
-
+  const base = `${DATE}-${stage}-start-order-${stampNow()}`;
+  const file = uniqueGatePath(p, base);
+  const fileRel = relGate(dir, file);
   const content = `# 开工令 · ${stage}
 
 > 状态：historical｜最后核对：${DATE}
@@ -970,8 +1340,9 @@ function cmdStart(args, flags) {
 - 下达人：${by}
 - 阶段：${stage}
 - 蓝图：BLUEPRINT.md ${bp.version}（批准人：${bp.approver}）
-- 冻结门禁：${freeze}
-- 开工条件：宪章确认；蓝图批准；开放 S1/S2 = 0
+- 冻结门禁：${relGate(dir, freezeFile)}
+- 冻结 payload：${recordedHash}
+- 开工条件：宪章确认；蓝图批准；冻结 payload 与当前内容一致；开放 S1/S2 = 0
 - 首次报告点：${firstReport}
 - 预算/停止：见冻结门禁与 STATUS.md 第 7 节
 
@@ -997,20 +1368,126 @@ function cmdStart(args, flags) {
 - 集群管家：
 `;
 
-  fs.writeFileSync(file, content, 'utf8');
+  const section8 = `## 8. 开工令
 
-  let s = status
-    .replace(/- 阶段状态：.*/, '- 阶段状态：executing')
-    .replace(/- 当前门禁：.*/, `- 当前门禁：${DATE}-start-order`);
-  if (!/- 阶段状态：/.test(s)) s = s.replace(/(- 阶段：.*\n)/, '$1- 阶段状态：executing\n');
-  s = s.replace(/\n## 8\. 开工令[\s\S]*$/, '');
-  s = s.trimEnd() + `\n\n## 8. 开工令\n\n- 下达人：${by}\n- 日期：${DATE}\n- 首次报告点：${firstReport}\n- 依据：${freeze} + BLUEPRINT.md ${bp.version}\n- 只授权本阶段；阶段结束或触发停止条件必须停、报告、等下一道门。\n`;
-  fs.writeFileSync(p.status, s, 'utf8');
+- 下达人：${by}
+- 日期：${DATE}
+- 首次报告点：${firstReport}
+- 依据：${relGate(dir, freezeFile)} + payload ${recordedHash}
+- 只授权本阶段；阶段结束或触发停止条件必须停、报告、等下一道门。
+`;
+
+  let nextStatus = statusWithStage(fs.readFileSync(p.status, 'utf8'), stage, 'executing', path.basename(file));
+  nextStatus = replaceStatusSection(nextStatus, '## 8. 开工令', section8);
+
+  const previous = readStateFile(dir) ?? {};
+  const nextState = stateFileContent(dir, {
+    ...previous.stage,
+    name: stage,
+    state: 'executing',
+    gate: fileRel,
+    start: {
+      gate: fileRel,
+      at: new Date().toISOString(),
+      by,
+      freeze_payload_hash: recordedHash,
+    },
+  });
+  nextStatus = syncStatusSummary(nextStatus, JSON.parse(nextState));
+
+  commitFiles(dir, [
+    { path: file, content },
+    { path: path.join(dir, 'state.json'), content: nextState },
+    { path: p.status, content: nextStatus },
+  ]);
 
   console.log(`开工令已下达：${file}`);
   console.log(`  阶段：${stage}｜蓝图：${bp.version}｜下达人：${by}`);
-  console.log(`  首次报告点：${firstReport}`);
+  console.log(`  冻结 payload：${recordedHash}`);
   console.log('  只授权本阶段；阶段结束或触发停止条件必须停。');
+}
+
+function cmdPause(args, flags) {
+  const dir = needDir(args, 'pause');
+  const p = projectPaths(dir);
+  const info = readStageInfo(dir);
+  if (info.state !== 'executing') fail(`pause 只允许从 executing 进入；当前 ${info.name}/${info.state}`);
+  const by = cleanCell(requireHuman(flags.by, dir, 'pause'));
+  const reason = cleanCell(flags.reason || '-') || '-';
+  let nextStatus = appendStageEvent(
+    statusWithStage(fs.readFileSync(p.status, 'utf8'), info.name, 'paused', '-'),
+    `${DATE} 暂停（${by}）：${reason}`,
+  );
+  const state = readStateFile(dir) ?? {};
+  state.updated = DATE;
+  state.stage = { ...(state.stage ?? {}), state: 'paused', paused: { at: new Date().toISOString(), by, reason } };
+  nextStatus = syncStatusSummary(nextStatus, state);
+  commitFiles(dir, [
+    { path: path.join(dir, 'state.json'), content: `${JSON.stringify(state, null, 2)}\n` },
+    { path: p.status, content: nextStatus },
+  ]);
+  console.log(`阶段已暂停：${info.name}（${by}）`);
+}
+
+function cmdResume(args, flags) {
+  const dir = needDir(args, 'resume');
+  const p = projectPaths(dir);
+  const info = readStageInfo(dir);
+  if (info.state !== 'paused') fail(`resume 只允许从 paused 进入；当前 ${info.name}/${info.state}`);
+  const by = cleanCell(requireHuman(flags.by, dir, 'resume'));
+  let nextStatus = appendStageEvent(
+    statusWithStage(fs.readFileSync(p.status, 'utf8'), info.name, 'executing', readStateFile(dir)?.stage?.gate ? path.basename(readStateFile(dir).stage.gate) : '-'),
+    `${DATE} 恢复（${by}）`,
+  );
+  const state = readStateFile(dir) ?? {};
+  state.updated = DATE;
+  state.stage = { ...(state.stage ?? {}), state: 'executing', resumed: { at: new Date().toISOString(), by } };
+  nextStatus = syncStatusSummary(nextStatus, state);
+  commitFiles(dir, [
+    { path: path.join(dir, 'state.json'), content: `${JSON.stringify(state, null, 2)}\n` },
+    { path: p.status, content: nextStatus },
+  ]);
+  console.log(`阶段已恢复执行：${info.name}（${by}）`);
+}
+
+function cmdClose(args, flags) {
+  const dir = needDir(args, 'close');
+  const p = projectPaths(dir);
+  const info = readStageInfo(dir);
+  if (info.state !== 'executing') fail(`close 只允许从 executing 进入；当前 ${info.name}/${info.state}`);
+  const by = cleanCell(requireHuman(flags.by, dir, 'close（阶段关闭）'));
+  const decision = normalizeGateDecision(flags.decision);
+  if (!['通过', '有条件通过', '退回补证', '暂停', '拒绝'].includes(decision)) {
+    fail('close --decision 必须是 通过/有条件通过/退回补证/暂停/拒绝');
+  }
+  if (!flags.gate || flags.gate === true) fail('close 需要 --gate <阶段门禁文件>');
+  const gateAbs = path.resolve(projectRootOf(dir), String(flags.gate));
+  const gateRelToGates = path.relative(p.gates, gateAbs);
+  if (gateRelToGates.startsWith('..') || path.isAbsolute(gateRelToGates)) fail('close --gate 必须位于 gates/ 内');
+  if (!fs.existsSync(gateAbs)) fail(`阶段门禁不存在：${gateAbs}`);
+  const gateText = fs.readFileSync(gateAbs, 'utf8');
+  const gateDecisionMatch = gateText.match(/^- 决策：\s*([^\n]+)/m);
+  if (!gateDecisionMatch || normalizeGateDecision(gateDecisionMatch[1]) !== decision) {
+    fail(`close --decision（${decision}）与门禁记录（${gateDecisionMatch?.[1] ?? '缺失'}）不一致`);
+  }
+  const reason = cleanCell(flags.reason || '-') || '-';
+  const gateName = path.basename(gateAbs);
+  let nextStatus = statusWithStage(fs.readFileSync(p.status, 'utf8'), info.name, 'closed', gateName);
+  nextStatus = appendStageEvent(nextStatus, `${DATE} 关闭（${by}）：${decision}；gate ${gateName}；${reason}`);
+  const state = readStateFile(dir) ?? {};
+  state.updated = DATE;
+  state.stage = {
+    ...(state.stage ?? {}),
+    state: 'closed',
+    gate: relGate(dir, gateAbs),
+    closed: { gate: relGate(dir, gateAbs), decision, reason, at: new Date().toISOString(), by },
+  };
+  nextStatus = syncStatusSummary(nextStatus, state);
+  commitFiles(dir, [
+    { path: path.join(dir, 'state.json'), content: `${JSON.stringify(state, null, 2)}\n` },
+    { path: p.status, content: nextStatus },
+  ]);
+  console.log(`阶段已关闭：${info.name}（${decision}，${by}）`);
 }
 
 function normalizeDecision(raw) {
@@ -1141,6 +1618,165 @@ function cmdStatus(args) {
   console.log(fs.readFileSync(path.join(dir, 'STATUS.md'), 'utf8'));
 }
 
+function cmdVerify(args, flags) {
+  const dir = needDir(args, 'verify');
+  const p = projectPaths(dir);
+  const projectRoot = projectRootOf(dir);
+  const gate = String(flags.gate || 'release').toLowerCase();
+  if (!['release', 'adoption', 'evolution', 'stage'].includes(gate)) {
+    fail('verify --gate 必须是 release/adoption/evolution/stage');
+  }
+  const reviewer = requireText(flags.reviewer, 'verify --reviewer');
+  const reviewerSession = cleanCell(flags['reviewer-session'] || '-') || '-';
+  const attestDir = attestationDir(dir);
+  ensureDir(attestDir);
+  const now = new Date();
+  const id = `VA-${now.toISOString().replace(/[-:T]/g, '').slice(0, 14)}-${crypto.randomBytes(3).toString('hex')}`;
+  const logPath = (label) => path.join(attestDir, `${id}-${label}.log`);
+  const failures = [];
+
+  // 1. check --strict
+  const cli = fileURLToPath(import.meta.url);
+  const checkRun = runCaptured(process.execPath, [cli, 'check', dir, '--strict'], projectRoot, logPath('check'));
+  const check = { status: checkRun.status === 0 ? 'pass' : 'fail', exit: checkRun.status, log: path.relative(dir, checkRun.logFile).replace(/\\/g, '/'), sha256: checkRun.sha256 };
+  if (checkRun.status !== 0) failures.push('check --strict 未通过');
+
+  // 2. probe
+  const manifest = projectManifest(dir) ?? {};
+  const commands = manifest.commands ?? {};
+  let probe = { status: 'missing', exit: null };
+  if (typeof commands.probe !== 'string') {
+    failures.push('PROJECT.json commands.probe 缺失');
+  } else {
+    const run = runCaptured(commands.probe, [], projectRoot, logPath('probe'), { shell: true, timeout: 120000 });
+    probe = { status: run.status === 0 ? 'pass' : 'fail', exit: run.status, log: path.relative(dir, run.logFile).replace(/\\/g, '/'), sha256: run.sha256, output: run.output };
+    if (run.status !== 0) failures.push(`probe 未通过（exit ${run.status}）`);
+  }
+
+  // 3. full tests
+  let tests = { status: 'missing', exit: null };
+  if (typeof commands.test !== 'string') {
+    failures.push('PROJECT.json commands.test 缺失');
+  } else {
+    const run = runCaptured(commands.test, [], projectRoot, logPath('test'), { shell: true, timeout: 900000 });
+    tests = { status: run.status === 0 ? 'pass' : 'fail', exit: run.status, log: path.relative(dir, run.logFile).replace(/\\/g, '/'), sha256: run.sha256, output: run.output };
+    if (run.status !== 0) failures.push(`完整测试未通过（exit ${run.status}）`);
+  }
+
+  // 4. criteria
+  const criteria = readCriteria(dir);
+  const criteriaStats = { total: 0, met: 0, waived: 0, deferred: 0, failed: 0, not_started: 0 };
+  if (!criteria.ok) {
+    failures.push(criteria.reason);
+  } else {
+    for (const cells of criteria.rows) {
+      const [criterionId, , criterionStatus, evidence, , humanDecision, due, impact] = cells;
+      criteriaStats.total++;
+      if (!STATE_ENUM.criteria.has(criterionStatus)) {
+        failures.push(`criteria ${criterionId} 状态非法：${criterionStatus}`);
+        continue;
+      }
+      if (criterionStatus === 'met') criteriaStats.met++;
+      if (criterionStatus === 'waived') criteriaStats.waived++;
+      if (criterionStatus === 'deferred') criteriaStats.deferred++;
+      if (criterionStatus === 'failed') criteriaStats.failed++;
+      if (criterionStatus === 'not-started') criteriaStats.not_started++;
+      if (criterionStatus === 'failed' || criterionStatus === 'not-started') {
+        failures.push(`criteria ${criterionId} 为 ${criterionStatus}`);
+      }
+      if (criterionStatus === 'met' && isPlaceholder(evidence)) failures.push(`criteria ${criterionId} 为 met 但没有证据`);
+      if ((criterionStatus === 'waived' || criterionStatus === 'deferred')
+        && (isPlaceholder(humanDecision) || isPlaceholder(due) || isPlaceholder(impact))) {
+        failures.push(`criteria ${criterionId} 为 ${criterionStatus} 但缺少人类裁决/到期/影响门`);
+      }
+    }
+    if (criteriaStats.total === 0) failures.push('criteria.md 没有判据行');
+  }
+
+  // 5. open S1/S2
+  const ledger = fs.existsSync(p.ledger) ? fs.readFileSync(p.ledger, 'utf8') : '';
+  const openRows = openHighRows(ledger);
+  if (openRows.length) failures.push(`开放 S1/S2：${openRows.map((row) => row.cells[0]).join('、')}`);
+
+  // 6. evidence debt by impact
+  const state = readStateFile(dir) ?? {};
+  const debts = Array.isArray(state.evidence_debt) ? state.evidence_debt : [];
+  const blockingDebt = [];
+  const openOther = [];
+  for (const debt of debts) {
+    if (!debt?.id || !debt?.impact || !debt?.due) {
+      failures.push(`evidence_debt 条目缺 id/impact/due：${debt?.id ?? '（空）'}`);
+      continue;
+    }
+    if (!['release', 'adoption', 'evolution', 'stage'].includes(debt.impact)) {
+      failures.push(`evidence_debt ${debt.id} impact 非法：${debt.impact}`);
+    }
+    const dueTime = Date.parse(debt.due);
+    if (!Number.isFinite(dueTime)) failures.push(`evidence_debt ${debt.id} due 非法：${debt.due}`);
+    const isOpen = debt.status === 'open' || debt.status === 'deferred';
+    if (debt.impact === gate && isOpen) {
+      blockingDebt.push({ id: debt.id, reason: 'open' });
+      failures.push(`证据债 ${debt.id} 未清（impact ${debt.impact}）`);
+    }
+    if (debt.impact === gate && isOpen && Number.isFinite(dueTime) && dueTime < now.getTime()) {
+      failures.push(`证据债 ${debt.id} 已过期（${debt.due}）`);
+    }
+    if (debt.impact !== gate && isOpen) openOther.push(debt.id);
+  }
+
+  // 7. tree hashes
+  const hashes = {
+    tree: projectTreeHash(dir),
+    product: productTreeHash(dir),
+    direction: hashFile(p.direction),
+    blueprint: hashFile(p.blueprint),
+    criteria: hashFile(path.join(dir, 'criteria.md')),
+  };
+  const attestRel = path.relative(projectRoot, attestDir).replace(/\\/g, '/');
+  const git = gitFacts(projectRoot, attestDir, attestRel);
+  if (git.available && git.dirty) failures.push('工作树不干净（git status 有未提交变更）；先提交再 verify');
+  const toolHash = hashFile(cli);
+
+  const ok = failures.length === 0;
+  const attestation = {
+    kind: 'verify',
+    version: 1,
+    id,
+    ok,
+    project: projectOf(dir),
+    gate,
+    created_at: now.toISOString(),
+    expires_at: new Date(now.getTime() + 72 * 3600 * 1000).toISOString(),
+    reviewer: { name: reviewer, session: reviewerSession },
+    git,
+    tree_hash: hashes.tree,
+    product_hash: hashes.product,
+    direction_hash: hashes.direction,
+    blueprint_hash: hashes.blueprint,
+    criteria_hash: hashes.criteria,
+    tool: { version: TOOL_VERSION, hash: toolHash },
+    open_s1s2: openRows.length,
+    criteria: criteriaStats,
+    evidence_debt: { gate, blocking: blockingDebt, open_other: openOther },
+    checks: { check, probe, tests },
+    failures,
+  };
+  const attestationPath = path.join(attestDir, `${id}.json`);
+  writeFileAtomic(attestationPath, `${JSON.stringify(attestation, null, 2)}\n`);
+
+  console.log(`${ok ? 'PASS' : 'FAIL'} verify · ${id}｜gate ${gate}`);
+  console.log(`  tree      ${attestation.tree_hash}`);
+  console.log(`  product   ${attestation.product_hash}`);
+  console.log(`  criteria  ${criteriaStats.total} 行（met ${criteriaStats.met} / waived ${criteriaStats.waived} / deferred ${criteriaStats.deferred}）`);
+  console.log(`  checks    check ${check.status}｜probe ${probe.status}｜tests ${tests.status}`);
+  console.log(`  attestation ${attestationPath}`);
+  if (!ok) {
+    for (const failure of failures) console.error(`  - ${failure}`);
+    process.exit(1);
+  }
+}
+
+
 function readJson(file) {
   return JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
 }
@@ -1157,7 +1793,7 @@ function walkMarkdown(dir) {
   const out = [];
   if (!fs.existsSync(dir)) return out;
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (entry.name === '.git' || entry.name === 'node_modules') continue;
+    if (entry.name === '.git' || entry.name === 'node_modules' || entry.name === '.aecw-txn' || entry.name.startsWith('.tmp')) continue;
     const abs = path.join(dir, entry.name);
     if (entry.isDirectory()) out.push(...walkMarkdown(abs));
     else if (entry.name.endsWith('.md')) out.push(abs);
@@ -1174,9 +1810,10 @@ const STATE_ENUM = {
   criteria: new Set(['met', 'waived', 'deferred', 'failed', 'not-started']),
 };
 
-function cmdCheck(args) {
+function cmdCheck(args, flags = {}) {
   const dir = args[0] ? path.resolve(args[0]) : '';
   if (!dir) fail('check 需要一个项目目录');
+  const strict = Boolean(flags.strict);
   const p = projectPaths(dir);
   const required = [p.status, p.direction, p.blueprint, p.ledger, p.board, p.work, p.evidence, p.memory, p.landing, p.gates, p.inbox];
   const missing = required.filter((x) => !fs.existsSync(x));
@@ -1243,8 +1880,8 @@ function cmdCheck(args) {
     else stageState = 'seed';
   }
 
-  const hasFreeze = Boolean(latestGate(p, 'charter-freeze'));
-  const hasStart = Boolean(latestGate(p, 'start-order'));
+  const hasFreeze = Boolean(latestStageGate(p, stage, 'charter-freeze'));
+  const hasStart = Boolean(latestStageGate(p, stage, 'start-order'));
   const bp = blueprintMeta(p);
 
   if (stageState !== 'seed') {
@@ -1386,6 +2023,10 @@ function cmdCheck(args) {
       } else {
         console.log('  OK   state.stage 与 STATUS 一致');
       }
+      if (stateFile.stage?.gate && !fs.existsSync(path.join(dir, stateFile.stage.gate))) {
+        failCount++;
+        console.log(`  FAIL state.stage.gate 不存在：${stateFile.stage.gate}`);
+      }
       if (stateFile.owner?.name !== owner) {
         failCount++;
         console.log(`  FAIL state.owner 与 STATUS 不一致：${stateFile.owner?.name ?? '（空）'} vs ${owner || '（空）'}`);
@@ -1516,9 +2157,9 @@ function cmdCheck(args) {
     for (const line of criteriaText.split(/\r?\n/)) {
       if (!line.trim().startsWith('|')) continue;
       const cells = line.split('|').slice(1, -1).map((cell) => cell.trim());
-      if (cells.length < 7 || cells[0] === 'ID' || /^-+$/.test(cells[0])) continue;
+      if (cells.length < 8 || cells[0] === 'ID' || /^-+$/.test(cells[0])) continue;
       criteriaRows++;
-      const [id, , criterionStatus, evidence, , humanDecision, impact] = cells;
+      const [id, , criterionStatus, evidence, , humanDecision, due, impact] = cells;
       if (!STATE_ENUM.criteria.has(criterionStatus)) {
         failCount++;
         console.log(`  FAIL criteria ${id} 状态非法：${criterionStatus}`);
@@ -1527,9 +2168,9 @@ function cmdCheck(args) {
         failCount++;
         console.log(`  FAIL criteria ${id} 为 met 但没有证据`);
       }
-      if ((criterionStatus === 'waived' || criterionStatus === 'deferred') && (isPlaceholder(humanDecision) || isPlaceholder(impact))) {
+      if ((criterionStatus === 'waived' || criterionStatus === 'deferred') && (isPlaceholder(humanDecision) || isPlaceholder(due) || isPlaceholder(impact))) {
         failCount++;
-        console.log(`  FAIL criteria ${id} 为 ${criterionStatus} 但缺少人类裁决/影响门（不得用 - 占位）`);
+        console.log(`  FAIL criteria ${id} 为 ${criterionStatus} 但缺少人类裁决/到期/影响门（不得用 - 占位）`);
       }
       if (criterionStatus === 'failed' || criterionStatus === 'not-started') {
         failCount++;
@@ -1609,9 +2250,10 @@ function cmdCheck(args) {
   }
   console.log('  OK   当前文档关键词一致性');
 
-  console.log(`结果：FAIL ${failCount}｜WARN ${warnCount}`);
+  console.log(`结果：FAIL ${failCount}｜WARN ${warnCount}${strict ? '（strict）' : ''}`);
+  if (strict && warnCount > 0) console.log('  strict：WARN 视为 FAIL');
   console.log('说明：以上为结构/一致性检查；不是授权/发布证明。');
-  if (failCount) process.exit(1);
+  if (failCount || (strict && warnCount > 0)) process.exit(1);
 }
 
 function demoDissentDetail() {
@@ -1960,15 +2602,19 @@ function main() {
     case 'blueprint': return cmdBlueprint(args, flags);
     case 'freeze': return cmdFreeze(args, flags);
     case 'start': return cmdStart(args, flags);
+    case 'pause': return cmdPause(args, flags);
+    case 'resume': return cmdResume(args, flags);
+    case 'close': return cmdClose(args, flags);
     case 'change': return cmdChange(args, flags);
     case 'status': return cmdStatus(args);
     case 'dissent': return cmdDissent(args, flags);
     case 'fact': return cmdFact(args, flags);
     case 'gate': return cmdGate(args, flags);
+    case 'verify': return cmdVerify(args, flags);
     case 'resolve': return cmdResolve(args, flags);
     case 'accept': return cmdAccept(args, flags);
     case 'log': return cmdLog(args, flags);
-    case 'check': return cmdCheck(args);
+    case 'check': return cmdCheck(args, flags);
     case 'demo': return cmdDemo(args, flags);
     default: return fail(`未知命令：${cmd}（用 help 查看）`);
   }

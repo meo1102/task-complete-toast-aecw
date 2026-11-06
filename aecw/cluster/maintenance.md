@@ -11,6 +11,7 @@
 | 2026-11-05 | v0.9 校准验收 | 修复 13 处残留当前文档矛盾；G4-ENTRY 口径；`PROJECT.json` test 命令；`state.baseline`；验收报告 | F-050；[`../workspace/evidence/2026-11-05-v09-acceptance.md`](../workspace/evidence/2026-11-05-v09-acceptance.md) |
 | 2026-11-06 | 布局 v3（取消 product 层） | 产品代码 → 仓库根；profile → 根；`PROJECT.json`/`state.layout`/`state.install`/probe/check 同步 | F-051；[`../workspace/evidence/2026-11-06-layout-v3.md`](../workspace/evidence/2026-11-06-layout-v3.md) |
 | 2026-11-06 | 红队整改 **S1**（P0-1 + P0-7） | 治理工具 0.9.3：open S1/S2 = FAIL；通过类门禁拒绝自由文本；init 生成 PROJECT/state/criteria 并自检；表格转义/分表 ID/半事务 | F-052；[`../workspace/evidence/2026-11-06-s1-redteam.md`](../workspace/evidence/2026-11-06-s1-redteam.md) |
+| 2026-11-06 | 红队整改 **S2**（P0-2 + P0-3） | 治理工具 0.9.4：`verify` attestation；gate 绑定 tree；freeze payload hash/start 重算；closed 终态/pause/resume/close；唯一门禁名；criteria 到期列 | F-053；[`../workspace/evidence/2026-11-06-s2-redteam.md`](../workspace/evidence/2026-11-06-s2-redteam.md) |
 
 ## 停止/回滚
 
