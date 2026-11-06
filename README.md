@@ -119,7 +119,7 @@ node aecw/bin/aecw.mjs evolve aecw list
 - G2-8 双会话并发/上限/顺序未测（已接受遗留）。
 - G3-4b 提醒卡不受 `durationMs` 未单独真机（已接受遗留）。
 - 真实浏览器 settings save/307/自定义 routePath/live 限速未真机；发布后条件 2026-11-20 前复核。
-- 1.3.2 候选未发布；远程 `main` 与 `v1.3.2` 未推送（本机 GitHub 凭证缺失）。
+- 1.3.2 已 conditional 发布并推送：`origin/main`/`v1.3.2` 已同步；远程条件已关闭。
 
 ## 目录
 
@@ -131,5 +131,5 @@ task-complete-toast-aecw/
    ├─ state.json / STATUS.md / criteria.md
    ├─ bin/aecw.mjs
    ├─ scripts/probe.mjs
-   └─ workspace/{evidence,decisions,evolution,memory,archive}
+   └─ workspace/{evidence,decisions,conditions,evolution,memory,archive}
 ```

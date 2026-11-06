@@ -216,6 +216,7 @@ function projectPaths(dir) {
     evidence: path.join(dir, 'workspace', 'evidence'),
     attestations: path.join(dir, 'workspace', 'evidence', 'attestations'),
     decisions: path.join(dir, 'workspace', 'decisions'),
+    conditions: path.join(dir, 'workspace', 'conditions'),
     evolution: path.join(dir, 'workspace', 'evolution'),
     candidates: path.join(dir, 'workspace', 'evolution', 'candidates'),
     ledger: path.join(dir, 'workspace', 'evolution', 'ledger.jsonl'),
@@ -272,6 +273,29 @@ function loadDecisions(dir) {
     out.push({ ...value, __file: file, __rel: rel(p.project, file) });
   }
   return out;
+}
+
+function loadConditions(dir) {
+  const p = projectPaths(dir);
+  if (!fs.existsSync(p.conditions)) return [];
+  const out = [];
+  for (const name of fs.readdirSync(p.conditions).filter((item) => item.endsWith('.json')).sort()) {
+    const value = readJsonMaybe(path.join(p.conditions, name));
+    if (!value) fail(`condition ${name} 无法解析`);
+    out.push({ ...value, __file: path.join(p.conditions, name), __rel: rel(p.project, path.join(p.conditions, name)) });
+  }
+  return out;
+}
+
+function openConditions(conditions) {
+  return conditions
+    .filter((condition) => condition.status === 'open')
+    .sort((a, b) => {
+      const left = a.due ?? '9999-99-99';
+      const right = b.due ?? '9999-99-99';
+      if (left !== right) return left.localeCompare(right);
+      return String(a.id).localeCompare(String(b.id));
+    });
 }
 
 function appendLedger(dir, event) {
@@ -451,31 +475,20 @@ function stateSummary(state, decisions) {
   };
 }
 
-function collectConditions(decisions) {
-  const out = [];
-  for (const decision of [...decisions].sort((a, b) => String(a.id).localeCompare(String(b.id)))) {
-    for (const condition of decision.conditions ?? []) {
-      out.push({
-        id: `C-${String(out.length + 1).padStart(3, '0')}`,
-        text: String(condition.text ?? ''),
-        due: condition.due ?? null,
-        owner: condition.owner ?? '—',
-        source: decision.id,
-      });
-    }
-  }
-  return out.sort((a, b) => {
-    const left = a.due ?? '9999-99-99';
-    const right = b.due ?? '9999-99-99';
-    if (left !== right) return left.localeCompare(right);
-    return `${a.source}${a.text}`.localeCompare(`${b.source}${b.text}`);
-  }).slice(0, MAX_CRITERIA);
+function collectConditions(conditions) {
+  return openConditions(conditions).map((condition) => ({
+    id: condition.id,
+    text: String(condition.text ?? ''),
+    due: condition.due ?? null,
+    owner: condition.owner ?? '—',
+    source: condition.source ?? condition.id,
+  }));
 }
 
-function renderStatus(state, decisions) {
+function renderStatus(state, decisions, conditionRecords) {
   const summary = stateSummary(state, decisions);
   const decision = decisions.find((row) => row.id === summary.decision);
-  const conditions = collectConditions(decisions);
+  const conditions = collectConditions(conditionRecords);
   const lines = [
     `# STATUS · ${state.project}`,
     '',
@@ -522,8 +535,8 @@ function renderStatus(state, decisions) {
   return `${lines.join('\n')}\n`;
 }
 
-function renderCriteria(decisions) {
-  const conditions = collectConditions(decisions);
+function renderCriteria(conditionRecords) {
+  const conditions = collectConditions(conditionRecords);
   const lines = [
     '# 当前阻塞项 · 生成视图',
     '',
@@ -541,11 +554,13 @@ function renderCriteria(decisions) {
 function renderAll(dir) {
   const state = loadState(dir);
   const decisions = loadDecisions(dir);
+  const conditions = loadConditions(dir);
   const p = projectPaths(dir);
   ensureDir(p.workspace);
-  writeAtomic(p.status, renderStatus(state, decisions));
-  writeAtomic(p.criteria, renderCriteria(decisions));
-  return { state, decisions, status: p.status, criteria: p.criteria };
+  ensureDir(p.conditions);
+  writeAtomic(p.status, renderStatus(state, decisions, conditions));
+  writeAtomic(p.criteria, renderCriteria(conditions));
+  return { state, decisions, conditions, status: p.status, criteria: p.criteria };
 }
 
 function validateEvidence(project, evidence, errors, label) {
@@ -675,6 +690,14 @@ function validateDecision(dir, decision, owner, currentTree, errors, state) {
   if (attestation && (attestation.tree_hash !== currentTree || decision.attestation.tree_hash !== currentTree)) {
     errors.push(`${label} tree 不一致：decision/attestation 与当前树不同`);
   }
+  if (decision.risk === 'high') {
+    if (!decision.baseline || typeof decision.baseline !== 'object') {
+      errors.push(`${label} high risk 缺 baseline`);
+    } else {
+      if (decision.baseline.tree_hash !== currentTree) errors.push(`${label} baseline.tree_hash 与当前树不一致`);
+      if (!/^(?:[0-9a-f]{7,40}|nogit)$/i.test(String(decision.baseline.commit ?? ''))) errors.push(`${label} baseline.commit 非法`);
+    }
+  }
   const riskRank = { low: 1, medium: 2, high: 3 };
   if (attestation && riskRank[decision.risk] > riskRank[attestation.risk]) {
     errors.push(`${label} risk 高于 attestation.risk（${decision.risk} > ${attestation.risk}）`);
@@ -769,8 +792,19 @@ function checkEvolution(dir, state, errors) {
   }
   for (const candidate of candidates.values()) {
     if (candidate.status === 'adopted' && !adopted.has(candidate.id)) errors.push(`candidate ${candidate.id} adopted 但 ledger 无记录`);
+    if (!candidate.artifact || typeof candidate.artifact.path !== 'string' || typeof candidate.artifact.sha256 !== 'string' || typeof candidate.artifact.version !== 'string') {
+      errors.push(`candidate ${candidate.id} 缺 artifact {path,sha256,version}`);
+    }
+    if (!candidate.metric || typeof candidate.metric.name !== 'string' || !['lower', 'higher'].includes(candidate.metric.direction)) {
+      errors.push(`candidate ${candidate.id} 缺 metric {name,direction}`);
+    }
     if (candidate.status === 'adopted' && candidate.scope === 'project') {
       if (!candidate.evaluation?.e1) errors.push(`project candidate ${candidate.id} adopted 但缺 E1 通过证据`);
+      if (!Number.isFinite(candidate.evaluation?.baseline) || !Number.isFinite(candidate.evaluation?.candidate) || !Number.isFinite(candidate.evaluation?.delta)) {
+        errors.push(`project candidate ${candidate.id} 缺 baseline/candidate/delta`);
+      }
+      if (candidate.evaluation?.improved !== true) errors.push(`project candidate ${candidate.id} adopted 但未标记 improved`);
+      if (!candidate.evaluation?.eval_log?.path || !candidate.evaluation?.eval_log?.sha256) errors.push(`project candidate ${candidate.id} 缺 eval_log`);
       for (const key of ['tests', 'probe']) {
         const log = candidate.evaluation?.logs?.[key];
         if (!log || typeof log.path !== 'string' || typeof log.sha256 !== 'string') {
@@ -826,6 +860,7 @@ function cmdCheck(args, flags) {
     p.evidence,
     p.attestations,
     p.decisions,
+    p.conditions,
     p.evolution,
     p.candidates,
     p.ledger,
@@ -910,6 +945,27 @@ function cmdCheck(args, flags) {
   } catch (error) {
     errors.push(`decisions 无法解析：${error.message}`);
   }
+  let conditionRecords = [];
+  try {
+    conditionRecords = loadConditions(dir);
+  } catch (error) {
+    errors.push(`conditions 无法解析：${error.message}`);
+  }
+  for (const condition of conditionRecords) {
+    const label = `condition ${condition.id ?? '（无 id）'}`;
+    if (typeof condition.id !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9._:-]{0,79}$/.test(condition.id)) errors.push(`${label} id 非法`);
+    if (typeof condition.text !== 'string' || !condition.text.trim()) errors.push(`${label} text 为空`);
+    if (condition.due !== null && condition.due !== undefined && !isDate(condition.due)) errors.push(`${label} due 非法`);
+    if (typeof condition.owner !== 'string' || !condition.owner.trim()) errors.push(`${label} owner 为空`);
+    if (!['open', 'closed', 'waived'].includes(condition.status)) errors.push(`${label} status 非法`);
+    if (condition.status === 'closed' || condition.status === 'waived') {
+      if (!Array.isArray(condition.evidence) || condition.evidence.length === 0) errors.push(`${label} ${condition.status} 缺 evidence`);
+      else validateEvidence(project, condition.evidence, errors, label);
+      if (condition.closed_by !== state.owner?.name) errors.push(`${label} closed_by 必须是 owner`);
+      if (!isIso(condition.closed_at)) errors.push(`${label} closed_at 非法`);
+      if (condition.status === 'waived' && (typeof condition.waiver_reason !== 'string' || !condition.waiver_reason.trim())) errors.push(`${label} waived 缺 waiver_reason`);
+    }
+  }
   const currentTree = treeHash(dir);
   for (const decision of decisions) {
     if (decision.__rel.split('/').pop() !== `${decision.id}.json`) errors.push(`decision 文件名与 id 不一致：${decision.__rel}`);
@@ -949,15 +1005,13 @@ function cmdCheck(args, flags) {
     }
   }
 
-  const expectedStatus = renderStatus(state, decisions);
+  const expectedStatus = renderStatus(state, decisions, conditionRecords);
   const actualStatus = fs.existsSync(p.status) ? fs.readFileSync(p.status, 'utf8') : '';
-  if (actualStatus !== expectedStatus) errors.push('STATUS.md 与 state/decisions 生成结果不一致（运行 render）');
-  const expectedCriteria = renderCriteria(decisions);
+  if (actualStatus !== expectedStatus) errors.push('STATUS.md 与 state/decisions/conditions 生成结果不一致（运行 render）');
+  const expectedCriteria = renderCriteria(conditionRecords);
   const actualCriteria = fs.existsSync(p.criteria) ? fs.readFileSync(p.criteria, 'utf8') : '';
-  if (actualCriteria !== expectedCriteria) errors.push('criteria.md 与 decisions.conditions 生成结果不一致（运行 render）');
-  const conditionCount = collectConditions(decisions).length;
-  const allConditionCount = decisions.reduce((sum, decision) => sum + (decision.conditions?.length ?? 0), 0);
-  if (allConditionCount > MAX_CRITERIA) errors.push(`当前阻塞项 ${allConditionCount} 超过上限 ${MAX_CRITERIA}`);
+  if (actualCriteria !== expectedCriteria) errors.push('criteria.md 与 conditions 生成结果不一致（运行 render）');
+  const conditionCount = collectConditions(conditionRecords).length;
   if (conditionCount > MAX_CRITERIA) errors.push(`criteria 行数 ${conditionCount} 超过上限 ${MAX_CRITERIA}`);
 
   const readme = fs.existsSync(path.join(project, 'README.md')) ? fs.readFileSync(path.join(project, 'README.md'), 'utf8') : '';
@@ -977,7 +1031,7 @@ function cmdCheck(args, flags) {
   }
   console.log(`  OK    state / STATUS / decisions / evolution / archive`);
   console.log(`  OK    tree ${currentTree}`);
-  console.log(`  OK    decisions ${decisions.length}｜conditions ${allConditionCount}｜active evolution ${state.evolution.active.length}`);
+  console.log(`  OK    decisions ${decisions.length}｜open conditions ${conditionCount}｜active evolution ${state.evolution.active.length}`);
   console.log(`结果：FAIL 0｜WARN ${warnings.length}`);
 }
 
@@ -994,8 +1048,8 @@ function cmdStatus(args) {
   const dir = requireDir(args, 'status');
   const state = loadState(dir);
   const decisions = loadDecisions(dir);
-  const conditions = collectConditions(decisions);
-  console.log(JSON.stringify({ state, decisions: decisions.map((row) => ({ id: row.id, scope: row.scope, risk: row.risk, human: row.human, conditions: row.conditions })), blockers: conditions }, null, 2));
+  const conditions = loadConditions(dir);
+  console.log(JSON.stringify({ state, decisions: decisions.map((row) => ({ id: row.id, scope: row.scope, risk: row.risk, human: row.human, conditions: row.conditions })), conditions, blockers: collectConditions(conditions) }, null, 2));
 }
 
 function cmdTree(args) {
@@ -1151,8 +1205,33 @@ function cmdDecide(args, flags) {
     if (due && !isDate(due)) fail(`condition due 非法：${due}`);
     conditions.push({ text: body, due: due || null, owner: conditionOwner || owner });
   }
-  const existingConditions = loadDecisions(dir).reduce((sum, decision) => sum + (decision.conditions?.length ?? 0), 0);
-  if (existingConditions + conditions.length > MAX_CRITERIA) fail(`conditions 总数超过 ${MAX_CRITERIA}`);
+  const existingConditions = openConditions(loadConditions(dir)).length;
+  if (existingConditions + conditions.length > MAX_CRITERIA) fail(`open conditions 总数超过 ${MAX_CRITERIA}`);
+  const conditionIds = [];
+  const conditionRecords = loadConditions(dir);
+  for (const existingId of list(flags, 'condition-id')) {
+    const safeId = requireId(existingId, 'condition id');
+    const existing = conditionRecords.find((row) => row.id === safeId);
+    if (!existing || existing.status !== 'open') fail(`condition-id 不是 open：${safeId}`);
+    conditionIds.push(safeId);
+  }
+  ensureDir(p.conditions);
+  for (const condition of conditions) {
+    const conditionId = `C-${DATE}-${crypto.randomBytes(2).toString('hex')}`;
+    const conditionPath = path.join(p.conditions, `${conditionId}.json`);
+    writeJson(conditionPath, {
+      id: conditionId,
+      kind: 'condition',
+      text: condition.text,
+      due: condition.due,
+      owner: condition.owner,
+      source: id,
+      status: 'open',
+      evidence: [],
+      created_at: NOW(),
+    });
+    conditionIds.push(conditionId);
+  }
   const residual = one(flags, 'residual', undefined);
   if (risk === 'high' && (typeof residual !== 'string' || !residual.trim())) fail('high risk 必须写 --residual');
   let independentReview = null;
@@ -1196,6 +1275,8 @@ function cmdDecide(args, flags) {
     residual_risk: residual ?? 'none',
     human: { name: owner, decision: humanDecision, at: humanAt, ...(humanSource ? { source: humanSource } : {}) },
     attestation: { path: rel(project, attestationPath), id: attestation.id, tree_hash: attestation.tree_hash },
+    baseline: { tree_hash: attestation.tree_hash, commit: one(flags, 'baseline-commit', attestation.git?.head ?? 'nogit') },
+    condition_ids: conditionIds,
     created_at: NOW(),
     ...(independentReview ? { independent_review: independentReview } : {}),
     ...(backfill ? { backfilled: true, backfilled_at: NOW() } : {}),
@@ -1267,12 +1348,24 @@ function cmdEvolve(args, flags) {
     const risk = one(flags, 'risk', 'low');
     if (!RISKS.has(risk)) fail('evolve propose --risk 非法');
     if (!observation || !change || !expected || !rollback) fail('propose 需要 observation/change/expected/rollback');
+    const artifactPath = one(flags, 'artifact', undefined);
+    if (!artifactPath) fail('propose 需要 --artifact <path>');
+    const artifactAbs = safeInProject(project, artifactPath);
+    if (!fs.existsSync(artifactAbs)) fail(`artifact 不存在：${artifactPath}`);
+    const version = one(flags, 'version', undefined);
+    if (!version) fail('propose 需要 --version');
+    const metricName = one(flags, 'metric', undefined);
+    if (!metricName) fail('propose 需要 --metric <name>');
+    const direction = one(flags, 'metric-direction', 'lower');
+    if (!['lower', 'higher'].includes(direction)) fail('propose --metric-direction 必须是 lower|higher');
     const candidate = {
       id,
       type,
       scope,
       observation,
       evidence: list(flags, 'evidence'),
+      artifact: { path: rel(project, artifactAbs), sha256: hashFile(artifactAbs), version },
+      metric: { name: metricName, direction },
       change,
       expected,
       risk,
@@ -1308,13 +1401,30 @@ function cmdEvolve(args, flags) {
         const probeLog = path.join(p.evidence, 'evolution', `${requireId(id, 'candidate id')}-probe.log`);
         const tests = runCommandString(projectManifest(project).commands?.test, project, testLog, 900000);
         const probe = runCommandString(projectManifest(project).commands?.probe, project, probeLog, 120000);
-        evaluation.e1 = tests.status === 0 && probe.status === 0;
         evaluation.tests_pass = tests.status === 0;
         evaluation.probe_pass = probe.status === 0;
         evaluation.logs = {
           tests: { path: rel(project, testLog), sha256: hashFile(testLog) },
           probe: { path: rel(project, probeLog), sha256: hashFile(probeLog) },
         };
+      }
+      if (evaluation.forced_failure !== true) {
+        const baseline = Number(one(flags, 'baseline', NaN));
+        const candidateValue = Number(one(flags, 'candidate', NaN));
+        if (!Number.isFinite(baseline) || !Number.isFinite(candidateValue)) fail('project candidate 需要 --baseline 和 --candidate 数值');
+        const evalLogPath = one(flags, 'eval-log', undefined);
+        if (!evalLogPath) fail('project candidate 需要 --eval-log <path>');
+        const evalLogAbs = safeInProject(project, evalLogPath);
+        if (!fs.existsSync(evalLogAbs) || !fs.readFileSync(evalLogAbs, 'utf8').trim()) fail(`eval-log 为空：${evalLogPath}`);
+        const delta = candidateValue - baseline;
+        const improved = candidate.metric.direction === 'higher' ? delta > 0 : delta < 0;
+        evaluation.baseline = baseline;
+        evaluation.candidate = candidateValue;
+        evaluation.metric = candidate.metric;
+        evaluation.delta = delta;
+        evaluation.improved = improved;
+        evaluation.eval_log = { path: rel(project, evalLogAbs), sha256: hashFile(evalLogAbs) };
+        evaluation.e1 = Boolean(evaluation.tests_pass && evaluation.probe_pass && improved);
       }
     } else {
       const review = one(flags, 'independent-review', undefined);
@@ -1354,7 +1464,11 @@ function cmdEvolve(args, flags) {
     candidate.status = 'adopted';
     candidate.adopted_at = NOW();
     saveCandidate(candidate);
-    state.evolution = { ...(state.evolution ?? {}), active: [...new Set([...(state.evolution?.active ?? []), id])] };
+    state.evolution = {
+      ...(state.evolution ?? {}),
+      active: [...new Set([...(state.evolution?.active ?? []), id])],
+      versions: { ...(state.evolution?.versions ?? {}), [id]: candidate.artifact },
+    };
     state.updated = DATE;
     saveState(dir, state);
     appendLedger(dir, { event: 'adopted', id, scope: candidate.scope });
@@ -1475,6 +1589,45 @@ function cmdStart(args, flags) {
   console.log(`start ${state.stage.name}`);
 }
 
+function cmdCondition(args, flags) {
+  const sub = args[0];
+  const dir = requireDir(args.slice(1), 'condition');
+  acquireLock(dir);
+  const p = projectPaths(dir);
+  const state = loadState(dir);
+  const conditions = loadConditions(dir);
+  if (sub === 'list') {
+    console.log(JSON.stringify(conditions, null, 2));
+    return;
+  }
+  const id = requireId(one(flags, 'id', undefined), 'condition id');
+  const condition = conditions.find((row) => row.id === id);
+  if (!condition) fail(`condition 不存在：${id}`);
+  if (condition.status !== 'open') fail(`condition ${id} 不是 open（${condition.status}）`);
+  const by = one(flags, 'by', undefined);
+  if (by !== state.owner?.name) fail(`condition --by 必须是 owner ${state.owner?.name}`);
+  if (sub === 'close' || sub === 'waive') {
+    const evidence = list(flags, 'evidence').map((file) => {
+      const abs = safeInProject(p.project, file);
+      if (!fs.existsSync(abs) || !fs.statSync(abs).isFile()) fail(`condition evidence 不存在：${file}`);
+      return { path: rel(p.project, abs), sha256: hashFile(abs) };
+    });
+    if (evidence.length === 0) fail(`condition ${sub} 需要 --evidence`);
+    const reason = one(flags, 'reason', undefined);
+    if (sub === 'waive' && (typeof reason !== 'string' || !reason.trim())) fail('condition waive 需要 --reason');
+    condition.status = sub === 'close' ? 'closed' : 'waived';
+    condition.evidence = evidence;
+    condition.closed_by = by;
+    condition.closed_at = NOW();
+    if (sub === 'waive') condition.waiver_reason = reason;
+    writeJson(condition.__file, condition);
+    renderAll(dir);
+    console.log(`condition ${id} → ${condition.status}`);
+    return;
+  }
+  fail('condition 子命令：list|close|waive');
+}
+
 function cmdDissent(args, flags) {
   const dir = requireDir(args, 'dissent');
   acquireLock(dir);
@@ -1532,7 +1685,7 @@ function cmdInit(rawArgs, flags) {
   const name = one(flags, 'name', path.basename(project));
   const gov = path.basename(dir);
   ensureDir(dir);
-  for (const folder of ['bin', 'workspace/evidence/attestations', 'workspace/decisions', 'workspace/evolution/candidates', 'workspace/memory', 'workspace/archive']) {
+  for (const folder of ['bin', 'workspace/evidence/attestations', 'workspace/decisions', 'workspace/conditions', 'workspace/evolution/candidates', 'workspace/memory', 'workspace/archive']) {
     ensureDir(path.join(dir, folder));
   }
   fs.copyFileSync(CLI, path.join(dir, 'bin', 'aecw.mjs'));
@@ -1586,9 +1739,10 @@ function cmdHelp() {
   console.log('  node aecw.mjs check <aecw>');
   console.log('  node aecw.mjs render <aecw>');
   console.log('  node aecw.mjs verify <aecw> --reviewer <name> [--reviewer-session <id>] [--risk low|medium|high] [--independent]');
-  console.log('  node aecw.mjs decide <aecw> --attestation <verify.json> --scope <scope> --risk <risk> --by <owner> --decision <text> [--fact ...] [--condition "text|due|owner"] [--residual ...] [--evidence path]');
+  console.log('  node aecw.mjs decide <aecw> --attestation <verify.json> --scope <scope> --risk <risk> --by <owner> --decision <text> [--fact ...] [--condition "text|due|owner"] [--condition-id <id>] [--residual ...] [--evidence path] [--baseline-commit <sha>]');
   console.log('  node aecw.mjs evolve <aecw> propose|evaluate|adopt|retire|list ...');
   console.log('  node aecw.mjs change|freeze|start|dissent|resolve ...');
+  console.log('  node aecw.mjs condition <aecw> list|close|waive --id <id> --by <owner> --evidence <path>');
   console.log('  node aecw.mjs init <aecw> --name <name> --owner <human>');
   console.log('  node aecw.mjs gate   # 已废弃，不生成文件');
   console.log('  node aecw.mjs tree <aecw>');
@@ -1611,6 +1765,7 @@ try {
     case 'start': cmdStart(parsed.args.slice(1), parsed.flags); break;
     case 'dissent': cmdDissent(parsed.args.slice(1), parsed.flags); break;
     case 'resolve': cmdResolve(parsed.args.slice(1), parsed.flags); break;
+    case 'condition': cmdCondition(parsed.args.slice(1), parsed.flags); break;
     case 'init': cmdInit(parsed.args.slice(1), parsed.flags); break;
     case 'gate': cmdGate(); break;
     case 'help': case undefined: cmdHelp(); break;

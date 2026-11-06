@@ -173,6 +173,7 @@ test('32 路并发 evolve propose 不丢/不重/不截断', { timeout: 120000 },
         '--id', `EV-C-${index}`, '--type', 'test', '--scope', 'project',
         '--observation', 'o', '--change', 'c', '--expected', 'e',
         '--risk', 'low', '--rollback', 'r', '--run', `run-${index}`,
+        '--artifact', 'README.md', '--version', '1', '--metric', 'open-conditions',
       ], { cwd: project.project, stdio: 'ignore', windowsHide: true });
       child.on('error', reject);
       child.on('exit', (code) => resolve(code));
@@ -190,10 +191,12 @@ test('32 路并发 evolve propose 不丢/不重/不截断', { timeout: 120000 },
 
 test('E1 自动采纳、E2 必须人类、失败候选 retired', () => {
   const project = initProject();
-  assert.equal(cli(project, ['evolve', 'propose', project.gov, '--id', 'EV-E1', '--type', 'skill', '--scope', 'project', '--observation', 'o', '--change', 'c', '--expected', 'e', '--risk', 'low', '--rollback', 'r', '--run', 'r1']).code, 0);
-  assert.equal(cli(project, ['evolve', 'evaluate', project.gov, '--id', 'EV-E1']).code, 0);
+  const evalLog = path.join(project.gov, 'workspace', 'evidence', 'eval.txt');
+  fs.writeFileSync(evalLog, 'baseline=10 candidate=9\n', 'utf8');
+  assert.equal(cli(project, ['evolve', 'propose', project.gov, '--id', 'EV-E1', '--type', 'skill', '--scope', 'project', '--observation', 'o', '--change', 'c', '--expected', 'e', '--risk', 'low', '--rollback', 'r', '--run', 'r1', '--artifact', 'README.md', '--version', '1', '--metric', 'open-conditions']).code, 0);
+  assert.equal(cli(project, ['evolve', 'evaluate', project.gov, '--id', 'EV-E1', '--baseline', '10', '--candidate', '9', '--eval-log', evalLog]).code, 0);
   assert.equal(cli(project, ['evolve', 'adopt', project.gov, '--id', 'EV-E1']).code, 0);
-  assert.equal(cli(project, ['evolve', 'propose', project.gov, '--id', 'EV-E2', '--type', 'workflow', '--scope', 'governance', '--observation', 'o', '--change', 'c', '--expected', 'e', '--risk', 'high', '--rollback', 'r', '--run', 'r2']).code, 0);
+  assert.equal(cli(project, ['evolve', 'propose', project.gov, '--id', 'EV-E2', '--type', 'workflow', '--scope', 'governance', '--observation', 'o', '--change', 'c', '--expected', 'e', '--risk', 'high', '--rollback', 'r', '--run', 'r2', '--artifact', 'README.md', '--version', '1', '--metric', 'open-conditions']).code, 0);
   const review = path.join(project.gov, 'workspace', 'evidence', 'review.md');
   fs.writeFileSync(review, 'independent review\n', 'utf8');
   assert.equal(cli(project, ['evolve', 'evaluate', project.gov, '--id', 'EV-E2', '--independent-review', review]).code, 0);
@@ -201,8 +204,9 @@ test('E1 自动采纳、E2 必须人类、失败候选 retired', () => {
   assert.equal(noHuman.code, 1, noHuman.output);
   assert.match(noHuman.output, /--by 必须是 owner/);
   assert.equal(cli(project, ['evolve', 'adopt', project.gov, '--id', 'EV-E2', '--by', 'tester', '--decision', 'accept', '--independent-review', review]).code, 0);
-  assert.equal(cli(project, ['evolve', 'propose', project.gov, '--id', 'EV-BAD', '--type', 'test', '--scope', 'project', '--observation', 'o', '--change', 'c', '--expected', 'e', '--risk', 'low', '--rollback', 'r', '--run', 'r3']).code, 0);
-  assert.equal(cli(project, ['evolve', 'evaluate', project.gov, '--id', 'EV-BAD', '--tests-pass', 'true', '--probe-pass', 'false']).code, 0);
+  assert.equal(cli(project, ['evolve', 'propose', project.gov, '--id', 'EV-BAD', '--type', 'test', '--scope', 'project', '--observation', 'o', '--change', 'c', '--expected', 'e', '--risk', 'low', '--rollback', 'r', '--run', 'r3', '--artifact', 'README.md', '--version', '1', '--metric', 'open-conditions']).code, 0);
+  const badEval = cli(project, ['evolve', 'evaluate', project.gov, '--id', 'EV-BAD', '--tests-pass', 'true', '--probe-pass', 'false']);
+  assert.equal(badEval.code, 0, badEval.output);
   assert.equal(cli(project, ['evolve', 'retire', project.gov, '--id', 'EV-BAD', '--reason', 'no improvement']).code, 0);
   const checked = cli(project, ['check', project.gov]);
   assert.equal(checked.code, 0, checked.output);

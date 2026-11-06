@@ -4,7 +4,8 @@
 
 ## 当前
 
-- [`DR-2026-11-06-1.3.1.json`](DR-2026-11-06-1.3.1.json)：1.3.1 本地发布（有条件接受，回填；新树 verify `VA-20261106084857-cc2880`；原始 `0700071129` + `fd647e` 作为证据）。
+- [`DR-2026-11-06-1.3.2.json`](DR-2026-11-06-1.3.2.json)：1.3.2 conditional 发布（routePath/限速/G4 宽度；9 条 release conditions 中远程已关闭，其余按 `workspace/conditions/` 生命周期管理）。
+- 1.3.1/更早 decision 已归档到 [`../archive/decisions/`](../archive/decisions/)。
 
 ## 规则
 

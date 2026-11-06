@@ -41,6 +41,6 @@
 
 ## 6. 当前停点
 
-- 产品：1.3.1 已发布（tag `v1.3.1`，conditional；远程未推送）；**1.3.2 conditional 发布**（routePath/限速/G4 宽度；tag `v1.3.2`）。
-- 治理：AECW 0.10.0 已接受；当前阶段 `product-hardening` active。
-- 当前阻塞项：`STATUS.md` 生成视图；1.3.2 release decision 待人类。
+- 产品：1.3.1 已发布（tag `v1.3.1`，conditional）；**1.3.2 conditional 发布**（routePath/限速/G4 宽度；tag `v1.3.2`，远程已推送）。
+- 治理：AECW 0.10.0 已接受；当前阶段 `product-hardening` active；condition 生命周期独立。
+- 当前阻塞项：`STATUS.md` 生成视图；1.3.2 release decision 已有，条件按 `workspace/conditions/` 生命周期管理。
