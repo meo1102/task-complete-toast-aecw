@@ -1,6 +1,6 @@
 # 学习账 · task-complete-toast
 
-> 状态：current｜最后核对：2026-11-05
+> 状态：historical｜最后核对：2026-11-05
 
 > 观察/教训/候选；**不自动晋升**为宪章、规则或技能。晋升要走 `change`（blueprint/charter）+ 人类批准，或按进化门（[`evolution.md`](evolution.md)）试用/激活。
 > 来源：试点阶段报告 §4、决策记录根因复盘、PILOT-REVIEW 的上下文污染分析。

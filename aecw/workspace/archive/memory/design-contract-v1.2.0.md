@@ -1,6 +1,6 @@
 # 设计
 
-> 状态：current｜最后核对：2026-11-05
+> 状态：historical｜最后核对：2026-11-05
 
 > 约束：[`human/direction.md`](../../human/direction.md)（继承宪章 v1.0）。本文描述 **v1.2.0 发布行为（G1/G2/G3）**；**§16 是 `grow-2` 的 G4 增量（随 1.3.0 发布）**。已知未测项见 [`验收报告 §14`](../evidence/acceptance-report-v1.2.0.md)。
 

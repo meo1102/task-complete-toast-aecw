@@ -1,6 +1,6 @@
 # 施工蓝图 · {{PROJECT}}
 
-> 状态：current｜最后核对：{{DATE}}
+> 状态：historical｜最后核对：{{DATE}}
 
 - 版本：v1
 - 阶段：{{STAGE}}

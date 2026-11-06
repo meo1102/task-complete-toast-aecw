@@ -1,6 +1,6 @@
 # workspace/work
 
-> 状态：current｜最后核对：2026-11-06
+> 状态：historical｜最后核对：2026-11-06
 
 任务产物、草稿、候选。候选不得当作已验收事实；当前状态见 [`../../STATUS.md`](../../STATUS.md)。
 

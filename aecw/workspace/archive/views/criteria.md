@@ -1,6 +1,6 @@
 # 验收矩阵 · task-complete-toast-aecw
 
-> 状态：current
+> 状态：historical
 > 最后核对：2026-11-05
 > 权威：本矩阵与 `state.json`；门禁是矩阵的视图。`met` 必须有证据；`waived/deferred` 必须有人类裁决/日期/影响门。
 > 证据等级：E1 运行事实｜E2 人类目视（无截图）｜E3 文档主张。

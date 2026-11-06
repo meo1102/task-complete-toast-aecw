@@ -1,6 +1,6 @@
 # 施工蓝图 · task-complete-toast
 
-> 状态：current｜最后核对：2026-11-06
+> 状态：historical｜最后核对：2026-11-06
 
 - 版本：v3
 - 阶段：security-1

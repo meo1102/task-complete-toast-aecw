@@ -1,6 +1,6 @@
 # STATUS · {{PROJECT}}
 
-> 状态：current｜最后核对：{{DATE}}
+> 状态：historical｜最后核对：{{DATE}}
 <!-- AECW-STATE {{SUMMARY}} -->
 {{STATE_BLOCK}}
 > **唯一当前状态页。** 最后更新：{{DATE}}｜人类所有者：{{OWNER}}

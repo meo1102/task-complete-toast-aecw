@@ -1,6 +1,6 @@
 # AGENTS.md · task-complete-toast（AECW 治理）
 
-> 状态：current｜最后核对：2026-11-06
+> 状态：historical｜最后核对：2026-11-06
 
 本目录是 AECW 治理结构；**产品代码在仓库根 `../`（`package.json`/`index.js`/`client.js`/`lib/`/`locale/`/`test/`）**，不在这里。仓库级约定见 [`../AGENTS.md`](../AGENTS.md)。
 产品代码基线 = v1.3.1（2026-11-06 发布；v1.3.0 为上一版；v1.2.0 为历史基线）；本项目于 2026-11-05 从原件复制并按 `agent-engineering-control/prototype` 结构重排，**产品逻辑未改**；同日按人类指令更新介绍文案与回归断言（F-031/F-032），后续在 `grow-2` 完成 G4 与 G2 遮挡修复并发布 1.3.0；`security-1` 完成 P0-6 安全收口并发布 1.3.1。

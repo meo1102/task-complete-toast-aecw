@@ -1,6 +1,6 @@
 # 异议与事实台账 · {{PROJECT}}
 
-> 状态：current｜最后核对：{{DATE}}
+> 状态：historical｜最后核对：{{DATE}}
 
 > 规则：S3/S4 一行；S1/S2 同时写 `inbox/` 详细记录；模型输出默认是“主张”，不是事实。
 > 变更走 `change`；blueprint/charter 变更不原地改冻结基线。

@@ -1,6 +1,6 @@
 # 人类决策记录 · task-complete-toast
 
-> 状态：current｜最后核对：2026-11-05
+> 状态：historical｜最后核对：2026-11-05
 
 > 只记“决定 / 理由 / 影响”。S1/S2 见 `ledger.md` 与 `inbox/`；技术决策（ADR-001–023）见 [`workspace/memory/adr-001-023.md`](../workspace/memory/adr-001-023.md)。
 > **署名口径（2026-11-05 人类指令）**：人类按 **Git 提交人**记录 = `meo1102`（`meo1102@163.com`）。原记录中的「本会话发起人 / 人类本人」统一对应此人，不再写“待确认”。

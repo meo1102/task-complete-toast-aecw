@@ -1,6 +1,6 @@
 # 项目记忆 · task-complete-toast
 
-> 状态：current｜最后核对：2026-11-05
+> 状态：historical｜最后核对：2026-11-05
 
 > 项目记忆：行为契约、决策（ADR）、历史编号映射、负记忆/根因、V 项对账。
 > 写法：判断/规范必须引用事实（`ledger.md` F 编号）；过期条目标 `SUPERSEDED`；当前状态只看 `../STATUS.md`。
