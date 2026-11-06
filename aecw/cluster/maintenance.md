@@ -13,6 +13,7 @@
 | 2026-11-06 | 红队整改 **S1**（P0-1 + P0-7） | 治理工具 0.9.3：open S1/S2 = FAIL；通过类门禁拒绝自由文本；init 生成 PROJECT/state/criteria 并自检；表格转义/分表 ID/半事务 | F-052；[`../workspace/evidence/2026-11-06-s1-redteam.md`](../workspace/evidence/2026-11-06-s1-redteam.md) |
 | 2026-11-06 | 红队整改 **S2**（P0-2 + P0-3） | 治理工具 0.9.4：`verify` attestation；gate 绑定 tree；freeze payload hash/start 重算；closed 终态/pause/resume/close；唯一门禁名；criteria 到期列 | F-053；[`../workspace/evidence/2026-11-06-s2-redteam.md`](../workspace/evidence/2026-11-06-s2-redteam.md) |
 | 2026-11-06 | 红队整改 **S3**（P0-4） | 治理工具 0.9.5：.aecw-lock 进程锁、退出释放、journal 先恢复、32 路并发 ×10 轮 | F-054；[../workspace/evidence/2026-11-06-s3-redteam.md](../workspace/evidence/2026-11-06-s3-redteam.md) |
+| 2026-11-06 | 红队整改 **S4**（P0-6，security-1） | 产品 1.3.1 候选：health/token、settings 写防护、probe 改版、EV-001 复核；阶段 closed | F-055；[../workspace/evidence/2026-11-06-s4-security.md](../workspace/evidence/2026-11-06-s4-security.md) |
 
 ## 停止/回滚
 

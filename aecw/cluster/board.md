@@ -24,7 +24,8 @@
 | T-015 | 红队整改 **S1**：P0-1 + P0-7（maintenance） | 单代理 + 人类指令 | done（基线冻结） | 人类“按 PLAN v0.9.1 顺序整改，每阶段后冻结基线” | 工具 0.9.3；open S1/S2 FAIL；gate 需 attestation；init 自检；表格/ID/事务加固；治理回归 10/10 | F-052；[`s1-redteam`](../workspace/evidence/2026-11-06-s1-redteam.md) |
 | T-016 | 红队整改 **S2**：P0-2 verify + P0-3 状态机/冻结哈希 | 单代理 + 人类 | done（基线冻结） | S1 基线；人类“开始 s2” | `verify` attestation；`freeze/start` payload hash；closed 终态；唯一门禁名；治理回归 17/17 | F-053；[`s2-redteam`](../workspace/evidence/2026-11-06-s2-redteam.md) |
 | T-017 | 红队整改 **S3**：P0-4 原子台账 + 32 路并发 | 单代理 + 人类 | done（基线冻结） | 人类“开始 s3 和 s4” | 锁/CAS/原子 rename/唯一 ID；32 路回归 | F-054；[`s3-redteam`](../workspace/evidence/2026-11-06-s3-redteam.md) |
-| T-018 | 红队整改 **S4**：P0-6 探针/写路由安全 + EV-001 激活 | 单代理 + 人类 | **in_progress** | 人类“开始 s3 和 s4”；S3 基线 | health/dry-run；settings 认证/CSRF/Origin/Host/Content-Type/非空 patch；probe 改版；EV-001 复核 | 需新 stage + freeze/start；未完成不发布 |
+| T-018 | 红队整改 **S4**：P0-6 探针/写路由安全 + EV-001 激活 | 单代理 + 人类 | done（阶段 closed，有条件通过） | 人类“开始 s3 和 s4”；S3 基线 | health/token；settings Host/Origin/CSRF/Content-Type/非空/限速；probe 改版；EV-001 复核 | F-055；`security-1` 门禁；[`s4-security`](../workspace/evidence/2026-11-06-s4-security.md) |
+| T-019 | 红队整改 **S5**：P1 SSOT/引用/字节/独立 reviewer/判据修正 | 单代理 + 人类 | **pending（等人类同意）** | S4 基线；人类批准 | 状态生成视图、引用校验、EOL、reviewer、文档漂移 | 未开始；不得提前改 |
 
 ## 积压（不进 `grow-2`，后续阶段处理）
 

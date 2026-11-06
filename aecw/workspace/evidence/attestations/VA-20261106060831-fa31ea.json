@@ -1,0 +1,70 @@
+{
+  "kind": "verify",
+  "version": 1,
+  "id": "VA-20261106060831-fa31ea",
+  "ok": true,
+  "project": "task-complete-toast-aecw",
+  "gate": "stage",
+  "created_at": "2026-11-06T06:08:31.394Z",
+  "expires_at": "2026-11-09T06:08:31.394Z",
+  "reviewer": {
+    "name": "meo1102",
+    "session": "web-session-2026-11-06"
+  },
+  "git": {
+    "available": true,
+    "head": "12440b1d3d495ae4731aee81cbab5215397f3c1c",
+    "tree": "58981ab2937fab34098bccb099dbabc4f91c6fe2",
+    "dirty": false
+  },
+  "tree_hash": "sha256:7ADA6E703B6FB2AEF7AE2F20480BED60AD85776224DF0E7EEE912A8C91FD0C6E",
+  "workspace_tree_hash": "sha256:1E33684BF44430584913924DF81B14DD0766A525014D349E7FD506A436C80499",
+  "product_hash": "sha256:C234C96FAAB14D05C15F215B2F9CDE72585403DF658A93E69C14CA9C7A03CE51",
+  "direction_hash": "sha256:BA93F8B1DFD29A4F03442BDCB30DFEA35BDDD305A020AC194DE8E33F0AF1A506",
+  "blueprint_hash": "sha256:51FCFEA2ED20A7765B12EC0A71CCF64C730FFC284BC53A10704DC87AF63314C4",
+  "criteria_hash": "sha256:410484D7FCE72A3898AFF5C9C4AEEDE1E0338AA8D6556335F8043E9642CD3F31",
+  "tool": {
+    "version": "0.9.6",
+    "hash": "sha256:160AB06F18CEBE272409EF6899CC14ACB20801B66772B49F7F7871A10CFE0C8B"
+  },
+  "open_s1s2": 0,
+  "criteria": {
+    "total": 29,
+    "met": 21,
+    "waived": 6,
+    "deferred": 2,
+    "failed": 0,
+    "not_started": 0
+  },
+  "evidence_debt": {
+    "gate": "stage",
+    "blocking": [],
+    "open_other": [
+      "ED-003",
+      "ED-004"
+    ]
+  },
+  "checks": {
+    "check": {
+      "status": "pass",
+      "exit": 0,
+      "log": "workspace/evidence/attestations/VA-20261106060831-fa31ea-check.log",
+      "sha256": "sha256:BF8DF0E2115A8090E7D0F23FA97D29153F09B15CED4B261EFEA2C093BA1B15CB"
+    },
+    "probe": {
+      "status": "pass",
+      "exit": 0,
+      "log": "workspace/evidence/attestations/VA-20261106060831-fa31ea-probe.log",
+      "sha256": "sha256:99FCE3E3F09F5B774A88048DF1AF8149BB9DCAB321AD24652DD1B884CE26BA9E",
+      "output": "PASS  宿主 package.json — @local/task-complete-toast@1.3.1 (D:\\DSH\\task-complete-toast-aecw)\nPASS  profile dependency link — link:D:/DSH/task-complete-toast-aecw\nPASS  profile bundles — @local/task-complete-toast\nPASS  junction target — D:\\DSH\\task-complete-toast-aecw\nPASS  profile patch config — task-complete-toast + appearance + /dsh-task-complete/outcome\nPASS  HTTP health identity — @local/task-complete-toast@1.3.1 · ae4fa986…\nPASS  HTTP outcome route (expect 400 + invalid-session-id) — 400 invalid-session-id\n\nAECW EV-001 probe: 7/7 passed · http://127.0.0.1:36137\n"
+    },
+    "tests": {
+      "status": "pass",
+      "exit": 0,
+      "log": "workspace/evidence/attestations/VA-20261106060831-fa31ea-test.log",
+      "sha256": "sha256:03316E5FEA5E3453264640D27C1582B1908D78E90C3A62D6D24184687F3FDDB5",
+      "output": "✔ D01 durationMs 到期触发 dismiss (2.2345ms)\n✔ D03 dispose 后不再触发 (0.8738ms)\n✔ D04 挂载前 enter/leave 为无操作，start 才计时 (0.1205ms)\n✔ D05 移入后等待 10s 不消失，移出后重新完整 5s (0.1017ms)\n✔ D06 第 3 秒移出 → 第 8 秒消失（不恢复剩余） (0.1047ms)\n✔ D07 第 3 秒移出、第 7 秒移入、第 9 秒移出 → 第 14 秒消失 (0.0984ms)\n✔ D08 焦点进入取消、离开重新 5s；held 期间重复 enter 不重置 (0.0812ms)\n✔ U15 formatLine：中英文严格匹配 {workspace}[{session}] · {status} (0.2959ms)\n✔ U16 缺工作区/会话名落回退文案 (0.6491ms)\n✔ U16b resolveNames：byId/数组/path 末段/会话 title (0.2682ms)\n✔ T-A WorkspaceSnapshot.items：按 sessionIds 命中并取工区 title (0.115ms)\n✔ T-B items 里没有该会话：工区回退未分组/Ungrouped (0.0782ms)\n✔ T-C workspace 无 title 有 path：取 path 末段 (0.0851ms)\n✔ T-D 会话名：displayTitle 优先，其次 title，空/缺省回退 (0.0762ms)\n✔ T-E 旧 byId / 裸数组形状仍可解析（回归） (0.0799ms)\n✔ U17 超长名称返回完整文本，不截断（截断交给 CSS） (0.0714ms)\n✔ titleOf：§7.5 映射与未知 outcome 回 completed (0.0597ms)\n✔ formatLine：模板占位符与缺省 t 的兜底 (0.0543ms)\n✔ I01 turn/end(completed) 写入后 GET → 200 且字段/头齐全 (1.1501ms)\n✔ I02 未知会话 GET → 404 unknown-session (0.1621ms)\n✔ I03 sessionId 缺失/空/超长/控制字符 → 400；非 GET → 405 (0.2057ms)\n✔ I04 error 与 max-tokens 分别映射 error / interrupted (0.1647ms)\n✔ I05 aborted 的 5 种 cause 与 forked 映射正确 (0.2997ms)\n✔ I06 index-inject 默认投影：基础三项 + G3 外观五项 (0.195ms)\n✔ I06b enabled:false 只注册注入行，bridge 投影为 off (0.1261ms)\n✔ I06c appearance 自定义值投影到客户端 (0.1113ms)\n✔ I06d notify.awaiting:false 投影为 false (0.1085ms)\n✔ I07 TTL 过期后 GET → 404 且表项被清除 (0.1083ms)\n✔ I08 表满 257 条淘汰最旧，容量保持 256 (0.2962ms)\n✔ I09 Config：undefined/空对象得到全套默认值 (0.0783ms)\n✔ I10 Config：数值/路径越界被拒，边界值通过 (0.2756ms)\n✔ I11 Config：类型错误被拒（含 enum） (0.1808ms)\n✔ I12 Config：未知键忽略且不进入归一化结果 (0.0693ms)\n✔ I13 parsePatch 支持 config 缩进映射 (0.5484ms)\n✔ I14 dispose 后监听与路由全部移除，注入行不再产出 (0.1919ms)\n✔ I15 exposeReason:false 只回 sessionId/outcome/at (0.1371ms)\n✔ I16 自定义 routePath/routeKind 透传并生效 (0.1188ms)\n✔ I17 blocked 与 interrupted 映射 (0.1057ms)\n✔ I18 G4 配置边界：字号 12–18、宽度 280–480、颜色 #RRGGBB/null (0.2589ms)\n✔ I19 设置补丁白名单与对比度守卫 (0.1757ms)\n✔ I20 设置路由：合法保存 200、对比度 422、非法 400、非 POST 405 (0.7254ms)\n✔ I21 设置/health/token 路由已注册，且不覆盖结果路由 (0.1214ms)\n✔ I22 A 方案：设置路由经 configEditor.edit 合并并保存 appearance (0.4011ms)\n✔ I01 初始快照中的 approval pending 入队一次，卸载取消订阅 (0.4029ms)\n✔ I02 pending 解决后自动移除并回调 onRemoved (0.162ms)\n✔ I03 手动 dismiss 后本轮 pending 内不再补弹；解决后再出现同 key 可重新提醒 (0.2342ms)\n✔ I04 kind 映射：approval/question/plan-review；未知 kind 与缺 key 跳过 (0.1875ms)\n✔ I05 maxVisible 上限生效，新增过多时保留最新 (0.1119ms)\n✔ I06 非法/缺失 source 与畸形快照不抛错 (0.131ms)\n✔ I07 onAdded / onRemoved 抛错不影响队列 (0.1283ms)\n✔ N01 auto + 隐藏 + granted：发送通知，内容与 tag 正确 (1.3574ms)\n✔ N11 同会话不同条目：tag 唯一、≤34 字符、含固定前缀，renotify 保持 false（V13） (0.4589ms)\n✔ N02 auto + 可见：不发送 (0.1242ms)\n✔ N03 always：可见也发送；never：不发送 (0.1418ms)\n✔ N04 denied → deferred；可见后补弹一次，第二次不再发 (0.2089ms)\n✔ N05 default + 隐藏：直接尝试发送，不申请权限（D1） (0.1133ms)\n✔ N06 default + 可见但无用户手势：仍直接发送，不申请权限（D1） (0.1171ms)\n✔ N07 构造失败 → deferred (0.1259ms)\n✔ N08 点击：focus → openSession → close (0.1593ms)\n✔ N09 dispose：关闭已发通知、移除监听、清空补弹，之后不再发送 (0.1287ms)\n✔ N10 dispose 后可见性监听不再补弹 (0.0972ms)\n✔ P01 隐藏时入队：notifier 被调用，正文与浮层第二行逐字一致 (4.1149ms)\n✔ R1-1 渲染不产生通知：onRendered 兜底已移除 (1.2528ms)\n✔ P02 可见时入队：不发送系统通知 (1.357ms)\n✔ P03 suppressWhenFocused:true 且聚焦 → 不入队、不通知 (1.1716ms)\n▶ P04 D1：default 权限仍尝试构造；构造抛错才 deferred；可见+手势再申请权限\n  ✔ default + 无手势：构造被调用，不申请权限 (0.1874ms)\n  ✔ default + 构造抛错：deferred (0.1259ms)\n  ✔ default + 可见 + 手势：发送后申请权限（升级路径） (0.1323ms)\n✔ P04 D1：default 权限仍尝试构造；构造抛错才 deferred；可见+手势再申请权限 (0.779ms)\n✔ P05 D4：deferred 恢复可见 → 浮层条目重新入队且 at 刷新 (0.386ms)\n✔ P05b G2 常驻提醒 deferred 恢复可见 → 只重试通知，不进入完成队列 (0.1204ms)\n✔ P06 F6：点击卡片回跳并 dismiss；关闭按钮不触发回跳 (1.5489ms)\n✔ P07 enabled:false → 不 start store、不注册 overlay、不建通知 (0.858ms)\n✔ P08 名称与状态行；真实 selector 签名 + IDENTITY 跨渲染同一引用 (1.4836ms)\n✔ P10 宿主错误边界：渲染抛错 → null、只记录一次、不外抛 (1.2633ms)\n✔ P09 D3：通知关闭/onclose/点击后从 issued 移除 (0.1672ms)\n✔ P11 只有 setTimeout/clearTimeout、没有 now 的 timers：卡片不抛且到期 dismiss (1.4189ms)\n✔ P12 window 形状的 timers（方法依赖 this）：绑定正确、now 可用 (1.3217ms)\n✔ R1b-D1-1 隐藏且从未渲染：入队即发通知 (2.3419ms)\n✔ R1b-D1-2 可见未聚焦（被遮挡）：入队即发；渲染后不重复 (1.1878ms)\n✔ R1b-D1-3 名称缓存可用：通知与浮层同文且渲染不重复 (1.2835ms)\n✔ R1b-D1-4 hasFocus=true 但 window 已 blur：按未聚焦处理，不等 250ms (1.3651ms)\n✔ R1b-D1-5 250ms timer 不触发：仍立即 decide/notify，render 不重复 (1.2005ms)\n✔ R1b-D1-6 后台通知标题不倒退：error 仍是任务失败 (1.1317ms)\n✔ P14 G3 外观：四角/主题/尺寸写入容器，非法值回落默认 (1.8449ms)\n✔ P15 G2 提醒卡：attention 图标、标题/状态与名称同源（不做定时消失） (2.3996ms)\n✔ R01 绑定快路径命中最后一条 turn/end，且 fetch 未被调用 (0.6954ms)\n✔ R01b 绑定无 turn/end 时转慢路径；getBinding 抛错也不外抛 (0.7848ms)\n▶ R02 慢路径 200：§7.4/§7.3 的七种合法 outcome 逐一映射为 route\n  ✔ completed (0.4266ms)\n  ✔ error (0.2125ms)\n  ✔ interrupted (0.2224ms)\n  ✔ blocked (0.1536ms)\n  ✔ stopped (0.169ms)\n  ✔ ignored (0.1145ms)\n  ✔ suppressed (0.11ms)\n✔ R02 慢路径 200：§7.4/§7.3 的七种合法 outcome 逐一映射为 route (2.5955ms)\n▶ R03 404/400/500 等非 2xx → completed + fallback\n  ✔ 400 (0.1753ms)\n  ✔ 404 (0.0769ms)\n  ✔ 500 (0.0588ms)\n  ✔ 204 (0.0813ms)\n✔ R03 404/400/500 等非 2xx → completed + fallback (0.6989ms)\n✔ R04 200ms 预算超时 → completed + fallback，且 abort 被触发 (0.3055ms)\n✔ R05 网络异常 → completed + fallback，且计时器被清理 (0.1186ms)\n✔ R06 200 但 JSON 解析失败 → completed + fallback (0.1432ms)\n▶ R07 未知/缺失 outcome → completed + fallback\n  ✔ body-0 (0.163ms)\n  ✔ body-1 (0.0655ms)\n  ✔ body-2 (0.0555ms)\n  ✔ body-3 (0.0447ms)\n  ✔ body-4 (0.0435ms)\n✔ R07 未知/缺失 outcome → completed + fallback (0.6409ms)\n✔ R08 bridge:off → 不发起 fetch；绑定命中仍走快路径 (0.1564ms)\n✔ R09 内联 classify 与 lib/classify.js 对 8 种 reason 输出一致 (0.1845ms)\n✔ R10 外部 signal 取消：未发起时不 fetch，在途时走 fallback 并 abort (0.2646ms)\n✔ R-12 陈旧 completed 后 40ms 出现 aborted/user → suppressed（binding） (0.2656ms)\n✔ R-13 since 后始终无新鲜结果 → 预算耗尽 completed + fallback (0.4709ms)\n✔ R-14 慢路径先陈旧 at、重试后新 at → 采用新结果且 source=route (0.1892ms)\n✔ R-15 since - SKEW（100ms）边界 ±1ms 判定 (0.1737ms)\n✔ health/token 只信任 loopback Host；health 不写配置 (0.198ms)\n✔ settings 写路由：Host/Origin/CSRF/Content-Type/空 patch 全部 fail-closed (1.8739ms)\n✔ settings 限速：第 31 次请求 429 (0.7397ms)\n✔ 纯函数：loopback/同源/Content-Type/token 比较 (0.1847ms)\n✔ JSON 响应安全头 (0.0833ms)\n✔ S1 清单：名称、版本、私有、ESM 与四个导出齐全 (0.3571ms)\n✔ S2 清单：dsh.bundle.patch 与 dsh.client(web/immediately/空 inject) (0.0787ms)\n✔ S3 patch：insert 恰好一行宿主 entry 且 id/name 正确 (0.403ms)\n✔ S4 客户端：factory 返回 inject/apply，并暴露 __test__（ADR-007） (0.8963ms)\n✔ S5 客户端：apply 不抛错，注册一项，组件为函数且可渲染 (1.3235ms)\n✔ S8 G4 外观纯函数：边界、联动、对比度 (1.0836ms)\n✔ S9 设置页可渲染：字体只读、联动边界、预览卡片 (3.183ms)\n✔ S6 资源：locale 只含 meta，icon 为合法且不超 256 KiB 的 SVG (0.6562ms)\n✔ S7 宿主：导出 apply/inject 与 Standard Schema Config，调用不抛错 (0.3988ms)\n✔ U01 phase=pending 的首个 status(false) 只记基线，不弹 (0.3783ms)\n✔ U02 status(true) → 2s → status(false)，250ms 后入队 (0.1305ms)\n✔ U03 运行 800ms 后结束被 minRunMs 抑制 (0.1129ms)\n✔ U04 观察窗内回弹 status(true) 取消，不入队 (0.1034ms)\n✔ U05 pendingSubmissions 非空时抑制 (0.1131ms)\n✔ U06 同会话两次完成间隔 2s，冷却合并只留一条 (0.1233ms)\n✔ U07 4 条同时有效时最多 3 条，最旧被移除 (0.2141ms)\n✔ U08 一分钟内 10 次完成，第 7 次起抑制 (0.2135ms)\n✔ U09 会话不在 byId 时抑制 (0.0908ms)\n✔ U10 byId 行带 subagent 标记时抑制（V-2 未证实） (0.0823ms)\n✔ U11 reset 清空状态/队列/计时器并重新基线 (0.1698ms)\n✔ R2-T0 tabId：优先 crypto.randomUUID，失败时回落到非空字符串 (0.1062ms)\n✔ R2-T1 两标签：字典序较小的 tabId 胜出，输家不入队 (0.7128ms)\n✔ R2-T1b 胜者按字符串字典序：tabId \"10\" < \"9\" (0.2549ms)\n✔ R2-T2 无 BroadcastChannel 恒胜出（单标签语义） (0.1309ms)\n✔ R2-T3 decide 时 claim 未决：等满窗口仍 pending 才降级胜出（ADR-015） (0.187ms)\n✔ R2-T9 等待认领期间变为 lost：立即丢弃、不入队、不通知 (0.1601ms)\n✔ R2-T10 等待认领期间 connection/reset：取消等待、不写状态、不抛错 (0.1642ms)\n✔ R2-T11 等待认领产生的额外延迟 ≤ claimWindowMs (0.1447ms)\n✔ R2-T4 认领频道/消息形状、reset 清计时器并关闭通道、重置后可复用 (0.2014ms)\n✔ R2-T5 输家不更新冷却与发射计数：紧接着的胜出仍应立即入队 (0.3573ms)\n✔ R2-T6 connection/reset 后迟到 claim 不写状态、不入队 (0.1787ms)\n✔ R2-T7 store.reset 关闭认领通道；重置后再次完成仍可胜出 (0.2539ms)\n✔ R1b-D1-7 后台 pending resolution：等待完成再入队，error 不降级为 completed (0.276ms)\n✔ W01 注入配置覆盖 DEFAULTS（maxVisible:1 生效，坏类型被忽略） (1.6598ms)\n✔ W02 zh/en 字典都注册，键集合与 §7.7 一致，语言切换即时生效 (1.041ms)\n✔ W03 status(false) 在 settling 起点触发一次真实 resolver 请求 (1.2415ms)\n✔ W04 aborted/user（suppressed）→ 不入队 (1.1155ms)\n✔ W05 error → 入队且 Item.outcome=error (0.9871ms)\n▶ W06 resolve 失败或超时 → 入队 completed\n  ✔ reject (1.2476ms)\n  ✔ 超过观察窗仍未返回 (1.4847ms)\n✔ W06 resolve 失败或超时 → 入队 completed (2.9501ms)\n✔ W07 观察窗内回弹 → abort 在途 resolve 且不入队 (2.9376ms)\n✔ W08 connection/reset → store.reset 清空队列 (1.3561ms)\n✔ W09 卸载 → 在途 resolve 被 abort、计时器清空 (1.3683ms)\n✔ W10 G2：uiSession.sessionStatus 的 pendingInteraction 进入常驻提醒并在解决后移除 (1.1353ms)\n✔ W11 G2：未知 kind 与缺 key 的 pending 不提醒 (0.9353ms)\n✔ W12 G3：合法外观字段覆盖 DEFAULTS，duration 越界被忽略 (2.6842ms)\n✔ W13 notify.awaiting:false → 不订阅 pendingInteraction、不产生提醒 (0.9447ms)\n✔ W14 进入会话（mainView>0）→ 收起 G2 提醒 (1.5008ms)\n✔ W15 已在会话内出现 pending → 不显示卡片（hidden 保留给通知生命周期） (1.1963ms)\n✔ W16 已进入会话但页面被遮挡 → 仍发系统通知 (4.4755ms)\n✔ W17 授权先可见、随后窗口失焦 → 补发系统通知且不重复 (1.4875ms)\nℹ tests 174\nℹ suites 0\nℹ pass 174\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 146.7336\n"
+    }
+  },
+  "failures": []
+}

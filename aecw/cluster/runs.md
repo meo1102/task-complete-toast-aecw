@@ -32,6 +32,7 @@
 | 2026-11-06 | 单代理 + 人类指令 | 红队整改 S1（P0-1 + P0-7） | 工具 0.9.3：open S1/S2 = FAIL；通过类门禁需 attestation + 人类签署；init 生成 PROJECT/state/criteria 并自检 0/0；表格转义/分表 ID/半事务回滚；治理回归 10/10 | F-052；[`s1-redteam`](../workspace/evidence/2026-11-06-s1-redteam.md) |
 | 2026-11-06 | 单代理 + 人类指令 | 红队整改 S2（P0-2 + P0-3） | 工具 0.9.4：`verify` 生成 attestation；gate 校验 tree；freeze payload hash/start 重算；closed 终态与 pause/resume/close；唯一门禁名；治理回归 17/17 | F-053；[`s2-redteam`](../workspace/evidence/2026-11-06-s2-redteam.md) |
 | 2026-11-06 | 单代理 + 人类指令 | 红队整改 S3（P0-4） | 工具 0.9.5：进程锁、journal 先恢复、32 路并发 fact ×10 轮；治理回归 20/20 | F-054；[s3-redteam](../workspace/evidence/2026-11-06-s3-redteam.md) |
+| 2026-11-06 | 单代理 + 人类指令 | 红队整改 S4（P0-6，security-1） | 产品 1.3.1 候选：health/token、settings Host/Origin/CSRF/Content-Type/非空/限速、probe 改版；live 矩阵通过；阶段 closed | F-055；[s4-security](../workspace/evidence/2026-11-06-s4-security.md) |
 
 ## 未记录但已发生（避免“记录即完成”的错觉）
 

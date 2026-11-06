@@ -1,7 +1,7 @@
 # STATUS · task-complete-toast（独立项目）
 
 > 状态：current｜最后核对：2026-11-06
-<!-- AECW-STATE {"stage":"security-1/executing","release":"1.3.1/release-candidate","g4":"released/released","evolution":"EV-001/active","adoption":"provisional","evidence_debt":["ED-001","ED-002","ED-003","ED-004"]} -->
+<!-- AECW-STATE {"stage":"security-1/closed","release":"1.3.1/release-candidate","g4":"released/released","evolution":"EV-001/active","adoption":"provisional","evidence_debt":["ED-001","ED-002","ED-003","ED-004"]} -->
 > **状态摘要（`state.json` 对账）**：stage `grow-2/closed`；release `1.3.0/released`；G4 `released/released`；EV-001 `active`；adoption `provisional`；证据债 `ED-001/002`（挂起）、`ED-003/004`（open）。验收矩阵见 [`criteria.md`](criteria.md)。
 
 > **唯一当前状态页。** 最后更新：2026-11-06｜版本：1.3.0｜人类所有者：meo1102
@@ -14,11 +14,11 @@
 
 ## 1. 当前阶段
 
-- 阶段：security-1（executing）
-- 阶段状态：executing
+- 阶段：security-1（closed）
+- 阶段状态：closed
 - 版本：1.3.1 候选（未发布；1.3.0 已发布）
-- 当前目标：`grow-2` 已关闭；**布局 v3：产品在仓库根、AECW `aecw/`**；EV-001 运行态探针已激活（门禁/交付前必跑）；**1.3.0 已发布**；**红队整改 S1/S2/S3 已完成并冻结基线**，**S4 security-1 进行中**；
-- 当前门禁：2026-11-06-security-1-start-order-053848eeff.md
+- 当前目标：`grow-2` 已关闭；**布局 v3：产品在仓库根、AECW `aecw/`**；EV-001 运行态探针已激活（门禁/交付前必跑）；**1.3.0 已发布**；**红队整改 S1/S2/S3/S4 已完成并冻结基线**，**S5 未开始**；1.3.1 安全候选已安装、未发布；
+- 当前门禁：2026-11-06-security-1-stage-0608409f11.md
 
 ## 2. 当前证据
 
@@ -40,7 +40,7 @@
 - **红队整改 S1（2026-11-06，工具 0.9.3）**：治理回归 **10/10**；开放 S1/S2 改为 FAIL（大小写统一）；通过类门禁拒绝自由文本，需 verify attestation + 人类签署；`init → check` 为 0/0；表格转义、DR/CR 分表、`nextId` 分表、accept/resolve/start 人类身份、多文件 journal 回滚。**S1 只改治理工具，不改产品行为**；证据 [`2026-11-06-s1-redteam.md`](workspace/evidence/2026-11-06-s1-redteam.md)，F-052。
 - **红队整改 S2（2026-11-06，工具 0.9.4）**：新增 `verify`（check --strict → probe → 完整测试 → criteria → 开放 S1/S2 → 按 impact 证据债 → tree attestation）；`gate` 拒绝过期/失败/树变化的 attestation；`freeze` 写 direction/blueprint/criteria/product payload hash，`start` 重算并拒绝任一字节变化；`closed` 终态、`pause/resume/close`、唯一门禁名；criteria 增到期列。最终 clean-tree verify **PASS**（`VA-20261106033417-2e1420`，release tree `ABD389…`，check/probe/tests 全 pass）；治理回归 **10 + 7 = 17/17**；**S2 只改治理工具，不改产品行为**；证据 [`2026-11-06-s2-redteam.md`](workspace/evidence/2026-11-06-s2-redteam.md)，F-053。`check` 仍只是结构检查，不是授权/发布证明。
 - **红队整改 S3（2026-11-06，工具 0.9.5）**：`fact`/`dissent`/`change`/`resolve`/`accept`/`log` 读写全程持 `.aecw-lock`；退出兜底释放；`withLock` 先恢复未完成 journal；32 路并发 `fact` × **10 轮**全部成功、ID 唯一、无截断/丢写。治理回归 **20/20**；**S3 只改治理工具，不改产品行为**；证据 [`2026-11-06-s3-redteam.md`](workspace/evidence/2026-11-06-s3-redteam.md)，F-054。
-- **红队整改 S4（2026-11-06，工具 0.9.6，产品 1.3.1 候选）**：新增只读 `health` 身份端点与同源 `settings-token`；settings 写路由要求 loopback Host + 同源 Origin + `x-aecw-csrf` + `application/json`，拒绝空 patch/未知字段/超限；probe 改用 health 身份 + outcome 错误体，不再 POST 写端点；live curl 矩阵 12 项符合预期，probe **7/7**，假服务/坏端口/query/fragment **5/7 fail**；EV-001 先降 trial 后重新 active。产品 **174/174**、治理 **20/20**；**未发布 1.3.1**；证据 [`2026-11-06-s4-security.md`](workspace/evidence/2026-11-06-s4-security.md)，F-055。
+- **红队整改 S4（2026-11-06，工具 0.9.6，产品 1.3.1 候选）**：新增只读 `health` 身份端点与同源 `settings-token`；settings 写路由要求 loopback Host + 同源 Origin + `x-aecw-csrf` + `application/json`，拒绝空 patch/未知字段/超限；probe 改用 health 身份 + outcome 错误体，不再 POST 写端点；live curl 矩阵 12 项符合预期，probe **7/7**，假服务/坏端口/query/fragment **5/7 fail**；EV-001 先降 trial 后重新 active。产品 **174/174**、治理 **20/20**；**未发布 1.3.1**；阶段门禁 [`2026-11-06-security-1-stage-0608409f11.md`](gates/2026-11-06-security-1-stage-0608409f11.md)（有条件通过，verify `VA-20261106060831-fa31ea`）；证据 [`2026-11-06-s4-security.md`](workspace/evidence/2026-11-06-s4-security.md)，F-055。
 - 安装态：**已替换安装并随布局 v3 重装**（2026-11-06）：profile link/junction → **`D:\DSH\task-complete-toast-aecw`**；plugin `include:task-complete-toast` active；live 设置路由校验 200/400/422 符合预期；A 方案写入 `profiles/desktop/cordis.patch.yml`（F-038/F-047/F-051）。
 - **G4 客户端 UI 已验收**：设置页入口/控件/预览/保存由人类目视接受（2026-11-05，E2，F-040）；`settings.plugins.tab` occupant 已确认（F-039）。截图缺口见 ED-001。
 
@@ -130,7 +130,7 @@
 
 **阶段 `grow-2` 已关闭（2026-11-05，有条件通过）。布局 v3：产品在仓库根、AECW `aecw/`，profile 指向仓库根。历史基线 commit `4aff41a` / tag `aecw-grow-2-2026-11-05`（`DSH_end` 归档）；独立仓库 initial `67809d0` / tag `aecw-standalone-2026-11-05`；**1.3.0 已发布**（tag `v1.3.0`）。**
 
-**当前停点（2026-11-06）**：红队整改 **S1 已完成并冻结基线**（tag `aecw-s1-2026-11-06`，F-052）；**S2 已完成并冻结基线**（tag `aecw-s2-2026-11-06`，F-053）；**S3 已完成并冻结基线**（tag `aecw-s3-2026-11-06`，F-054）；**S4 进行中**，S5 未开始。
+**当前停点（2026-11-06）**：红队整改 **S1** 基线 `aecw-s1-2026-11-06`；**S2** `aecw-s2-2026-11-06`；**S3** `aecw-s3-2026-11-06`；**S4** `aecw-s4-2026-11-06`（`security-1` closed，有条件通过）；**S5 未开始**；1.3.1 为安全候选，未发布。等人类决定 S5 或发布 1.3.1。
 
 1. **v0.9 校准已验收（有条件通过）**（maintenance）：`PROJECT.json`、`state.json`、`criteria.md`；13 处残留当前文档矛盾修复；历史文档加状态头；`check` 增加路径/命令/状态/围栏/文档头检查。**未改产品行为。** 验收见 [`2026-11-05-v09-acceptance.md`](workspace/evidence/2026-11-05-v09-acceptance.md)，F-050。已知缺口：`check` 关键词硬编码、`commands.test` 只验路径不执行（已修为 `test/*.test.js`）。
 2. **EV-001 已激活**：`node aecw/scripts/probe.mjs` 写入 AGENTS，门禁/交付前必跑；正控 7/7、负控 fail。分布外验证/真实回滚演练仍待做。
@@ -162,3 +162,6 @@
 - 首次报告点：SEC-1 health 路由通过后
 - 依据：gates/2026-11-06-security-1-charter-freeze-053832a4c7.md + payload sha256:C5188205125E7D5ACB6E0ABD11FD41376344D80A0D8FF56D6F916D61BBF1642B
 - 只授权本阶段；阶段结束或触发停止条件必须停、报告、等下一道门。
+
+## 9. 阶段事件
+- 2026-11-06 关闭（meo1102）：有条件通过；gate 2026-11-06-security-1-stage-0608409f11.md；SEC-1..5 有 E1；probe 7/7；1.3.1 候选未发布

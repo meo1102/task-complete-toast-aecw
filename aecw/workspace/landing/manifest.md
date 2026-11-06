@@ -8,6 +8,7 @@
 | 项 | 值 |
 |---|---|
 | 版本 | `1.3.0`（tag `v1.3.0`，本独立仓库发布；旧 `v1.2.0` 为原件基线） |
+| 候选 | `1.3.1`（P0-6 安全收口；已安装 desktop profile；**未发布/未打 tag**；`state.release=release-candidate`） |
 | 治理工具 | AECW `0.9.6`（S1+S2+S3+S4 红队整改，tag `aecw-s4-2026-11-06`；S4 改产品安全行为，未发布） |
 | 位置 | `D:\DSH\task-complete-toast-aecw`（独立仓库，initial `67809d0`）；**产品代码在仓库根，AECW `aecw/`**；历史归档在 `DSH_end`（`4aff41a`/tag `aecw-grow-2-2026-11-05`） |
 | 安装目标 | profile bundle 指向 **`D:\DSH\task-complete-toast-aecw`** |
