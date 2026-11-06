@@ -177,7 +177,7 @@
   "tool": {
     "name": "aecw",
     "version": "0.9.6",
-    "hash": "5C8FEF6BABC233EA9CE411848282526F0848EFDCC96B8343D83B13D4A2E8BBD5"
+    "hash": "D29FEF44ADF5F3F4EFA736FC5809872EC48178806CA301DD862E5A7A98EFFAB7"
   },
   "governance_baseline": {
     "commit": "8b4eda7",

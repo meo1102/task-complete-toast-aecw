@@ -37,5 +37,5 @@ node aecw/bin/aecw.mjs check aecw
 ```
 
 - `aecw` 工具版本 **0.9.6**（S1：open S1/S2 = FAIL、gate 需 attestation、表格/ID/半事务；S2：`verify` attestation、freeze/start payload hash、closed 终态；S3：`.aecw-lock` 进程锁、journal 恢复、32 路并发回归；S4：probe health 身份、settings 写路由安全）。
-- 当前阶段 `security-1`（P0-6 安全收口，executing）；`grow-2` 已 closed。产品行为变更需新蓝图 + `freeze`/`start`，不得静默扩范围。
+- 当前阶段 `security-1`（P0-6 安全收口，closed）；`grow-2` 已 closed。产品行为变更需新蓝图 + `freeze`/`start`，不得静默扩范围。
 - 当前发布口径 v1.3.0（G1/G2/G3 + G4 + G2 遮挡修复）；工作树为 **1.3.1 安全候选（未发布）**；截图/录屏要求人类挂起；E2 证据（无截图）不得写成 E1。

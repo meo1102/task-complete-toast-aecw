@@ -442,8 +442,12 @@ function listTreeFiles(root, { excludeDirs = [] } = {}) {
 }
 
 function treeHash(root, { excludeDirs = [] } = {}) {
+  return treeHashOfFiles(root, listTreeFiles(root, { excludeDirs }));
+}
+
+function treeHashOfFiles(root, files) {
   const hash = crypto.createHash('sha256');
-  for (const rel of listTreeFiles(root, { excludeDirs })) {
+  for (const rel of [...new Set(files)].sort()) {
     hash.update(rel);
     hash.update('\0');
     const text = fs.readFileSync(path.join(root, rel), 'utf8').replace(/\r\n/g, '\n');
@@ -467,6 +471,19 @@ function productTreeHash(dir) {
   const root = projectRootOf(dir);
   const productRoot = path.resolve(root, rootsFor(dir).product);
   if (!fs.existsSync(productRoot)) throw new Error(`产品根不存在：${productRoot}`);
+  if (path.resolve(productRoot) === path.resolve(root)) {
+    // 产品代码在仓库根时，只绑定产品文件，不把 AGENTS/README/PROJECT/治理文档算进产品树。
+    const files = [];
+    for (const name of ['package.json', 'index.js', 'client.js', 'cordis.patch.yml', 'icon.svg']) {
+      if (fs.existsSync(path.join(root, name))) files.push(name);
+    }
+    for (const name of ['lib', 'locale', 'test']) {
+      const abs = path.join(root, name);
+      if (!fs.existsSync(abs)) continue;
+      for (const rel of listTreeFiles(abs)) files.push(`${name}/${rel}`);
+    }
+    if (files.length > 0) return treeHashOfFiles(root, files);
+  }
   const excludeDirs = [];
   if (path.resolve(productRoot) === path.resolve(root)) {
     excludeDirs.push(rootsFor(dir).governance);

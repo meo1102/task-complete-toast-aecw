@@ -2,13 +2,13 @@
 
 > 状态：current｜最后核对：2026-11-06
 <!-- AECW-STATE {"stage":"security-1/closed","release":"1.3.1/release-candidate","g4":"released/released","evolution":"EV-001/active","adoption":"provisional","evidence_debt":["ED-001","ED-002","ED-003","ED-004"]} -->
-> **状态摘要（`state.json` 对账）**：stage `grow-2/closed`；release `1.3.0/released`；G4 `released/released`；EV-001 `active`；adoption `provisional`；证据债 `ED-001/002`（挂起）、`ED-003/004`（open）。验收矩阵见 [`criteria.md`](criteria.md)。
+> **状态摘要（`state.json` 对账）**：stage `security-1/closed`；release `1.3.1/release-candidate`；G4 `released/released`；EV-001 `active`；adoption `provisional`；证据债 `ED-001/002`（waived）、`ED-003/004`（open）。验收矩阵见 [`criteria.md`](criteria.md)。
 
-> **唯一当前状态页。** 最后更新：2026-11-06｜版本：1.3.0｜人类所有者：meo1102
+> **唯一当前状态页。** 最后更新：2026-11-06｜版本：1.3.1 候选（1.3.0 已发布）｜人类所有者：meo1102
 > 所有者口径：按 **Git 提交人**记录（`meo1102@163.com`，2026-11-05 人类指令）。
 > 规则：本页是当前状态；其他文档是证据/历史。冲突以本页为准；每次门禁/冻结/发布先更新本页。
 > 证据等级：**E1** 运行事实（可复现）｜**E2** 人类目视（无截图）｜**E3** 文档主张（未复核）。
-> **项目说明**：项目位于 **`D:\DSH\task-complete-toast-aecw`**（独立仓库；历史归档在 `DSH_end`）。**布局 v3：产品代码在仓库根（`../`）；AECW 治理在 `aecw/`**，两者不混放。本项目基于 `task-complete-toast` v1.2.0 复制；**当前发布 1.3.0**（G1/G2/G3 + G4 + G2 遮挡修复）。**已替换安装**：desktop profile 的 link/junction 指向 **`D:\DSH\task-complete-toast-aecw`**；原件保留在原路径，可回滚。结构迁移见 [`workspace/landing/migration-aecw-2026-11-05.md`](workspace/landing/migration-aecw-2026-11-05.md)；布局 v3 见 [`workspace/evidence/2026-11-06-layout-v3.md`](workspace/evidence/2026-11-06-layout-v3.md)。
+> **项目说明**：项目位于 **`D:\DSH\task-complete-toast-aecw`**（独立仓库；历史归档在 `DSH_end`）。**布局 v3：产品代码在仓库根（`../`）；AECW 治理在 `aecw/`**，两者不混放。本项目基于 `task-complete-toast` v1.2.0 复制；**当前发布 1.3.0**（G1/G2/G3 + G4 + G2 遮挡修复）；**1.3.1 安全候选已安装、待发布**。**已替换安装**：desktop profile 的 link/junction 指向 **`D:\DSH\task-complete-toast-aecw`**；原件保留在原路径，可回滚。结构迁移见 [`workspace/landing/migration-aecw-2026-11-05.md`](workspace/landing/migration-aecw-2026-11-05.md)；布局 v3 见 [`workspace/evidence/2026-11-06-layout-v3.md`](workspace/evidence/2026-11-06-layout-v3.md)。
 
 ---
 
@@ -26,7 +26,7 @@
 
 > 2026-11-06 在布局 v3（产品在仓库根）复跑（作者自验；只表示可复现，不表示独立复核）：
 
-- 自动化：10 个测试文件 → **tests 169 / pass 169 / fail 0**；`node --check` **17/17**；含介绍文案回归断言、G4 边界/联动/对比度/设置页/`configEditor` 合并测试、G2 遮挡推送（W16/W17）。
+- 自动化：11 个测试文件 → **tests 174 / pass 174 / fail 0**；`node --check` **23/23**（含治理测试）；含介绍文案回归断言、G4 边界/联动/对比度/设置页/`configEditor` 合并测试、G2 遮挡推送（W16/W17）、P0-6 安全 5 项。
 - G4 改动后源码哈希（2026-11-05）：
   - `client.js` `351080FC7314C3214506E8042C1FAB67B964CDED7D2D4334E69A01E2E0CF515D`
   - `lib/config.js` `7D11DC96006D81A726B8200F7AF7A0F8E345B49DD4230B0C3FD272B48D2E0A1F`
@@ -106,8 +106,8 @@
 | `human/acceptance.md` | 当前 | 人类验收/遗留接受 |
 | `cluster/evolution.md` | 当前 | 进化台账（EV-001 active） |
 | `cluster/maintenance.md` | 当前 | 维护泳道（v0.9 校准/迁移/分层） |
-| `cluster/release.md` | 当前 | 发布泳道（1.3.0 已发布） |
-| `BLUEPRINT.md` | 当前（v2，approved；阶段 closed） | 阶段 `grow-2`：外观设置 + 实时预览 |
+| `cluster/release.md` | 当前 | 发布泳道（1.3.0 已发布；1.3.1 候选） |
+| `BLUEPRINT.md` | 当前（v3，approved；阶段 closed） | 阶段 `security-1`：P0-6 安全收口 |
 | `workspace/evidence/blueprint-v1-steward-1.md` | 历史（未执行） | v1 `steward-1` 草案 |
 | `ledger.md` | 当前 | 异议/事实/变更（DR/F/CR） |
 | `cluster/` | 当前 | 名册/任务板/运行/学习/进化/维护/发布 |

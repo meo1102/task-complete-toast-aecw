@@ -90,3 +90,4 @@
 | CR-004 | 2026-11-05 | charter | `human/direction.md` v1.2：新增 **G4 外观自定义**；G3 样式约束改为“默认 token + 白名单字段”；明确不做任意 CSS | 人类 2026-11-05 指令：G4、A 方案、边界、最小宽度联动 | 新增设置页/预览/颜色；风险等级把“关键授权不可读”列为 S2；不改变 G1/G2 | 人类 | accepted | 接受（2026-11-05）；见 direction §1/§2/§8 |
 | CR-005 | 2026-11-05 | blueprint | `BLUEPRINT.md` v1 → v2：阶段 `grow-2`（外观设置 + 实时预览）；A 方案持久化；字号 12–18、宽度 280–480、最小宽度联动、颜色 `#RRGGBB` | 人类 2026-11-05 批准；v1 `steward-1` 未执行转积压 | 新增 `settings.plugins.tab`、host 设置路由、`configEditor` 写入；旧 appearance 兼容 | 人类 | accepted | 接受（2026-11-05）；蓝图 v2 approved；见 blueprint §7 |
 | CR-006 | 2026-11-06 | blueprint | G2 遮挡推送行为修复纳入 1.3.0（追溯登记） | F-042 人类真机接受；原 grow-2 蓝图未含该行为修复 | G2 hidden/失焦通知行为；已随 1.3.0 发布；补 CR 关闭范围缺口 | 集群管家 | accepted | F-042 人类真机接受；2026-11-06 发布指令包含该已发布行为 |
+| CR-007 | 2026-11-06 | blueprint | S5 判据调整：G1-P95/WP-4-RELOAD/SEC-E2E waived 与 1.3.1 发布证据 | 人类 2026-11-06 发布指令；S4/S5 复核发现未验项 | 不阻塞 1.3.1 有条件发布；2026-11-20 前补证；不重开 security-1 | 集群管家 | accepted | 发布指令接受；未验项列入证据债/到期 |
