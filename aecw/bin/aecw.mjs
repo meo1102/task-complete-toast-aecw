@@ -13,8 +13,21 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CORE = path.join(ROOT, 'core');
 const DATE = new Date().toISOString().slice(0, 10);
-const TOOL_VERSION = '0.9.4';
+const TOOL_VERSION = '0.9.5';
 const ATTESTATION_MAX_AGE_DAYS = 7;
+const HELD_LOCKS = new Set();
+
+process.on('exit', () => {
+  for (const lock of HELD_LOCKS) {
+    try { fs.rmSync(lock, { force: true }); } catch { /* ignore */ }
+  }
+});
+process.on('SIGINT', () => {
+  for (const lock of HELD_LOCKS) {
+    try { fs.rmSync(lock, { force: true }); } catch { /* ignore */ }
+  }
+  process.exit(130);
+});
 
 function usage() {
   console.log(`AECW 生态原型 v${TOOL_VERSION}
@@ -243,6 +256,59 @@ function readJsonMaybe(file) {
   }
 }
 
+/** 同步等待（Node 主线程可用）；用于锁重试，避免忙等。 */
+function sleepMs(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+function lockPathOf(dir) {
+  return path.join(dir, '.aecw-lock');
+}
+
+function acquireLock(dir, timeoutMs = 60000) {
+  const lock = lockPathOf(dir);
+  const start = Date.now();
+  let delay = 5;
+  for (;;) {
+    try {
+      const fd = fs.openSync(lock, 'wx');
+      fs.writeSync(fd, JSON.stringify({ pid: process.pid, at: new Date().toISOString() }));
+      fs.closeSync(fd);
+      HELD_LOCKS.add(lock);
+      return lock;
+    } catch (error) {
+      if (!['EEXIST', 'EPERM', 'EACCES', 'EBUSY'].includes(error?.code)) throw error;
+      try {
+        const stat = fs.statSync(lock);
+        if (Date.now() - stat.mtimeMs > 120000) {
+          fs.rmSync(lock, { force: true });
+          continue;
+        }
+      } catch { /* lock 可能刚被释放 */ }
+      if (Date.now() - start > timeoutMs) throw new Error(`等待台账锁超时：${lock}`);
+      sleepMs(delay);
+      delay = Math.min(delay * 2, 200);
+    }
+  }
+}
+
+function releaseLock(lock) {
+  if (!lock) return;
+  HELD_LOCKS.delete(lock);
+  try { fs.rmSync(lock, { force: true }); } catch { /* ignore */ }
+}
+
+/** 读-改-写全程持锁；进程退出时 exit handler 会兜底清理。 */
+function withLock(dir, fn) {
+  const lock = acquireLock(dir);
+  try {
+    recoverTxn(dir);
+    return fn();
+  } finally {
+    releaseLock(lock);
+  }
+}
+
 function readStateFile(dir) {
   return readJsonMaybe(path.join(dir, 'state.json'));
 }
@@ -364,6 +430,7 @@ function listTreeFiles(root, { excludeDirs = [] } = {}) {
         if (excluded.has(childRel)) continue;
         walk(childAbs, childRel);
       } else {
+        if (entry.name === '.aecw-lock') continue;
         if (/\.tmp-/.test(entry.name)) continue;
         out.push(childRel);
       }
@@ -881,15 +948,16 @@ function cmdDissent(args, flags) {
   const evidence = cleanCell(flags.evidence ?? '-') || '-';
   const route = cleanCell(flags.route || (severity === 'S1' || severity === 'S2' ? '直达' : '本地'));
   const handler = cleanCell(flags.owner || '集群管家') || '集群管家';
-  let ledger = fs.readFileSync(p.ledger, 'utf8');
-  const id = nextIdInTable(ledger, '## A. 异议台账', 'DR');
-  ledger = appendTableRow(ledger, '## A. 异议台账', joinRow([id, DATE, severity, type, claim, evidence, handler, 'open', '-']));
+  withLock(dir, () => {
+    let ledger = fs.readFileSync(p.ledger, 'utf8');
+    const id = nextIdInTable(ledger, '## A. 异议台账', 'DR');
+    ledger = appendTableRow(ledger, '## A. 异议台账', joinRow([id, DATE, severity, type, claim, evidence, handler, 'open', '-']));
 
-  const files = [{ path: p.ledger, content: ledger }];
-  const inboxFile = path.join(p.inbox, `${id}.md`);
-  if (severity === 'S1' || severity === 'S2') {
-    if (fs.existsSync(inboxFile)) fail(`${inboxFile} 已存在，拒绝覆盖历史异议记录`);
-    const detail = `# ${id} · ${severity} · ${type}
+    const files = [{ path: p.ledger, content: ledger }];
+    const inboxFile = path.join(p.inbox, `${id}.md`);
+    if (severity === 'S1' || severity === 'S2') {
+      if (fs.existsSync(inboxFile)) fail(`${inboxFile} 已存在，拒绝覆盖历史异议记录`);
+      const detail = `# ${id} · ${severity} · ${type}
 
 > 状态：current｜最后核对：${DATE}
 
@@ -906,22 +974,23 @@ function cmdDissent(args, flags) {
 
 > S1/S2：人类必须在 SLA 内回应；未回应默认暂停/缩小。
 `;
-    files.push({ path: inboxFile, content: detail });
-  }
+      files.push({ path: inboxFile, content: detail });
+    }
 
-  try {
-    commitFiles(dir, files);
-  } catch (error) {
-    fail(`异议写入失败，已回滚（ledger/inbox 均未提交）：${error.message}`);
-  }
+    try {
+      commitFiles(dir, files);
+    } catch (error) {
+      fail(`异议写入失败，已回滚（ledger/inbox 均未提交）：${error.message}`);
+    }
 
-  console.log(`${id} 已记录（${severity} / ${type}）`);
-  if (severity === 'S1' || severity === 'S2') {
-    console.log(`  → 直达人类：${inboxFile}`);
-    console.log('  → 未解决前，高风险门禁应暂停/缩小；不要只留在聊天里。');
-  } else {
-    console.log('  → 本地处理；周会记录，人类抽样。');
-  }
+    console.log(`${id} 已记录（${severity} / ${type}）`);
+    if (severity === 'S1' || severity === 'S2') {
+      console.log(`  → 直达人类：${inboxFile}`);
+      console.log('  → 未解决前，高风险门禁应暂停/缩小；不要只留在聊天里。');
+    } else {
+      console.log('  → 本地处理；周会记录，人类抽样。');
+    }
+  });
 }
 
 function cmdFact(args, flags) {
@@ -934,16 +1003,18 @@ function cmdFact(args, flags) {
   const verifier = cleanCell(flags.verifier ?? '-') || '-';
   if (status === '已核验' && isPlaceholder(verifier)) fail('fact --status 已核验 时必须提供具名 --verifier');
   const link = cleanCell(flags.link ?? '-') || '-';
-  const ledger = fs.readFileSync(p.ledger, 'utf8');
-  const id = nextIdInTable(ledger, '## B. 事实台账', 'F');
-  const next = appendTableRow(ledger, '## B. 事实台账', joinRow([id, DATE, statement, source, status, verifier, link]));
-  try {
-    commitFiles(dir, [{ path: p.ledger, content: next }]);
-  } catch (error) {
-    fail(`事实写入失败，已回滚：${error.message}`);
-  }
-  console.log(`${id} 已记录（${status}）`);
-  console.log('  模型输出默认是“主张”；高影响事实需非作者核验。');
+  withLock(dir, () => {
+    const ledger = fs.readFileSync(p.ledger, 'utf8');
+    const id = nextIdInTable(ledger, '## B. 事实台账', 'F');
+    const next = appendTableRow(ledger, '## B. 事实台账', joinRow([id, DATE, statement, source, status, verifier, link]));
+    try {
+      commitFiles(dir, [{ path: p.ledger, content: next }]);
+    } catch (error) {
+      fail(`事实写入失败，已回滚：${error.message}`);
+    }
+    console.log(`${id} 已记录（${status}）`);
+    console.log('  模型输出默认是“主张”；高影响事实需非作者核验。');
+  });
 }
 
 function cmdGate(args, flags) {
@@ -1005,34 +1076,36 @@ function cmdResolve(args, flags) {
   const p = projectPaths(dir);
   const id = String(flags.id || '').trim();
   if (!/^DR-\d{3}$/.test(id)) fail('resolve 只接受 DR-xxx（A. 异议台账）；CR/F 不得跨类型裁决');
-  let ledger = fs.readFileSync(p.ledger, 'utf8');
-  const rows = tableRows(ledger, '## A. 异议台账', 'DR');
-  const row = rows.find((item) => idMatchesCell(item.cells[0], id));
-  if (!row) fail(`未找到异议 ${id}（只查 A 表）`);
-  if (/^closed$/i.test(row.cells[7])) fail(`${id} 已关闭，拒绝重复裁决`);
-  const severity = String(row.cells[2] || '').toUpperCase();
-  let by;
-  if (severity === 'S1' || severity === 'S2') {
-    by = cleanCell(requireHuman(flags.by, dir, `resolve ${id}（${severity}）`));
-  } else {
-    by = cleanCell(flags.by || '集群管家') || '集群管家';
-  }
-  const decision = requireText(flags.decision, `resolve ${id} --decision`);
-  const reason = cleanCell(flags.reason ?? '') || '';
-  row.cells[6] = by;
-  row.cells[7] = 'closed';
-  row.cells[8] = reason ? `${decision}；${reason}` : decision;
-  const lines = ledger.split('\n');
-  const index = lines.indexOf(row.line);
-  if (index < 0) fail(`无法定位 ${id} 的原始行`);
-  lines[index] = joinRow(row.cells);
-  ledger = lines.join('\n');
-  try {
-    commitFiles(dir, [{ path: p.ledger, content: ledger }]);
-  } catch (error) {
-    fail(`裁决写入失败，已回滚：${error.message}`);
-  }
-  console.log(`${id} 已关闭：${decision}（${by}）`);
+  withLock(dir, () => {
+    let ledger = fs.readFileSync(p.ledger, 'utf8');
+    const rows = tableRows(ledger, '## A. 异议台账', 'DR');
+    const row = rows.find((item) => idMatchesCell(item.cells[0], id));
+    if (!row) fail(`未找到异议 ${id}（只查 A 表）`);
+    if (/^closed$/i.test(row.cells[7])) fail(`${id} 已关闭，拒绝重复裁决`);
+    const severity = String(row.cells[2] || '').toUpperCase();
+    let by;
+    if (severity === 'S1' || severity === 'S2') {
+      by = cleanCell(requireHuman(flags.by, dir, `resolve ${id}（${severity}）`));
+    } else {
+      by = cleanCell(flags.by || '集群管家') || '集群管家';
+    }
+    const decision = requireText(flags.decision, `resolve ${id} --decision`);
+    const reason = cleanCell(flags.reason ?? '') || '';
+    row.cells[6] = by;
+    row.cells[7] = 'closed';
+    row.cells[8] = reason ? `${decision}；${reason}` : decision;
+    const lines = ledger.split('\n');
+    const index = lines.indexOf(row.line);
+    if (index < 0) fail(`无法定位 ${id} 的原始行`);
+    lines[index] = joinRow(row.cells);
+    ledger = lines.join('\n');
+    try {
+      commitFiles(dir, [{ path: p.ledger, content: ledger }]);
+    } catch (error) {
+      fail(`裁决写入失败，已回滚：${error.message}`);
+    }
+    console.log(`${id} 已关闭：${decision}（${by}）`);
+  });
 }
 
 function cmdAccept(args, flags) {
@@ -1047,14 +1120,16 @@ function cmdAccept(args, flags) {
     fail('accept 接受/有条件接受 必须提供 --evidence；不得无证据验收');
   }
   const risk = cleanCell(flags.risk ?? '-') || '-';
-  let text = fs.readFileSync(p.acceptance, 'utf8');
-  text = appendRowByHeader(text, '| 日期 | 项 |', joinRow([DATE, item, decision, evidence || '-', risk, by]));
-  try {
-    commitFiles(dir, [{ path: p.acceptance, content: text }]);
-  } catch (error) {
-    fail(`验收写入失败，已回滚：${error.message}`);
-  }
-  console.log(`验收已记录：${item} → ${decision}（${by}）`);
+  withLock(dir, () => {
+    let text = fs.readFileSync(p.acceptance, 'utf8');
+    text = appendRowByHeader(text, '| 日期 | 项 |', joinRow([DATE, item, decision, evidence || '-', risk, by]));
+    try {
+      commitFiles(dir, [{ path: p.acceptance, content: text }]);
+    } catch (error) {
+      fail(`验收写入失败，已回滚：${error.message}`);
+    }
+    console.log(`验收已记录：${item} → ${decision}（${by}）`);
+  });
 }
 
 function cmdLog(args, flags) {
@@ -1062,14 +1137,16 @@ function cmdLog(args, flags) {
   const p = projectPaths(dir);
   const decision = requireText(flags.decision, 'log --decision');
   const reason = cleanCell(flags.reason ?? '-') || '-';
-  let text = fs.readFileSync(p.decisions, 'utf8');
-  text = appendRowByHeader(text, '| 日期 | 决策 |', joinRow([DATE, decision, reason, '-']));
-  try {
-    commitFiles(dir, [{ path: p.decisions, content: text }]);
-  } catch (error) {
-    fail(`决策写入失败，已回滚：${error.message}`);
-  }
-  console.log(`决策已记录：${decision}`);
+  withLock(dir, () => {
+    let text = fs.readFileSync(p.decisions, 'utf8');
+    text = appendRowByHeader(text, '| 日期 | 决策 |', joinRow([DATE, decision, reason, '-']));
+    try {
+      commitFiles(dir, [{ path: p.decisions, content: text }]);
+    } catch (error) {
+      fail(`决策写入失败，已回滚：${error.message}`);
+    }
+    console.log(`决策已记录：${decision}`);
+  });
 }
 
 function cmdBlueprint(args, flags) {
@@ -1513,6 +1590,10 @@ function normalizeDecision(raw) {
 
 function cmdChange(args, flags) {
   const dir = needDir(args, 'change');
+  withLock(dir, () => cmdChangeLocked(dir, flags));
+}
+
+function cmdChangeLocked(dir, flags) {
   const p = projectPaths(dir);
   let ledger = fs.readFileSync(p.ledger, 'utf8');
 

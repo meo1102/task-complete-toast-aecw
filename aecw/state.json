@@ -151,31 +151,21 @@
   },
   "tool": {
     "name": "aecw",
-    "version": "0.9.4",
-    "hash": "4F265768D79D21895B5052A16040DCF7EE109E26852C5762522FD7C83439B24C"
+    "version": "0.9.5",
+    "hash": "AA70023D5CE9F144FDB734B993D5AE1A0712642D1546D0CCFCE19BB411FEEFFC"
   },
   "governance_baseline": {
-    "commit": "b456ce5",
-    "tag": "aecw-s2-2026-11-06",
-    "tool": "0.9.4",
+    "commit": "pending",
+    "tag": "aecw-s3-2026-11-06",
+    "tool": "0.9.5",
     "plan": "agent-engineering-control/PLAN-v0.9.1-红队整改.md",
     "scope": [
-      "P0-2",
-      "P0-3"
+      "P0-4"
     ],
     "previous": {
-      "tag": "aecw-s1-2026-11-06",
-      "commit": "e76031f"
+      "tag": "aecw-s2-2026-11-06",
+      "commit": "b456ce5"
     },
-    "verify": {
-      "attestation": "workspace/evidence/attestations/VA-20261106033417-2e1420.json",
-      "id": "VA-20261106033417-2e1420",
-      "gate": "release",
-      "result": "pass",
-      "tree_hash": "sha256:ABD389234E3919FD3C378CF93E5A2E3681A0F59C137B2B3F60DFB336A6486F77",
-      "product_hash": "sha256:13657AFC0C1F6F1E64111CB1F01118B6D959E068613B94AD915431B9447A4295",
-      "created_at": "2026-11-06T03:34:17.787Z"
-    },
-    "next": "S3 pending human approval"
+    "next": "S4 in progress"
   }
 }

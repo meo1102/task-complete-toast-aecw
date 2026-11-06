@@ -17,8 +17,8 @@
   },
   "tool": {
     "name": "aecw",
-    "version": "0.9.4",
+    "version": "0.9.5",
     "mode": "vendored",
-    "hash": "4F265768D79D21895B5052A16040DCF7EE109E26852C5762522FD7C83439B24C"
+    "hash": "AA70023D5CE9F144FDB734B993D5AE1A0712642D1546D0CCFCE19BB411FEEFFC"
   }
 }

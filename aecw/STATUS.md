@@ -17,7 +17,7 @@
 - 阶段：grow-2（closed）
 - 阶段状态：closed
 - 版本：1.3.0（已发布；G4/G2 修复包含在内）
-- 当前目标：`grow-2` 已关闭；**布局 v3：产品在仓库根、AECW `aecw/`**；EV-001 运行态探针已激活（门禁/交付前必跑）；**1.3.0 已发布**；**红队整改 S1/S2 已完成并冻结基线**，等人类同意 S3；
+- 当前目标：`grow-2` 已关闭；**布局 v3：产品在仓库根、AECW `aecw/`**；EV-001 运行态探针已激活（门禁/交付前必跑）；**1.3.0 已发布**；**红队整改 S1/S2/S3 已完成并冻结基线**，S4 进行中；
 - 当前门禁：2026-11-05-release-v1.3.0（发布通过）；阶段门禁 `grow-2` 为历史
 
 ## 2. 当前证据
@@ -39,6 +39,7 @@
 - 结构：`node aecw/bin/aecw.mjs check aecw` → **FAIL 0｜WARN 0**（v0.9 对账见下）。
 - **红队整改 S1（2026-11-06，工具 0.9.3）**：治理回归 **10/10**；开放 S1/S2 改为 FAIL（大小写统一）；通过类门禁拒绝自由文本，需 verify attestation + 人类签署；`init → check` 为 0/0；表格转义、DR/CR 分表、`nextId` 分表、accept/resolve/start 人类身份、多文件 journal 回滚。**S1 只改治理工具，不改产品行为**；证据 [`2026-11-06-s1-redteam.md`](workspace/evidence/2026-11-06-s1-redteam.md)，F-052。
 - **红队整改 S2（2026-11-06，工具 0.9.4）**：新增 `verify`（check --strict → probe → 完整测试 → criteria → 开放 S1/S2 → 按 impact 证据债 → tree attestation）；`gate` 拒绝过期/失败/树变化的 attestation；`freeze` 写 direction/blueprint/criteria/product payload hash，`start` 重算并拒绝任一字节变化；`closed` 终态、`pause/resume/close`、唯一门禁名；criteria 增到期列。最终 clean-tree verify **PASS**（`VA-20261106033417-2e1420`，release tree `ABD389…`，check/probe/tests 全 pass）；治理回归 **10 + 7 = 17/17**；**S2 只改治理工具，不改产品行为**；证据 [`2026-11-06-s2-redteam.md`](workspace/evidence/2026-11-06-s2-redteam.md)，F-053。`check` 仍只是结构检查，不是授权/发布证明。
+- **红队整改 S3（2026-11-06，工具 0.9.5）**：`fact`/`dissent`/`change`/`resolve`/`accept`/`log` 读写全程持 `.aecw-lock`；退出兜底释放；`withLock` 先恢复未完成 journal；32 路并发 `fact` × **10 轮**全部成功、ID 唯一、无截断/丢写。治理回归 **20/20**；**S3 只改治理工具，不改产品行为**；证据 [`2026-11-06-s3-redteam.md`](workspace/evidence/2026-11-06-s3-redteam.md)，F-054。
 - 安装态：**已替换安装并随布局 v3 重装**（2026-11-06）：profile link/junction → **`D:\DSH\task-complete-toast-aecw`**；plugin `include:task-complete-toast` active；live 设置路由校验 200/400/422 符合预期；A 方案写入 `profiles/desktop/cordis.patch.yml`（F-038/F-047/F-051）。
 - **G4 客户端 UI 已验收**：设置页入口/控件/预览/保存由人类目视接受（2026-11-05，E2，F-040）；`settings.plugins.tab` occupant 已确认（F-039）。截图缺口见 ED-001。
 
@@ -117,6 +118,7 @@
 | [`workspace/evidence/2026-11-06-layout-v3.md`](workspace/evidence/2026-11-06-layout-v3.md) | 当前 | 布局 v3：取消 product 层，产品在仓库根；profile/清单/状态/探针写回 |
 | [`workspace/evidence/2026-11-06-s1-redteam.md`](workspace/evidence/2026-11-06-s1-redteam.md) | 当前 | 红队整改 S1：P0-1 + P0-7；工具 0.9.3；负控与未做项 |
 | [`workspace/evidence/2026-11-06-s2-redteam.md`](workspace/evidence/2026-11-06-s2-redteam.md) | 当前 | 红队整改 S2：P0-2 + P0-3；verify attestation、freeze payload、状态机 |
+| [`workspace/evidence/2026-11-06-s3-redteam.md`](workspace/evidence/2026-11-06-s3-redteam.md) | 当前 | 红队整改 S3：P0-4；进程锁、journal 恢复、32 路并发 |
 | `workspace/memory/` | 当前/参考 | 设计契约（§16 G4）、ADR、历史映射、V 项对账、设置方案 |
 | `workspace/landing/` | 当前/历史 | 落地清单、交接说明、迁移说明 |
 | [`../README.md`](../README.md) | 当前摘要 + 历史细节 | 产品功能/安装说明；状态以本页为准 |
@@ -126,7 +128,7 @@
 
 **阶段 `grow-2` 已关闭（2026-11-05，有条件通过）。布局 v3：产品在仓库根、AECW `aecw/`，profile 指向仓库根。历史基线 commit `4aff41a` / tag `aecw-grow-2-2026-11-05`（`DSH_end` 归档）；独立仓库 initial `67809d0` / tag `aecw-standalone-2026-11-05`；**1.3.0 已发布**（tag `v1.3.0`）。**
 
-**当前停点（2026-11-06）**：红队整改 **S1 已完成并冻结基线**（tag `aecw-s1-2026-11-06`，F-052）；**S2 已完成并冻结基线**（tag `aecw-s2-2026-11-06`，F-053）；**S3–S5 未开始**，等人类明确同意 S3 后再继续，不自动续跑。
+**当前停点（2026-11-06）**：红队整改 **S1 已完成并冻结基线**（tag `aecw-s1-2026-11-06`，F-052）；**S2 已完成并冻结基线**（tag `aecw-s2-2026-11-06`，F-053）；**S3 已完成并冻结基线**（tag `aecw-s3-2026-11-06`，F-054）；**S4 进行中**，S5 未开始。
 
 1. **v0.9 校准已验收（有条件通过）**（maintenance）：`PROJECT.json`、`state.json`、`criteria.md`；13 处残留当前文档矛盾修复；历史文档加状态头；`check` 增加路径/命令/状态/围栏/文档头检查。**未改产品行为。** 验收见 [`2026-11-05-v09-acceptance.md`](workspace/evidence/2026-11-05-v09-acceptance.md)，F-050。已知缺口：`check` 关键词硬编码、`commands.test` 只验路径不执行（已修为 `test/*.test.js`）。
 2. **EV-001 已激活**：`node aecw/scripts/probe.mjs` 写入 AGENTS，门禁/交付前必跑；正控 7/7、负控 fail。分布外验证/真实回滚演练仍待做。

@@ -29,13 +29,13 @@ node aecw/scripts/probe.mjs
 # 单测（从仓库根）
 node --test --test-isolation=none test/smoke.test.js test/integration.test.js test/store.test.js test/format.test.js test/dismiss.test.js test/notifier.test.js test/resolver.test.js test/wiring.test.js test/presentation.test.js test/interaction.test.js
 
-# AECW 治理回归（S1 + S2 红队；从仓库根）
-node --test --test-isolation=none aecw/test/cli-s1.test.mjs aecw/test/cli-s2.test.mjs
+# AECW 治理回归（S1 + S2 + S3 红队；从仓库根）
+node --test --test-isolation=none aecw/test/cli-s1.test.mjs aecw/test/cli-s2.test.mjs aecw/test/cli-s3.test.mjs
 
 # AECW 检查（治理目录是 aecw/）
 node aecw/bin/aecw.mjs check aecw
 ```
 
-- `aecw` 工具版本 **0.9.4**（S1：open S1/S2 = FAIL、gate 需 attestation、表格/ID/半事务；S2：`verify` attestation、freeze/start payload hash、closed 终态、唯一门禁名）。
+- `aecw` 工具版本 **0.9.5**（S1：open S1/S2 = FAIL、gate 需 attestation、表格/ID/半事务；S2：`verify` attestation、freeze/start payload hash、closed 终态；S3：`.aecw-lock` 进程锁、journal 恢复、32 路并发回归）。
 - 当前阶段 `grow-2` 已 closed；产品行为变更需新蓝图 + `freeze`/`start`，不得静默扩范围。
 - 当前发布口径 v1.3.0（G1/G2/G3 + G4 + G2 遮挡修复）；截图/录屏要求人类挂起；E2 证据（无截图）不得写成 E1。
