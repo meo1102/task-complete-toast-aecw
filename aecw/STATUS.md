@@ -1,14 +1,14 @@
 # STATUS · task-complete-toast（独立项目）
 
 > 状态：current｜最后核对：2026-11-06
-<!-- AECW-STATE {"stage":"security-1/closed","release":"1.3.1/release-candidate","g4":"released/released","evolution":"EV-001/active","adoption":"provisional","evidence_debt":["ED-001","ED-002","ED-003","ED-004"]} -->
-> **状态摘要（`state.json` 对账）**：stage `security-1/closed`；release `1.3.1/release-candidate`；G4 `released/released`；EV-001 `active`；adoption `provisional`；证据债 `ED-001/002`（waived）、`ED-003/004`（open）。验收矩阵见 [`criteria.md`](criteria.md)。
+<!-- AECW-STATE {"stage":"security-1/closed","release":"1.3.1/released","g4":"released/released","evolution":"EV-001/active","adoption":"provisional","evidence_debt":["ED-001","ED-002","ED-003","ED-004"]} -->
+> **状态摘要（`state.json` 对账）**：stage `security-1/closed`；release `1.3.1/released`；G4 `released/released`；EV-001 `active`；adoption `provisional`；证据债 `ED-001/002`（waived）、`ED-003/004`（open）。验收矩阵见 [`criteria.md`](criteria.md)。
 
-> **唯一当前状态页。** 最后更新：2026-11-06｜版本：1.3.1 候选（1.3.0 已发布）｜人类所有者：meo1102
+> **唯一当前状态页。** 最后更新：2026-11-06｜版本：1.3.1（已发布）｜人类所有者：meo1102
 > 所有者口径：按 **Git 提交人**记录（`meo1102@163.com`，2026-11-05 人类指令）。
 > 规则：本页是当前状态；其他文档是证据/历史。冲突以本页为准；每次门禁/冻结/发布先更新本页。
 > 证据等级：**E1** 运行事实（可复现）｜**E2** 人类目视（无截图）｜**E3** 文档主张（未复核）。
-> **项目说明**：项目位于 **`D:\DSH\task-complete-toast-aecw`**（独立仓库；历史归档在 `DSH_end`）。**布局 v3：产品代码在仓库根（`../`）；AECW 治理在 `aecw/`**，两者不混放。本项目基于 `task-complete-toast` v1.2.0 复制；**当前发布 1.3.0**（G1/G2/G3 + G4 + G2 遮挡修复）；**1.3.1 安全候选已安装、待发布**。**已替换安装**：desktop profile 的 link/junction 指向 **`D:\DSH\task-complete-toast-aecw`**；原件保留在原路径，可回滚。结构迁移见 [`workspace/landing/migration-aecw-2026-11-05.md`](workspace/landing/migration-aecw-2026-11-05.md)；布局 v3 见 [`workspace/evidence/2026-11-06-layout-v3.md`](workspace/evidence/2026-11-06-layout-v3.md)。
+> **项目说明**：项目位于 **`D:\DSH\task-complete-toast-aecw`**（独立仓库；历史归档在 `DSH_end`）。**布局 v3：产品代码在仓库根（`../`）；AECW 治理在 `aecw/`**，两者不混放。本项目基于 `task-complete-toast` v1.2.0 复制；**当前发布 1.3.1**（G1/G2/G3 + G4 + G2 遮挡修复 + P0-6 安全收口）。**已替换安装**：desktop profile 的 link/junction 指向 **`D:\DSH\task-complete-toast-aecw`**；原件保留在原路径，可回滚。结构迁移见 [`workspace/landing/migration-aecw-2026-11-05.md`](workspace/landing/migration-aecw-2026-11-05.md)；布局 v3 见 [`workspace/evidence/2026-11-06-layout-v3.md`](workspace/evidence/2026-11-06-layout-v3.md)。
 
 ---
 
@@ -16,9 +16,9 @@
 
 - 阶段：security-1（closed）
 - 阶段状态：closed
-- 版本：1.3.1 候选（未发布；1.3.0 已发布）
-- 当前目标：`grow-2` 已关闭；**布局 v3：产品在仓库根、AECW `aecw/`**；EV-001 运行态探针已激活（门禁/交付前必跑）；**1.3.0 已发布**；**红队整改 S1/S2/S3/S4/S5 已完成并冻结基线**；**1.3.1 待发布**；
-- 当前门禁：2026-11-06-security-1-stage-0608409f11.md
+- 版本：1.3.1（已发布；1.3.0 为上一版）
+- 当前目标：`grow-2` 已关闭；**布局 v3：产品在仓库根、AECW `aecw/`**；EV-001 运行态探针已激活（门禁/交付前必跑）；**1.3.1 已发布**；**红队整改 S1/S2/S3/S4/S5 已完成并冻结基线**；发布后条件 2026-11-20 前复核；
+- 当前门禁：2026-11-06-release-v1-3-1-0700071129（有条件通过）
 
 ## 2. 当前证据
 
@@ -40,8 +40,9 @@
 - **红队整改 S1（2026-11-06，工具 0.9.3）**：治理回归 **10/10**；开放 S1/S2 改为 FAIL（大小写统一）；通过类门禁拒绝自由文本，需 verify attestation + 人类签署；`init → check` 为 0/0；表格转义、DR/CR 分表、`nextId` 分表、accept/resolve/start 人类身份、多文件 journal 回滚。**S1 只改治理工具，不改产品行为**；证据 [`2026-11-06-s1-redteam.md`](workspace/evidence/2026-11-06-s1-redteam.md)，F-052。
 - **红队整改 S2（2026-11-06，工具 0.9.4）**：新增 `verify`（check --strict → probe → 完整测试 → criteria → 开放 S1/S2 → 按 impact 证据债 → tree attestation）；`gate` 拒绝过期/失败/树变化的 attestation；`freeze` 写 direction/blueprint/criteria/product payload hash，`start` 重算并拒绝任一字节变化；`closed` 终态、`pause/resume/close`、唯一门禁名；criteria 增到期列。最终 clean-tree verify **PASS**（`VA-20261106033417-2e1420`，release tree `ABD389…`，check/probe/tests 全 pass）；治理回归 **10 + 7 = 17/17**；**S2 只改治理工具，不改产品行为**；证据 [`2026-11-06-s2-redteam.md`](workspace/evidence/2026-11-06-s2-redteam.md)，F-053。`check` 仍只是结构检查，不是授权/发布证明。
 - **红队整改 S3（2026-11-06，工具 0.9.5）**：`fact`/`dissent`/`change`/`resolve`/`accept`/`log` 读写全程持 `.aecw-lock`；退出兜底释放；`withLock` 先恢复未完成 journal；32 路并发 `fact` × **10 轮**全部成功、ID 唯一、无截断/丢写。治理回归 **20/20**；**S3 只改治理工具，不改产品行为**；证据 [`2026-11-06-s3-redteam.md`](workspace/evidence/2026-11-06-s3-redteam.md)，F-054。
-- **红队整改 S4（2026-11-06，工具 0.9.6，产品 1.3.1 候选）**：新增只读 `health` 身份端点与同源 `settings-token`；settings 写路由要求 loopback Host + 同源 Origin + `x-aecw-csrf` + `application/json`，拒绝空 patch/未知字段/超限；probe 改用 health 身份 + outcome 错误体，不再 POST 写端点；live curl 矩阵 12 项符合预期，probe **7/7**，假服务/坏端口/query/fragment **5/7 fail**；EV-001 先降 trial 后重新 active。产品 **174/174**、治理 **20/20**；**未发布 1.3.1**；阶段门禁 [`2026-11-06-security-1-stage-0608409f11.md`](gates/2026-11-06-security-1-stage-0608409f11.md)（有条件通过，verify `VA-20261106060831-fa31ea`）；证据 [`2026-11-06-s4-security.md`](workspace/evidence/2026-11-06-s4-security.md)，F-055。
+- **红队整改 S4（2026-11-06，工具 0.9.6，产品 1.3.1）**：新增只读 `health` 身份端点与同源 `settings-token`；settings 写路由要求 loopback Host + 同源 Origin + `x-aecw-csrf` + `application/json`，拒绝空 patch/未知字段/超限；probe 改用 health 身份 + outcome 错误体，不再 POST 写端点；live curl 矩阵 12 项符合预期，probe **7/7**，假服务/坏端口/query/fragment **5/7 fail**；EV-001 先降 trial 后重新 active。产品 **174/174**、治理 **20/20**；**1.3.1 已发布**；阶段门禁 [`2026-11-06-security-1-stage-0608409f11.md`](gates/2026-11-06-security-1-stage-0608409f11.md)（有条件通过，verify `VA-20261106060831-fa31ea`）；证据 [`2026-11-06-s4-security.md`](workspace/evidence/2026-11-06-s4-security.md)，F-055。
 - **红队整改 S5（2026-11-06，工具 0.9.6）**：`render` 生成/校验机器状态块（STATUS/board/release/manifest）；check 增加 criteria/feature 引用、roots/install 逃逸、release.gate 校验；`.gitattributes` 统一 LF；G1-P95/WP-4-RELOAD waived；CR-006 追溯 G2 范围；current 文档漂移清理（g4-charter-impact、appearance-settings-design、work README、history-mapping、board B-004）。治理 **25/25**、产品 **174/174**、check 0/0；证据 [`2026-11-06-s5-redteam.md`](workspace/evidence/2026-11-06-s5-redteam.md)，F-056。
+- **发布 1.3.1（2026-11-06，release）**：P0-6 安全收口；release verify `VA-20261106065956-f82564`（release tree `7F62FC32…`，产品 `0C2B9946…`）；release gate [`2026-11-06-release-v1-3-1-0700071129.md`](gates/2026-11-06-release-v1-3-1-0700071129.md) **有条件通过**；tag `v1.3.1`；产品 174/174、治理 25/25、probe 7/7；客户端浏览器保存/307/routePath/限速为发布后条件（2026-11-20）。证据 [`2026-11-06-release-v1.3.1.md`](workspace/evidence/2026-11-06-release-v1.3.1.md)，F-057。
 - 安装态：**已替换安装并随布局 v3 重装**（2026-11-06）：profile link/junction → **`D:\DSH\task-complete-toast-aecw`**；plugin `include:task-complete-toast` active；live 设置路由校验 200/400/422 符合预期；A 方案写入 `profiles/desktop/cordis.patch.yml`（F-038/F-047/F-051）。
 - **G4 客户端 UI 已验收**：设置页入口/控件/预览/保存由人类目视接受（2026-11-05，E2，F-040）；`settings.plugins.tab` occupant 已确认（F-039）。截图缺口见 ED-001。
 
@@ -123,6 +124,7 @@
 | [`workspace/evidence/2026-11-06-s3-redteam.md`](workspace/evidence/2026-11-06-s3-redteam.md) | 当前 | 红队整改 S3：P0-4；进程锁、journal 恢复、32 路并发 |
 | [`workspace/evidence/2026-11-06-s4-security.md`](workspace/evidence/2026-11-06-s4-security.md) | 当前 | 红队整改 S4：P0-6；health/token/settings guard/probe/EV-001 |
 | [`workspace/evidence/2026-11-06-s5-redteam.md`](workspace/evidence/2026-11-06-s5-redteam.md) | 当前 | 红队整改 S5：P1；SSOT 机器块、引用/路径校验、LF、判据修正 |
+| [`workspace/evidence/2026-11-06-release-v1.3.1.md`](workspace/evidence/2026-11-06-release-v1.3.1.md) | 历史（发布时） | v1.3.1 发布：tag/哈希/attestation/条件/未验项 |
 | `workspace/memory/` | 当前/参考 | 设计契约（§16 G4）、ADR、历史映射、V 项对账、设置方案 |
 | `workspace/landing/` | 当前/历史 | 落地清单、交接说明、迁移说明 |
 | [`../README.md`](../README.md) | 当前摘要 + 历史细节 | 产品功能/安装说明；状态以本页为准 |
@@ -132,7 +134,7 @@
 
 **阶段 `grow-2` 已关闭（2026-11-05，有条件通过）。布局 v3：产品在仓库根、AECW `aecw/`，profile 指向仓库根。历史基线 commit `4aff41a` / tag `aecw-grow-2-2026-11-05`（`DSH_end` 归档）；独立仓库 initial `67809d0` / tag `aecw-standalone-2026-11-05`；**1.3.0 已发布**（tag `v1.3.0`）。**
 
-**当前停点（2026-11-06）**：红队整改 **S1** `aecw-s1-2026-11-06`；**S2** `aecw-s2-2026-11-06`；**S3** `aecw-s3-2026-11-06`；**S4** `aecw-s4-2026-11-06`；**S5** `aecw-s5-2026-11-06`；1.3.1 进入发布验证（release gate + `v1.3.1`）。
+**当前停点（2026-11-06）**：红队整改 **S1–S5** 全部冻结；**1.3.1 已发布**（tag `v1.3.1`，release gate 有条件通过）；发布后条件 2026-11-20 前复核。
 
 1. **v0.9 校准已验收（有条件通过）**（maintenance）：`PROJECT.json`、`state.json`、`criteria.md`；13 处残留当前文档矛盾修复；历史文档加状态头；`check` 增加路径/命令/状态/围栏/文档头检查。**未改产品行为。** 验收见 [`2026-11-05-v09-acceptance.md`](workspace/evidence/2026-11-05-v09-acceptance.md)，F-050。已知缺口：`check` 关键词硬编码、`commands.test` 只验路径不执行（已修为 `test/*.test.js`）。
 2. **EV-001 已激活**：`node aecw/scripts/probe.mjs` 写入 AGENTS，门禁/交付前必跑；正控 7/7、负控 fail。分布外验证/真实回滚演练仍待做。
@@ -173,7 +175,7 @@
 | 项 | 值 |
 |---|---|
 | 阶段 | `security-1/closed` |
-| 发布 | `1.3.1/release-candidate` |
+| 发布 | `1.3.1/released` |
 | 功能 | G1 released/released；G2 released/released；G2-occlusion released/released；G3 released/released；G4 released/released |
 | 进化 | EV-001 active |
 | adoption | `provisional` |

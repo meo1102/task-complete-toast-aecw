@@ -57,7 +57,7 @@
 | 项 | 值 |
 |---|---|
 | 阶段 | `security-1/closed` |
-| 发布 | `1.3.1/release-candidate` |
+| 发布 | `1.3.1/released` |
 | 功能 | G1 released/released；G2 released/released；G2-occlusion released/released；G3 released/released；G4 released/released |
 | 进化 | EV-001 active |
 | adoption | `provisional` |
