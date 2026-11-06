@@ -26,7 +26,8 @@
 | T-017 | 红队整改 **S3**：P0-4 原子台账 + 32 路并发 | 单代理 + 人类 | done（基线冻结） | 人类“开始 s3 和 s4” | 锁/CAS/原子 rename/唯一 ID；32 路回归 | F-054；[`s3-redteam`](../workspace/evidence/2026-11-06-s3-redteam.md) |
 | T-018 | 红队整改 **S4**：P0-6 探针/写路由安全 + EV-001 激活 | 单代理 + 人类 | done（阶段 closed，有条件通过） | 人类“开始 s3 和 s4”；S3 基线 | health/token；settings Host/Origin/CSRF/Content-Type/非空/限速；probe 改版；EV-001 复核 | F-055；`security-1` 门禁；[`s4-security`](../workspace/evidence/2026-11-06-s4-security.md) |
 | T-019 | 红队整改 **S5**：P1 SSOT/引用/字节/判据修正 | 单代理 + 人类 | done（基线冻结） | 人类“开始后面的改造” | 机器状态块、引用/路径校验、.gitattributes、G1-P95/WP-4-RELOAD waived、CR-006、漂移清理 | F-056；[`s5-redteam`](../workspace/evidence/2026-11-06-s5-redteam.md) |
-| T-020 | 发布 **1.3.1**（release） | 单代理 + 人类 | **in_progress** | S5 基线；人类“全部完成后发布新版本” | release verify、release gate、tag v1.3.1、状态写回 | 发布证据未完成前不称已发布 |
+| T-020 | 发布 **1.3.1**（release） | 单代理 + 人类 | done（有条件通过） | S5 基线；人类“全部完成后发布新版本” | release verify、release gate、tag v1.3.1、状态写回 | F-057；`release-v1-3-1` |
+| T-021 | 1.3.1 发布后条件复核（2026-11-20） | 单代理 + 人类 | pending | release gate 条件 | 浏览器设置页保存、307、routePath、live 限速、G1-P95/WP-4-RELOAD/SEC-E2E、ED-003/004 | 到期复核；未完成不称条件已闭 |
 
 ## 积压（不进 `grow-2`，后续阶段处理）
 

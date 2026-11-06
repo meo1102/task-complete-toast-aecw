@@ -100,7 +100,8 @@
     "gate": "gates/2026-11-06-release-v1-3-1-0700071129.md",
     "attestation": "workspace/evidence/attestations/VA-20261106065956-f82564.json",
     "note": "P0-6 安全收口；有条件通过；客户端浏览器保存/307/routePath/限速为发布后条件",
-    "conditions_due": "2026-11-20"
+    "conditions_due": "2026-11-20",
+    "commit": "eb6d80d"
   },
   "evolution": {
     "EV-001": {
@@ -162,7 +163,7 @@
     }
   ],
   "baseline": {
-    "commit": "pending",
+    "commit": "eb6d80d",
     "tag": "v1.3.1",
     "product_version": "1.3.1"
   },

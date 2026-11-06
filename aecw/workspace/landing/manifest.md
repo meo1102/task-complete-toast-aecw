@@ -2,21 +2,21 @@
 
 > 状态：current｜最后核对：2026-11-06
 
-> 对象：v1.3.0（2026-11-05 发布）。
-> 这是落地事实清单，不是发布公告；发布口径见 [`../../gates/2026-11-05-release-v1.3.0.md`](../../gates/2026-11-05-release-v1.3.0.md) 与 [`../evidence/2026-11-05-release-v1.3.0.md`](../evidence/2026-11-05-release-v1.3.0.md)。
+> 对象：v1.3.1（2026-11-06 发布；上一版 v1.3.0）。
+> 这是落地事实清单，不是发布公告；发布口径见 [`../../gates/2026-11-06-release-v1-3-1-0700071129.md`](../../gates/2026-11-06-release-v1-3-1-0700071129.md) 与 [`../evidence/2026-11-06-release-v1.3.1.md`](../evidence/2026-11-06-release-v1.3.1.md)。
 
 | 项 | 值 |
 |---|---|
-| 版本 | `1.3.0`（tag `v1.3.0`，本独立仓库发布；旧 `v1.2.0` 为原件基线） |
-| 候选 | `1.3.1`（P0-6 安全收口；已安装 desktop profile；**未发布/未打 tag**；`state.release=release-candidate`） |
+| 版本 | `1.3.1`（tag `v1.3.1`，本独立仓库发布；上一版 `1.3.0`） |
+| 发布条件 | 客户端浏览器保存/307/routePath/限速 2026-11-20 前复核；ED-003/004 另计 |
 | 治理工具 | AECW `0.9.6`（S1–S5 红队整改，tag `aecw-s5-2026-11-06`；S4 改产品安全行为） |
 | 位置 | `D:\DSH\task-complete-toast-aecw`（独立仓库，initial `67809d0`）；**产品代码在仓库根，AECW `aecw/`**；历史归档在 `DSH_end`（`4aff41a`/tag `aecw-grow-2-2026-11-05`） |
 | 安装目标 | profile bundle 指向 **`D:\DSH\task-complete-toast-aecw`** |
-| 可用 | v1.3.0：G1 5/5；G2 7/8（G2-8 遗留）；G3 6/6（G3-4b 遗留）；**G4 设置页（E2）**；**G2 遮挡推送（E2）**；截图/录屏挂起 |
-| 可运维 | 零第三方运行时依赖、无构建链；安装/重装：`plugin_manager remove_bundle` + `install_bundle`；客户端改动刷新页面，宿主改动重启；G4 设置页依赖 DSH `settings.plugins.tab` 与宿主 `configEditor` |
+| 可用 | v1.3.1：G1 5/5；G2 7/8（G2-8 遗留）；G3 6/6（G3-4b 遗留）；G4 设置页（E2）；G2 遮挡推送（E2）；**P0-6 health/token/settings guard**；截图/录屏挂起；客户端浏览器保存待刷新后目视 |
+| 可运维 | 零第三方运行时依赖、无构建链；安装/重装：`plugin_manager remove_bundle` + `install_bundle`；客户端改动刷新页面，宿主改动重启；G4 设置页依赖 DSH `settings.plugins.tab`、宿主 `configEditor` 与同源 CSRF token |
 | 可交接 | `PROJECT.json` + `STATUS.md` + `state.json` + `criteria.md` + `ledger.md` + `gates/` + `workspace/evidence/` + 本清单；渲染顺序：STATUS → state/criteria → direction → BLUEPRINT → ledger → 最近门禁 |
-| 可审计 | 事实/异议/变更均有 ID；基线有 commit/tag + 三个 SHA-256；证据分 E1/E2/E3；证据债 ED-001–ED-004 |
-| 证据债 | ED-001/ED-002 已挂起（waived）；ED-003 adoption 签署、ED-004 EV-001 分布外/回滚仍 open |
+| 可审计 | 事实/异议/变更均有 ID；基线有 commit/tag + 发布哈希；证据分 E1/E2/E3；证据债 ED-001–ED-004 + G1-P95/WP-4-RELOAD/SEC-E2E |
+| 证据债 | ED-001/ED-002 waived；ED-003 adoption 签署、ED-004 EV-001 分布外/回滚 open；G1-P95/WP-4-RELOAD/SEC-E2E 2026-11-20 前补 |
 | 成本 | 本机零依赖、零外部服务；人类注意力：2026-11-04 真机约 40 min（未计入决策问答） |
 | 已接受遗留 | G2-8、G3-4b、G1 通知点击不还原（R1）——见 [`../../human/acceptance.md`](../../human/acceptance.md) |
 | G4 状态 | **设置页已人类验收**（E2，无截图，F-040）；**G2 遮挡推送真机通过**（F-042）；**随 1.3.0 发布**；截图/录屏挂起（ED-001/ED-002） |

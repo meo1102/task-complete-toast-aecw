@@ -168,7 +168,7 @@
 - 只授权本阶段；阶段结束或触发停止条件必须停、报告、等下一道门。
 
 ## 9. 阶段事件
-- 2026-11-06 关闭（meo1102）：有条件通过；gate 2026-11-06-security-1-stage-0608409f11.md；SEC-1..5 有 E1；probe 7/7；1.3.1 候选未发布
+- 2026-11-06 关闭（meo1102）：有条件通过；gate 2026-11-06-security-1-stage-0608409f11.md；SEC-1..5 有 E1；probe 7/7；1.3.1 随后经 release gate 发布
 
 <!-- AECW-GENERATED BEGIN -->
 > **机器状态**（由 `state.json` 生成；勿手改；`node bin/aecw.mjs render <dir>` 更新）
