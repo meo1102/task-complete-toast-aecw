@@ -3,13 +3,13 @@
 > 状态：current｜最后核对：2026-11-06
 
 本目录是 AECW 治理结构；**产品代码在仓库根 `../`（`package.json`/`index.js`/`client.js`/`lib/`/`locale/`/`test/`）**，不在这里。仓库级约定见 [`../AGENTS.md`](../AGENTS.md)。
-产品代码基线 = v1.3.0（当前发布；v1.2.0 为历史基线）；本项目于 2026-11-05 从原件复制并按 `agent-engineering-control/prototype` 结构重排，**产品逻辑未改**；同日按人类指令更新介绍文案与回归断言（F-031/F-032），后续在 `grow-2` 完成 G4 与 G2 遮挡修复并发布 1.3.0。
+产品代码基线 = v1.3.0（已发布；当前工作树为 **1.3.1 安全候选**，未发布）；本项目于 2026-11-05 从原件复制并按 `agent-engineering-control/prototype` 结构重排，**产品逻辑未改**；同日按人类指令更新介绍文案与回归断言（F-031/F-032），后续在 `grow-2` 完成 G4 与 G2 遮挡修复并发布 1.3.0；当前阶段 `security-1` 做 P0-6 安全收口。
 
 ## 开工前
 
 0. 先读 [`../PROJECT.json`](../PROJECT.json) → [`STATUS.md`](STATUS.md) → [`state.json`](state.json) → [`criteria.md`](criteria.md)。**唯一状态源是 `state.json`；`STATUS` 是视图**；其他文档是证据/历史，冲突时以 state + STATUS 摘要为准。
 1. 读 [`human/direction.md`](human/direction.md)——方向/边界/S1–S4/停止（继承试点宪章 v1.0）。
-2. 读 [`BLUEPRINT.md`](BLUEPRINT.md)——阶段 `grow-2`（外观设置 + 实时预览，**已关闭/有条件通过**）；下一阶段须新蓝图 + 重新 `freeze`/`start`，不自动续跑。
+2. 读 [`BLUEPRINT.md`](BLUEPRINT.md)——阶段 `security-1`（P0-6 安全收口，v3 approved）；`grow-2` 已 closed，蓝图 v2 归档在 `workspace/evidence/blueprint-v2-grow-2.md`。
 3. 读 [`ledger.md`](ledger.md)、最近的 [`gates/`](gates/)；设计契约与 ADR 在 [`workspace/memory/`](workspace/memory/)；原始证据在 [`workspace/evidence/`](workspace/evidence/)。
 4. 旧文档编号（D-001/D-002、旧 G2-6、`8D034A…`）先查 [`workspace/memory/history-mapping.md`](workspace/memory/history-mapping.md)，不要按字面理解。
 5. **门禁/交付前跑运行态探针**：`node scripts/probe.mjs`（EV-001，2026-11-05 激活）。FAIL 则停，不进入门禁；它只做只读结构检查，不替代真机/人工验收。
@@ -45,11 +45,11 @@ node --test --test-isolation=none test/cli-s1.test.mjs test/cli-s2.test.mjs test
 
 # 全量单测（产品代码在仓库根）
 cd ..
-node --test --test-isolation=none test/smoke.test.js test/integration.test.js test/store.test.js test/format.test.js test/dismiss.test.js test/notifier.test.js test/resolver.test.js test/wiring.test.js test/presentation.test.js test/interaction.test.js
+node --test --test-isolation=none test/smoke.test.js test/integration.test.js test/store.test.js test/format.test.js test/dismiss.test.js test/notifier.test.js test/resolver.test.js test/wiring.test.js test/presentation.test.js test/interaction.test.js test/security.test.js
 cd aecw
 ```
 
-期望 `tests 169 / pass 169 / fail 0`（产品）+ `tests 20 / pass 20`（治理 S1+S2+S3）。受限沙箱内**必须** `--test-isolation=none`（默认模式 spawn EPERM）。
+期望 `tests 174 / pass 174 / fail 0`（产品）+ `tests 20 / pass 20`（治理 S1+S2+S3）。受限沙箱内**必须** `--test-isolation=none`（默认模式 spawn EPERM）。
 
 ## AECW CLI
 
@@ -78,5 +78,5 @@ node bin/aecw.mjs close . --by meo1102 --decision 有条件通过 --gate gates/<
 - 行为变更：先改 [`workspace/memory/design-contract-v1.2.0.md`](workspace/memory/design-contract-v1.2.0.md) 与 [`workspace/memory/adr-001-023.md`](workspace/memory/adr-001-023.md)，再改代码与测试。
 - 证据：事实写进 `ledger.md`（F 编号）；阶段结束更新门禁；验收必须列失败/未测项。
 - 基线：阶段结束提交 commit/tag，记录源码/测试哈希与验收基线版本。
-- 当前发布口径：v1.3.0（G1/G2/G3 + G4 + G2 遮挡修复）；截图/录屏要求人类挂起；G2-8、G3-4b 等已知未测见 `STATUS.md` §3/§4，不写「全绿」。
+- 当前发布口径：v1.3.0（G1/G2/G3 + G4 + G2 遮挡修复）；工作树为 **1.3.1 安全候选（未发布）**；截图/录屏要求人类挂起；G2-8、G3-4b 等已知未测见 `STATUS.md` §3/§4，不写「全绿」。
 - 每道门/发布先更新 `STATUS.md`，再更新其他文档；旧文档标 `SUPERSEDED`。

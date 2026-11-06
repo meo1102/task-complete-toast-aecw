@@ -127,6 +127,8 @@ window.__ModuleLoader__.load({
 
     /** 设置页保存端点（与 index.js 的 SETTINGS_PATH 一致）。 */
     const SETTINGS_PATH = '/dsh-task-complete/settings';
+    /** P0-6：同源 CSRF token 端点。 */
+    const SETTINGS_TOKEN_PATH = '/dsh-task-complete/settings-token';
 
     /** 客户端配置兜底（§7.2）；WP6a 用注入值按字段类型覆盖。 */
     const DEFAULTS = Object.freeze({
@@ -2932,9 +2934,25 @@ window.__ModuleLoader__.load({
               textColor: draft.textColor,
             };
             try {
+              let csrfToken = '';
+              try {
+                const tokenResponse = await fetchFn(SETTINGS_TOKEN_PATH, {
+                  method: 'GET',
+                  headers: { accept: 'application/json' },
+                });
+                if (tokenResponse?.ok) {
+                  csrfToken = String((await tokenResponse.json())?.token ?? '');
+                }
+              } catch {
+                csrfToken = '';
+              }
+              if (!csrfToken) throw new Error('settings-token-unavailable');
               const response = await fetchFn(SETTINGS_PATH, {
                 method: 'POST',
-                headers: { 'content-type': 'application/json' },
+                headers: {
+                  'content-type': 'application/json',
+                  'x-aecw-csrf': csrfToken,
+                },
                 body: JSON.stringify(payload),
               });
               if (!response?.ok) {

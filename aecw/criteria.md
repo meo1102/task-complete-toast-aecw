@@ -32,6 +32,10 @@
 | AECW-ADOPT | AECW 结构采纳（adoption 门禁） | deferred | `gates/2026-11-05-adoption.md` | 人类 | 临时采纳（provisional），签署待 ED-003 | 2026-11-12 | adoption |
 | EV-001 | 运行态探针 trial → active | met | F-044/F-045 | 人类 | 激活 2026-11-05 | — | evolution |
 | EV-001-OOD | 分布外验证/真实回滚演练 | deferred | 无（ED-004） | — | 激活时已知；到期复核 | 2026-11-19 | evolution |
+| SEC-HEALTH | 只读 health 返回 plugin/version/instance/capabilities/routePath；非 loopback Host 拒绝 | met | F-055（E1；live probe 7/7） | agent + 人类 | — | — | stage |
+| SEC-WRITE-GUARD | settings 写路由拒绝恶意 Origin/无 token/text-plain/空 patch/非 loopback Host；合法请求 200 | met | F-055（E1；live curl 矩阵 + 单测） | agent + 人类 | — | — | stage |
+| SEC-PROBE | probe 用 health 身份 + outcome 错误体，不再 POST 写端点；假服务/坏端口/query/fragment 不 PASS | met | F-055（E1；正控 7/7、负控 5/7） | agent | — | — | stage |
+| SEC-EV001 | EV-001 降 trial 后经正/负控复核，重新 active | met | F-055；`gates/2026-11-06-security-1-*` | agent + 人类 | — | — | evolution |
 
 > G4-ENTRY 只证明“入口可达且人类确认”，**不证明“无 agent 指路独立发现”**；后者未单列，列入后续 UX/入口观察项，不追溯改写 1.3.0 发布结论。
 

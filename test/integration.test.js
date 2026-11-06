@@ -21,8 +21,18 @@ import {
 
 const INJECTION_NAME = '__DSH_TASK_COMPLETE_TOAST__';
 const SETTINGS_PATH = '/dsh-task-complete/settings';
+const HEALTH_PATH = '/dsh-task-complete/health';
+const SETTINGS_TOKEN_PATH = '/dsh-task-complete/settings-token';
+const NON_OUTCOME_PATHS = new Set([SETTINGS_PATH, HEALTH_PATH, SETTINGS_TOKEN_PATH]);
 /** 结果表 TTL 以 event.time（epoch 毫秒）计算，测试事件时间必须贴近当前时间。 */
 const EVENT_TIME = Date.now();
+const CSRF_TOKEN = 'a'.repeat(64);
+const SETTINGS_HEADERS = Object.freeze({
+  host: '127.0.0.1:36137',
+  origin: 'http://127.0.0.1:36137',
+  'x-aecw-csrf': CSRF_TOKEN,
+  'content-type': 'application/json',
+});
 
 function setupHost(config) {
   const host = createFakeHostCtx();
@@ -31,7 +41,7 @@ function setupHost(config) {
 }
 
 function currentRoute(host) {
-  const outcomeRoutes = host.routes.filter((route) => route.path !== SETTINGS_PATH);
+  const outcomeRoutes = host.routes.filter((route) => !NON_OUTCOME_PATHS.has(route.path));
   assert.equal(outcomeRoutes.length, 1, '应恰好注册一条结果路由');
   return outcomeRoutes[0];
 }
@@ -410,7 +420,7 @@ test('I13 parsePatch 支持 config 缩进映射', () => {
 
 test('I14 dispose 后监听与路由全部移除，注入行不再产出', () => {
   const host = setupHost();
-  assert.equal(host.routes.length, 2);
+  assert.equal(host.routes.length, 4);
   assert.equal((host.handlers.get('session/event') ?? []).length, 1);
   assert.equal((host.handlers.get('webserver/index-inject') ?? []).length, 1);
 
@@ -534,6 +544,7 @@ test('I20 设置路由：合法保存 200、对比度 422、非法 400、非 POS
         saved.push(patch);
         return patch;
       },
+      security: { csrfToken: CSRF_TOKEN },
     }),
   };
 
@@ -542,7 +553,7 @@ test('I20 设置路由：合法保存 200、对比度 422、非法 400、非 POS
     cardWidth: 340,
     backgroundColor: null,
     textColor: null,
-  });
+  }, SETTINGS_HEADERS);
   assert.equal(ok.statusCode, 200);
   assert.equal(readResponseJson(ok).ok, true);
   assert.deepEqual(saved[0], { fontSize: 16, cardWidth: 340, backgroundColor: null, textColor: null });
@@ -550,21 +561,23 @@ test('I20 设置路由：合法保存 200、对比度 422、非法 400、非 POS
   const low = await requestJsonRoute(route, 'POST', SETTINGS_PATH, {
     backgroundColor: '#000000',
     textColor: '#111111',
-  });
+  }, SETTINGS_HEADERS);
   assert.equal(low.statusCode, 422);
   assert.equal(readResponseJson(low).error, 'contrast-too-low');
 
-  const bad = await requestJsonRoute(route, 'POST', SETTINGS_PATH, { fontFamily: 'x' });
+  const bad = await requestJsonRoute(route, 'POST', SETTINGS_PATH, { fontFamily: 'x' }, SETTINGS_HEADERS);
   assert.equal(bad.statusCode, 400);
 
   const method = await requestJsonRoute(route, 'GET', SETTINGS_PATH, undefined);
   assert.equal(method.statusCode, 405);
 });
 
-test('I21 设置路由已注册，且不覆盖结果路由', () => {
+test('I21 设置/health/token 路由已注册，且不覆盖结果路由', () => {
   const host = setupHost({ bridge: { routePath: '/custom/outcome' } });
-  assert.equal(host.routes.length, 2);
+  assert.equal(host.routes.length, 4);
   assert.ok(host.routes.some((route) => route.path === SETTINGS_PATH));
+  assert.ok(host.routes.some((route) => route.path === HEALTH_PATH));
+  assert.ok(host.routes.some((route) => route.path === SETTINGS_TOKEN_PATH));
   assert.ok(host.routes.some((route) => route.path === '/custom/outcome'));
 });
 
@@ -582,13 +595,20 @@ test('I22 A 方案：设置路由经 configEditor.edit 合并并保存 appearanc
   apply(host.ctx, {});
   const route = host.routes.find((row) => row.path === SETTINGS_PATH);
   assert.ok(route, '设置路由必须注册');
+  const tokenRoute = host.routes.find((row) => row.path === SETTINGS_TOKEN_PATH);
+  const tokenResponse = requestRoute(tokenRoute, 'GET', SETTINGS_TOKEN_PATH, {
+    host: SETTINGS_HEADERS.host,
+    origin: SETTINGS_HEADERS.origin,
+  });
+  const csrfToken = readResponseJson(tokenResponse).token;
+  assert.equal(typeof csrfToken, 'string');
 
   const res = await requestJsonRoute(route, 'POST', SETTINGS_PATH, {
     fontSize: 16,
     cardWidth: 320,
     backgroundColor: null,
     textColor: null,
-  });
+  }, { ...SETTINGS_HEADERS, 'x-aecw-csrf': csrfToken });
   assert.equal(res.statusCode, 200);
   assert.equal(edits.length, 1);
   assert.equal(edits[0].target, entry);

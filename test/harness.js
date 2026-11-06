@@ -554,8 +554,8 @@ export function createFakeHostCtx(options = {}) {
 }
 
 /** 伪 IncomingMessage。 */
-export function createFakeRequest(method, url) {
-  return { method, url };
+export function createFakeRequest(method, url, headers = {}) {
+  return { method, url, headers };
 }
 
 /** 伪 ServerResponse：记录状态码、响应头与响应体。 */
@@ -580,18 +580,19 @@ export function readResponseJson(res) {
 }
 
 /** 直接调用注册到伪 webServer 的路由处理器。 */
-export function requestRoute(route, method, url) {
+export function requestRoute(route, method, url, headers = {}) {
   const res = createFakeResponse();
-  route.handler(createFakeRequest(method, url), res);
+  route.handler(createFakeRequest(method, url, headers), res);
   return res;
 }
 
 /** 伪 JSON 请求：异步触发 data/end，供 readJsonBody 使用。 */
-export function createJsonRequest(method, url, body) {
+export function createJsonRequest(method, url, body, headers = {}) {
   const listeners = new Map();
   const req = {
     method,
     url,
+    headers,
     destroy() {},
     on(name, handler) {
       const list = listeners.get(name) ?? [];
@@ -611,9 +612,9 @@ export function createJsonRequest(method, url, body) {
 }
 
 /** 调用需要读取 JSON body 的路由；await handler 完成后返回伪响应。 */
-export async function requestJsonRoute(route, method, url, body) {
+export async function requestJsonRoute(route, method, url, body, headers = {}) {
   const res = createFakeResponse();
-  await route.handler(createJsonRequest(method, url, body), res);
+  await route.handler(createJsonRequest(method, url, body, headers), res);
   return res;
 }
 

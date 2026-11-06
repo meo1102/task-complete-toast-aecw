@@ -32,6 +32,7 @@
 | [`2026-11-06-s1-redteam.md`](2026-11-06-s1-redteam.md) | 红队整改 S1：P0-1（check/gate/init）+ P0-7（表格/ID/半事务）；工具 0.9.3 | 当前（阶段证据） | E1 |
 | [`2026-11-06-s2-redteam.md`](2026-11-06-s2-redteam.md) | 红队整改 S2：P0-2 verify attestation + P0-3 状态机/冻结哈希；工具 0.9.4 | 当前（阶段证据） | E1 |
 | [`2026-11-06-s3-redteam.md`](2026-11-06-s3-redteam.md) | 红队整改 S3：P0-4 进程锁/journal/32 路并发；工具 0.9.5 | 当前（阶段证据） | E1 |
+| [`2026-11-06-s4-security.md`](2026-11-06-s4-security.md) | 红队整改 S4：P0-6 health/settings guard/probe/EV-001；产品 1.3.1 候选 | 当前（阶段证据） | E1 |
 | [`attestations/`](attestations/) | `verify` 生成的 `VA-*.json` 与 check/probe/test 原始日志 | 当前 | E1 |
 | [`2026-11-05-development-retrospective.md`](2026-11-05-development-retrospective.md) | **开发过程全记录**：需求追踪、时间线、决策、失败/修正、证据、未完成项 | 历史（复盘） | E3（叙述）/引用 E1/E2 |
 

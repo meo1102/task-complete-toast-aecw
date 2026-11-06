@@ -32,7 +32,7 @@ const RUNTIME_FILES = [
 
 test('S1 清单：名称、版本、私有、ESM 与四个导出齐全', () => {
   assert.equal(manifest.name, '@local/task-complete-toast');
-  assert.equal(manifest.version, '1.3.0');
+  assert.equal(manifest.version, '1.3.1');
   assert.equal(manifest.private, true);
   assert.equal(manifest.type, 'module');
 
@@ -280,5 +280,5 @@ test('S7 宿主：导出 apply/inject 与 Standard Schema Config，调用不抛�
   assert.doesNotThrow(() => {
     host.apply(fake.ctx, undefined);
   });
-  assert.equal(fake.routes.length, 2);
+  assert.equal(fake.routes.length, 4);
 });

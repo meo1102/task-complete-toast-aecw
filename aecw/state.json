@@ -19,9 +19,25 @@
     "last_pushed_tag": "aecw-layout-v3-2026-11-06"
   },
   "stage": {
-    "name": "grow-2",
-    "state": "closed",
-    "gate": "gates/2026-11-05-grow-2.md"
+    "name": "security-1",
+    "state": "executing",
+    "gate": "gates/2026-11-06-security-1-start-order-053848eeff.md",
+    "freeze": {
+      "gate": "gates/2026-11-06-security-1-charter-freeze-053832a4c7.md",
+      "payload_hash": "sha256:C5188205125E7D5ACB6E0ABD11FD41376344D80A0D8FF56D6F916D61BBF1642B",
+      "direction_hash": "sha256:BA93F8B1DFD29A4F03442BDCB30DFEA35BDDD305A020AC194DE8E33F0AF1A506",
+      "blueprint_hash": "sha256:51FCFEA2ED20A7765B12EC0A71CCF64C730FFC284BC53A10704DC87AF63314C4",
+      "criteria_hash": "sha256:1693D73EFA5E8BA9F65A1F8DAFF378D7F4C8B13596F5A628046C2F8913B4B37F",
+      "product_hash": "sha256:4D62B22F9C4C7EAD509D1363C9266312FE7B0B5447BBE42681DC3ED3E3159F72",
+      "blueprint_version": "v3",
+      "frozen_at": "2026-11-06T05:38:32.392Z"
+    },
+    "start": {
+      "gate": "gates/2026-11-06-security-1-start-order-053848eeff.md",
+      "at": "2026-11-06T05:38:48.089Z",
+      "by": "meo1102",
+      "freeze_payload_hash": "sha256:C5188205125E7D5ACB6E0ABD11FD41376344D80A0D8FF56D6F916D61BBF1642B"
+    }
   },
   "features": {
     "G1": {
@@ -71,19 +87,21 @@
     }
   },
   "release": {
-    "version": "1.3.0",
-    "state": "released",
-    "tag": "v1.3.0",
-    "gate": "gates/2026-11-05-release-v1.3.0.md",
-    "note": "G1/G2/G3 + G4 外观设置 + G2 遮挡推送修复；截图/录屏要求人类挂起"
+    "version": "1.3.1",
+    "state": "release-candidate",
+    "tag": null,
+    "gate": null,
+    "note": "security-1 候选：P0-6 安全收口；未发布、未打 tag"
   },
   "evolution": {
     "EV-001": {
       "state": "active",
       "evidence": [
         "F-044",
-        "F-045"
-      ]
+        "F-045",
+        "F-055"
+      ],
+      "note": "2026-11-06 P0-6 复核：health/negative controls 通过后重新激活"
     }
   },
   "adoption": {
@@ -151,21 +169,21 @@
   },
   "tool": {
     "name": "aecw",
-    "version": "0.9.5",
-    "hash": "AA70023D5CE9F144FDB734B993D5AE1A0712642D1546D0CCFCE19BB411FEEFFC"
+    "version": "0.9.6",
+    "hash": "160AB06F18CEBE272409EF6899CC14ACB20801B66772B49F7F7871A10CFE0C8B"
   },
   "governance_baseline": {
-    "commit": "51c2be3",
-    "tag": "aecw-s3-2026-11-06",
-    "tool": "0.9.5",
+    "commit": "pending",
+    "tag": "aecw-s4-2026-11-06",
+    "tool": "0.9.6",
     "plan": "agent-engineering-control/PLAN-v0.9.1-红队整改.md",
     "scope": [
-      "P0-4"
+      "P0-6"
     ],
     "previous": {
-      "tag": "aecw-s2-2026-11-06",
-      "commit": "b456ce5"
+      "tag": "aecw-s3-2026-11-06",
+      "commit": "51c2be3"
     },
-    "next": "S4 in progress"
+    "next": "S5 or release decision"
   }
 }

@@ -6,6 +6,7 @@
 > **开发过程全记录**：[`aecw/workspace/evidence/2026-11-05-development-retrospective.md`](aecw/workspace/evidence/2026-11-05-development-retrospective.md)（需求追踪/时间线/决策/失败修正/未完成项）。
 > **项目位置**：`D:\DSH\task-complete-toast-aecw`（独立 Git 仓库）；**产品代码在仓库根目录**，AECW 治理在 `aecw/`。
 > **本项目来源**：2026-11-05 复制自 `DSH_end/插件/task-complete-toast` v1.2.0；随后更新介绍文案/回归断言（F-031/F-032），实现 G4 外观设置与 G2 遮挡修复，并发布 **v1.3.0**。
+> **1.3.1 安全候选（未发布）**：当前工作树含 P0-6 health/settings guard/probe 改版；设置页保存改走同源 CSRF token；未打 tag、未发布。
 > **安装状态**：desktop profile 的 link/junction 指向 **`D:\DSH\task-complete-toast-aecw`**；原件保留在 `DSH_end/插件/task-complete-toast`，可回滚。与原件同包名。
 > **开发约束**：先读 [`aecw/human/direction.md`](aecw/human/direction.md)（v1.2-aecw，含 G4）+ [`aecw/BLUEPRINT.md`](aecw/BLUEPRINT.md)（阶段 `grow-2`，closed）。**v1.3.0 发布**：G1/G2/G3 + G4 外观设置 + G2 遮挡修复；截图/录屏要求人类挂起；已知遗留见文末。
 

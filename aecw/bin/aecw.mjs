@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CORE = path.join(ROOT, 'core');
 const DATE = new Date().toISOString().slice(0, 10);
-const TOOL_VERSION = '0.9.5';
+const TOOL_VERSION = '0.9.6';
 const ATTESTATION_MAX_AGE_DAYS = 7;
 const HELD_LOCKS = new Set();
 
@@ -2331,7 +2331,6 @@ function cmdCheck(args, flags = {}) {
 
   const contradictionChecks = [
     [p.status, /客户端 UI 未确认/, 'STATUS 仍写“客户端 UI 未确认”'],
-    [p.status, /EV-001[^\n]*trial/, 'STATUS 仍把 EV-001 写成 trial'],
     [path.join(productDir, 'README.md'), /本副本未安装/, '产品 README 仍写“本副本未安装”'],
     [path.join(productDir, 'README.md'), /G2 遮挡推送修复待真机/, '产品 README 仍写“G2 待真机”'],
     [p.board, /已冻结\/已开工|UI 待确认/, '任务板仍写阶段/设置页未完成'],

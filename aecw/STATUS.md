@@ -1,7 +1,7 @@
 # STATUS · task-complete-toast（独立项目）
 
 > 状态：current｜最后核对：2026-11-06
-<!-- AECW-STATE {"stage":"grow-2/closed","release":"1.3.0/released","g4":"released/released","evolution":"EV-001/active","adoption":"provisional","evidence_debt":["ED-001","ED-002","ED-003","ED-004"]} -->
+<!-- AECW-STATE {"stage":"security-1/executing","release":"1.3.1/release-candidate","g4":"released/released","evolution":"EV-001/active","adoption":"provisional","evidence_debt":["ED-001","ED-002","ED-003","ED-004"]} -->
 > **状态摘要（`state.json` 对账）**：stage `grow-2/closed`；release `1.3.0/released`；G4 `released/released`；EV-001 `active`；adoption `provisional`；证据债 `ED-001/002`（挂起）、`ED-003/004`（open）。验收矩阵见 [`criteria.md`](criteria.md)。
 
 > **唯一当前状态页。** 最后更新：2026-11-06｜版本：1.3.0｜人类所有者：meo1102
@@ -14,11 +14,11 @@
 
 ## 1. 当前阶段
 
-- 阶段：grow-2（closed）
-- 阶段状态：closed
-- 版本：1.3.0（已发布；G4/G2 修复包含在内）
-- 当前目标：`grow-2` 已关闭；**布局 v3：产品在仓库根、AECW `aecw/`**；EV-001 运行态探针已激活（门禁/交付前必跑）；**1.3.0 已发布**；**红队整改 S1/S2/S3 已完成并冻结基线**，S4 进行中；
-- 当前门禁：2026-11-05-release-v1.3.0（发布通过）；阶段门禁 `grow-2` 为历史
+- 阶段：security-1（executing）
+- 阶段状态：executing
+- 版本：1.3.1 候选（未发布；1.3.0 已发布）
+- 当前目标：`grow-2` 已关闭；**布局 v3：产品在仓库根、AECW `aecw/`**；EV-001 运行态探针已激活（门禁/交付前必跑）；**1.3.0 已发布**；**红队整改 S1/S2/S3 已完成并冻结基线**，**S4 security-1 进行中**；
+- 当前门禁：2026-11-06-security-1-start-order-053848eeff.md
 
 ## 2. 当前证据
 
@@ -40,6 +40,7 @@
 - **红队整改 S1（2026-11-06，工具 0.9.3）**：治理回归 **10/10**；开放 S1/S2 改为 FAIL（大小写统一）；通过类门禁拒绝自由文本，需 verify attestation + 人类签署；`init → check` 为 0/0；表格转义、DR/CR 分表、`nextId` 分表、accept/resolve/start 人类身份、多文件 journal 回滚。**S1 只改治理工具，不改产品行为**；证据 [`2026-11-06-s1-redteam.md`](workspace/evidence/2026-11-06-s1-redteam.md)，F-052。
 - **红队整改 S2（2026-11-06，工具 0.9.4）**：新增 `verify`（check --strict → probe → 完整测试 → criteria → 开放 S1/S2 → 按 impact 证据债 → tree attestation）；`gate` 拒绝过期/失败/树变化的 attestation；`freeze` 写 direction/blueprint/criteria/product payload hash，`start` 重算并拒绝任一字节变化；`closed` 终态、`pause/resume/close`、唯一门禁名；criteria 增到期列。最终 clean-tree verify **PASS**（`VA-20261106033417-2e1420`，release tree `ABD389…`，check/probe/tests 全 pass）；治理回归 **10 + 7 = 17/17**；**S2 只改治理工具，不改产品行为**；证据 [`2026-11-06-s2-redteam.md`](workspace/evidence/2026-11-06-s2-redteam.md)，F-053。`check` 仍只是结构检查，不是授权/发布证明。
 - **红队整改 S3（2026-11-06，工具 0.9.5）**：`fact`/`dissent`/`change`/`resolve`/`accept`/`log` 读写全程持 `.aecw-lock`；退出兜底释放；`withLock` 先恢复未完成 journal；32 路并发 `fact` × **10 轮**全部成功、ID 唯一、无截断/丢写。治理回归 **20/20**；**S3 只改治理工具，不改产品行为**；证据 [`2026-11-06-s3-redteam.md`](workspace/evidence/2026-11-06-s3-redteam.md)，F-054。
+- **红队整改 S4（2026-11-06，工具 0.9.6，产品 1.3.1 候选）**：新增只读 `health` 身份端点与同源 `settings-token`；settings 写路由要求 loopback Host + 同源 Origin + `x-aecw-csrf` + `application/json`，拒绝空 patch/未知字段/超限；probe 改用 health 身份 + outcome 错误体，不再 POST 写端点；live curl 矩阵 12 项符合预期，probe **7/7**，假服务/坏端口/query/fragment **5/7 fail**；EV-001 先降 trial 后重新 active。产品 **174/174**、治理 **20/20**；**未发布 1.3.1**；证据 [`2026-11-06-s4-security.md`](workspace/evidence/2026-11-06-s4-security.md)，F-055。
 - 安装态：**已替换安装并随布局 v3 重装**（2026-11-06）：profile link/junction → **`D:\DSH\task-complete-toast-aecw`**；plugin `include:task-complete-toast` active；live 设置路由校验 200/400/422 符合预期；A 方案写入 `profiles/desktop/cordis.patch.yml`（F-038/F-047/F-051）。
 - **G4 客户端 UI 已验收**：设置页入口/控件/预览/保存由人类目视接受（2026-11-05，E2，F-040）；`settings.plugins.tab` occupant 已确认（F-039）。截图缺口见 ED-001。
 
@@ -119,6 +120,7 @@
 | [`workspace/evidence/2026-11-06-s1-redteam.md`](workspace/evidence/2026-11-06-s1-redteam.md) | 当前 | 红队整改 S1：P0-1 + P0-7；工具 0.9.3；负控与未做项 |
 | [`workspace/evidence/2026-11-06-s2-redteam.md`](workspace/evidence/2026-11-06-s2-redteam.md) | 当前 | 红队整改 S2：P0-2 + P0-3；verify attestation、freeze payload、状态机 |
 | [`workspace/evidence/2026-11-06-s3-redteam.md`](workspace/evidence/2026-11-06-s3-redteam.md) | 当前 | 红队整改 S3：P0-4；进程锁、journal 恢复、32 路并发 |
+| [`workspace/evidence/2026-11-06-s4-security.md`](workspace/evidence/2026-11-06-s4-security.md) | 当前 | 红队整改 S4：P0-6；health/token/settings guard/probe/EV-001 |
 | `workspace/memory/` | 当前/参考 | 设计契约（§16 G4）、ADR、历史映射、V 项对账、设置方案 |
 | `workspace/landing/` | 当前/历史 | 落地清单、交接说明、迁移说明 |
 | [`../README.md`](../README.md) | 当前摘要 + 历史细节 | 产品功能/安装说明；状态以本页为准 |
@@ -143,19 +145,20 @@
 
 ## 7. 阶段授权（冻结）
 
-- 阶段：grow-2
-- 蓝图：v2（批准：meo1102）
-- 范围：外观设置：字体跟随系统正文；字号 12–18 px；卡片宽度 280–480 px；最小宽度联动；背景色/字体色 #RRGGBB + 对比度守卫；实时预览；不含 G2-8/G3-4b/V
-- 预算：2 周 / 15 个有效 agent 回合
-- 停止：S1 / 预算耗尽 / 需新增依赖或改宿主 / configEditor 不可用且人类不接受降级 / 连续两道门禁失败
-- 验收：WP-0 有结论；设置页可调；字号/宽度边界与联动生效；颜色对比度守卫；预览即时；保存经 configEditor 可复现；160 项不回归；真机截图
-- 冻结：2026-11-05；宪章确认：meo1102
+- 阶段：security-1
+- 蓝图：v3（批准：meo1102）
+- 范围：只做 P0-6 安全收口：health/token/settings guard/probe/EV-001 复核
+- 预算：1 天 / 10 个有效回合
+- 停止：S1 / 预算耗尽 / 需改宿主或新增依赖 / 安全矩阵有未解释失败
+- 验收：SEC-1..5 有 E1；probe 正控 7/7 且负控 fail；check 0/0
+- payload：sha256:C5188205125E7D5ACB6E0ABD11FD41376344D80A0D8FF56D6F916D61BBF1642B
+- 冻结：2026-11-06；宪章确认：meo1102
 - 集群只可执行本阶段；阶段结束必须停、报告、等下一道门。
 
 ## 8. 开工令
 
 - 下达人：meo1102
-- 日期：2026-11-05
-- 首次报告点：WP-0 方案与 configEditor 探针后，或触发 S2 时
-- 依据：2026-11-05-charter-freeze.md + BLUEPRINT.md v2
+- 日期：2026-11-06
+- 首次报告点：SEC-1 health 路由通过后
+- 依据：gates/2026-11-06-security-1-charter-freeze-053832a4c7.md + payload sha256:C5188205125E7D5ACB6E0ABD11FD41376344D80A0D8FF56D6F916D61BBF1642B
 - 只授权本阶段；阶段结束或触发停止条件必须停、报告、等下一道门。

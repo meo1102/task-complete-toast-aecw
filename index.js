@@ -1,12 +1,25 @@
+import crypto from 'node:crypto';
 import { Config, buildClientConfig } from './lib/config.js';
 import { createOutcomeTable } from './lib/outcome-table.js';
-import { createRouteHandler, createSettingsHandler, toOutcomeEntry } from './lib/host.js';
+import {
+  createHealthHandler,
+  createRouteHandler,
+  createSettingsHandler,
+  createSettingsTokenHandler,
+  toOutcomeEntry,
+} from './lib/host.js';
 
 /** 配置注入行的全局名（§7.2 / C04）。 */
 const INJECTION_NAME = '__DSH_TASK_COMPLETE_TOAST__';
 const PACKAGE_NAME = '@local/task-complete-toast';
+/** 本阶段候选版本；发布时与 package.json 同步。 */
+const PLUGIN_VERSION = '1.3.1';
 /** G4 设置路由：与结果桥分开，避免被 bridge.routePath 的自定义覆盖。 */
 const SETTINGS_PATH = '/dsh-task-complete/settings';
+/** 只读 health：probe 用它证明“是哪个插件/实例”，不再用任意 400。 */
+const HEALTH_PATH = '/dsh-task-complete/health';
+/** 同源 CSRF token 端点（GET；不写配置）。 */
+const SETTINGS_TOKEN_PATH = '/dsh-task-complete/settings-token';
 
 export { Config };
 
@@ -66,6 +79,8 @@ export function apply(ctx, config) {
   const current = validation.value;
   const state = { disposed: false };
   const table = createOutcomeTable(current.bridge.ringSize, current.bridge.entryTtlMs);
+  const instance = crypto.randomUUID();
+  const csrfToken = crypto.randomBytes(32).toString('hex');
 
   /** 注入行在 enabled:false 时也要注册（§6.3 第 1 步）。 */
   function registerInjection() {
@@ -115,12 +130,38 @@ export function apply(ctx, config) {
     };
   });
 
+  // P0-6：只读 health 身份端点；probe 用它替代“任意 400”。
+  ctx.effect(() => {
+    const off = ctx.webServer.register({
+      kind: 'exact',
+      path: HEALTH_PATH,
+      handler: createHealthHandler({
+        plugin: PACKAGE_NAME,
+        version: PLUGIN_VERSION,
+        instance,
+        routePath: current.bridge.routePath,
+        capabilities: ['outcome', 'settings', 'settings-token'],
+      }),
+    });
+    return off;
+  });
+
+  // P0-6：同源 CSRF token；settings 写路由必须带 x-aecw-csrf。
+  ctx.effect(() => {
+    const off = ctx.webServer.register({
+      kind: 'exact',
+      path: SETTINGS_TOKEN_PATH,
+      handler: createSettingsTokenHandler({ csrfToken, instance }),
+    });
+    return off;
+  });
+
   // G4：外观设置保存路由（A 方案：宿主 configEditor）。
   ctx.effect(() => {
     const off = ctx.webServer.register({
       kind: 'exact',
       path: SETTINGS_PATH,
-      handler: createSettingsHandler({ save: (patch) => saveAppearance(ctx, patch) }),
+      handler: createSettingsHandler({ save: (patch) => saveAppearance(ctx, patch), security: { csrfToken } }),
     });
     return off;
   });
