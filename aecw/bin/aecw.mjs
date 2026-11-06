@@ -1317,6 +1317,23 @@ function upsertStateBlock(text, block) {
   return `${text.trimEnd()}\n\n${block}\n`;
 }
 
+/** STATUS + board/release/manifest 的生成视图写入；只返回实际变化的文件。 */
+function generatedViewFiles(dir, state, statusText) {
+  const block = stateBlock(state);
+  const p = projectPaths(dir);
+  const files = [{
+    path: p.status,
+    content: upsertStateBlock(syncStatusSummary(statusText, state), block),
+  }];
+  for (const file of [p.board, path.join(dir, 'cluster', 'release.md'), path.join(dir, 'workspace', 'landing', 'manifest.md')]) {
+    if (!fs.existsSync(file)) continue;
+    const before = fs.readFileSync(file, 'utf8');
+    const after = upsertStateBlock(before, block);
+    if (after !== before) files.push({ path: file, content: after });
+  }
+  return files;
+}
+
 function cmdRender(args) {
   const dir = needDir(args, 'render');
   const state = readStateFile(dir);
@@ -1475,7 +1492,7 @@ function cmdFreeze(args, flags) {
   commitFiles(dir, [
     { path: file, content },
     { path: path.join(dir, 'state.json'), content: nextState },
-    { path: p.status, content: nextStatus },
+    ...generatedViewFiles(dir, JSON.parse(nextState), nextStatus),
   ]);
 
   console.log(`阶段基线已冻结：${file}`);
@@ -1584,7 +1601,7 @@ function cmdStart(args, flags) {
   commitFiles(dir, [
     { path: file, content },
     { path: path.join(dir, 'state.json'), content: nextState },
-    { path: p.status, content: nextStatus },
+    ...generatedViewFiles(dir, JSON.parse(nextState), nextStatus),
   ]);
 
   console.log(`开工令已下达：${file}`);
@@ -1610,7 +1627,7 @@ function cmdPause(args, flags) {
   nextStatus = syncStatusSummary(nextStatus, state);
   commitFiles(dir, [
     { path: path.join(dir, 'state.json'), content: `${JSON.stringify(state, null, 2)}\n` },
-    { path: p.status, content: nextStatus },
+    ...generatedViewFiles(dir, state, nextStatus),
   ]);
   console.log(`阶段已暂停：${info.name}（${by}）`);
 }
@@ -1631,7 +1648,7 @@ function cmdResume(args, flags) {
   nextStatus = syncStatusSummary(nextStatus, state);
   commitFiles(dir, [
     { path: path.join(dir, 'state.json'), content: `${JSON.stringify(state, null, 2)}\n` },
-    { path: p.status, content: nextStatus },
+    ...generatedViewFiles(dir, state, nextStatus),
   ]);
   console.log(`阶段已恢复执行：${info.name}（${by}）`);
 }
@@ -1671,7 +1688,7 @@ function cmdClose(args, flags) {
   nextStatus = syncStatusSummary(nextStatus, state);
   commitFiles(dir, [
     { path: path.join(dir, 'state.json'), content: `${JSON.stringify(state, null, 2)}\n` },
-    { path: p.status, content: nextStatus },
+    ...generatedViewFiles(dir, state, nextStatus),
   ]);
   console.log(`阶段已关闭：${info.name}（${decision}，${by}）`);
 }
