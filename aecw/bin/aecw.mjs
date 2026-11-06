@@ -92,6 +92,45 @@ function requireId(value, label = 'id') {
   return id;
 }
 
+/**
+ * 单写者锁：同一 AECW 目录的写命令串行化。
+ * 退出时兜底释放；超过 120s 的锁视为 stale；30s 拿不到即失败。
+ */
+function acquireLock(dir) {
+  const lock = path.join(dir, '.aecw-lock');
+  const started = Date.now();
+  let fd;
+  for (;;) {
+    try {
+      fd = fs.openSync(lock, 'wx');
+      fs.writeFileSync(fd, `${JSON.stringify({ pid: process.pid, at: NOW() })}\n`, 'utf8');
+      break;
+    } catch (error) {
+      if (!['EEXIST', 'EPERM', 'EACCES', 'EBUSY'].includes(error.code)) throw error;
+      try {
+        const stat = fs.statSync(lock);
+        if (Date.now() - stat.mtimeMs > 120000) {
+          fs.unlinkSync(lock);
+          continue;
+        }
+      } catch {
+        // lock disappeared; retry
+      }
+      if (Date.now() - started > 30000) fail(`获取写锁超时：${lock}`);
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 50);
+    }
+  }
+  let released = false;
+  const release = () => {
+    if (released) return;
+    released = true;
+    try { fs.closeSync(fd); } catch { /* ignore */ }
+    try { fs.unlinkSync(lock); } catch { /* ignore */ }
+  };
+  process.once('exit', release);
+  return release;
+}
+
 function rel(project, abs) {
   return path.relative(project, abs).replace(/\\/g, '/');
 }
@@ -573,7 +612,7 @@ function attestationErrors(project, attestation) {
   return errors;
 }
 
-function validateDecision(dir, decision, owner, currentTree, errors) {
+function validateDecision(dir, decision, owner, currentTree, errors, state) {
   const p = projectPaths(dir);
   const project = p.project;
   const label = `decision ${decision.id ?? '（无 id）'}`;
@@ -639,6 +678,16 @@ function validateDecision(dir, decision, owner, currentTree, errors) {
   if (attestation && decision.risk !== attestation.risk) {
     errors.push(`${label} risk 与 attestation.risk 不一致`);
   }
+  if (decision.backfilled === true) {
+    if (!isIso(decision.backfilled_at)) errors.push(`${label} backfilled_at 非法`);
+    if (!decision.human?.source) errors.push(`${label} backfilled 缺 human.source`);
+    if (!decision.legacy || typeof decision.legacy !== 'object') errors.push(`${label} backfilled 缺 legacy`);
+    if (isIso(decision.human?.at) && isIso(decision.backfilled_at) && Date.parse(decision.human.at) > Date.parse(decision.backfilled_at)) {
+      errors.push(`${label} human.at 晚于 backfilled_at`);
+    }
+  } else if (decision.backfilled !== undefined) {
+    errors.push(`${label} backfilled 必须是 true 或不存在`);
+  }
   if (decision.risk === 'high') {
     if (!decision.independent_review || typeof decision.independent_review.path !== 'string' || typeof decision.independent_review.sha256 !== 'string') {
       errors.push(`${label} high risk 缺 independent_review`);
@@ -652,6 +701,20 @@ function validateDecision(dir, decision, owner, currentTree, errors) {
       if (reviewPath && (!fs.existsSync(reviewPath) || normalizeHash(hashFile(reviewPath)) !== normalizeHash(decision.independent_review.sha256))) {
         errors.push(`${label} independent_review 缺失或哈希不匹配`);
       }
+    }
+    if (decision.backfilled !== true) {
+      if (!['frozen', 'active'].includes(state?.stage?.state)) {
+        errors.push(`${label} high risk 非回填 decision 要求 stage frozen/active`);
+      } else {
+        const freezePath = state.stage.freeze ? safeInProject(project, state.stage.freeze) : undefined;
+        if (!freezePath || !fs.existsSync(freezePath)) errors.push(`${label} high risk 缺 freeze 文件`);
+        else {
+          const freeze = readJsonMaybe(freezePath);
+          if (!freeze || freeze.kind !== 'freeze') errors.push(`${label} freeze 文件非法`);
+          else if (freeze.tree_hash !== currentTree) errors.push(`${label} freeze.tree_hash 与当前树不一致`);
+        }
+      }
+      if (attestation?.reviewer?.independent !== true) errors.push(`${label} high risk 非回填 decision 要求 independent verify`);
     }
   }
 }
@@ -849,7 +912,7 @@ function cmdCheck(args, flags) {
   const currentTree = treeHash(dir);
   for (const decision of decisions) {
     if (decision.__rel.split('/').pop() !== `${decision.id}.json`) errors.push(`decision 文件名与 id 不一致：${decision.__rel}`);
-    validateDecision(dir, decision, state.owner?.name, currentTree, errors);
+    validateDecision(dir, decision, state.owner?.name, currentTree, errors, state);
   }
   if ((state.release?.state === 'released' || state.release?.state === 'conditional') && !state.release?.decision) {
     errors.push('已发布版本缺 state.release.decision（不允许 migration 空窗）');
@@ -918,6 +981,7 @@ function cmdCheck(args, flags) {
 
 function cmdRender(args) {
   const dir = requireDir(args, 'render');
+  acquireLock(dir);
   const result = renderAll(dir);
   const project = projectRootOf(dir);
   console.log(`rendered ${rel(project, result.status)}`);
@@ -1028,6 +1092,7 @@ function cmdVerify(args, flags) {
 
 function cmdDecide(args, flags) {
   const dir = requireDir(args, 'decide');
+  acquireLock(dir);
   const p = projectPaths(dir);
   const project = p.project;
   const state = loadState(dir);
@@ -1104,6 +1169,19 @@ function cmdDecide(args, flags) {
     const value = one(flags, key, undefined);
     if (value !== undefined) legacy[key.replace('legacy-', '')] = value;
   }
+  if (risk === 'high') {
+    if (backfill) {
+      if (!humanSource) fail('high risk backfill 必须写 --human-source');
+      if (!legacy.tag) fail('high risk backfill 必须写 --legacy-tag');
+    } else {
+      if (!['frozen', 'active'].includes(state.stage?.state)) fail('high risk 非回填 decision 要求 stage frozen/active');
+      const freezePath = state.stage.freeze ? safeInProject(project, state.stage.freeze) : undefined;
+      if (!freezePath || !fs.existsSync(freezePath)) fail('high risk 非回填 decision 缺 freeze 文件');
+      const freeze = readJsonMaybe(freezePath);
+      if (!freeze || freeze.kind !== 'freeze' || freeze.tree_hash !== currentTree) fail('freeze 与当前树不一致');
+      if (attestation.reviewer?.independent !== true) fail('high risk 非回填 decision 要求 independent verify');
+    }
+  }
   const decision = {
     id,
     kind: 'decision',
@@ -1159,6 +1237,7 @@ function cmdDecide(args, flags) {
 function cmdEvolve(args, flags) {
   const sub = args[0];
   const dir = requireDir(args.slice(1), 'evolve');
+  acquireLock(dir);
   const p = projectPaths(dir);
   const project = p.project;
   const state = loadState(dir);
@@ -1306,6 +1385,7 @@ function cmdEvolve(args, flags) {
 
 function cmdChange(args, flags) {
   const dir = requireDir(args, 'change');
+  acquireLock(dir);
   const p = projectPaths(dir);
   const state = loadState(dir);
   const id = one(flags, 'id', undefined);
@@ -1341,6 +1421,7 @@ function cmdChange(args, flags) {
 
 function cmdFreeze(args, flags) {
   const dir = requireDir(args, 'freeze');
+  acquireLock(dir);
   const p = projectPaths(dir);
   const state = loadState(dir);
   if (state.stage?.state === 'active') fail('stage active，不能重复 freeze');
@@ -1374,6 +1455,7 @@ function cmdFreeze(args, flags) {
 
 function cmdStart(args, flags) {
   const dir = requireDir(args, 'start');
+  acquireLock(dir);
   const p = projectPaths(dir);
   const state = loadState(dir);
   if (state.stage?.state !== 'frozen') fail(`start 只接受 frozen 阶段，当前 ${state.stage?.state}`);
@@ -1392,6 +1474,7 @@ function cmdStart(args, flags) {
 
 function cmdDissent(args, flags) {
   const dir = requireDir(args, 'dissent');
+  acquireLock(dir);
   const p = projectPaths(dir);
   const severity = String(one(flags, 'severity', '')).toUpperCase();
   if (!['S1', 'S2', 'S3', 'S4'].includes(severity)) fail('dissent --severity 必须是 S1|S2|S3|S4');
@@ -1413,6 +1496,7 @@ function cmdDissent(args, flags) {
 
 function cmdResolve(args, flags) {
   const dir = requireDir(args, 'resolve');
+  acquireLock(dir);
   const p = projectPaths(dir);
   const state = loadState(dir);
   const id = requireId(one(flags, 'id', undefined), 'dissent id');

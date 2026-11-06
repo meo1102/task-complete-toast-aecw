@@ -11,7 +11,7 @@
 | 项目 | task-complete-toast-aecw |
 | 人类所有者 | meo1102 |
 | 阶段 | `security-1/closed` |
-| 发布 | `1.3.1/conditional`（有条件接受（回填原 1.3.1 发布决定；本次 decision 绑定简化树）） |
+| 发布 | `1.3.1/conditional`（有条件接受（回填原 1.3.1 发布决定；本次 decision 绑定 L2/并发加固后的简化树）） |
 | 发布决定 | `DR-2026-11-06-1.3.1` |
 | 风险 | `high` |
 | 活跃进化 | — |

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -132,6 +132,55 @@ test('decide 负控：高风险缺 residual、11 个 conditions、tree 变化都
   const changed = cli(project, [...base, '--risk', 'high', '--residual', 'r']);
   assert.equal(changed.code, 1, changed.output);
   assert.match(changed.output, /tree/);
+});
+
+test('L2：high 无 freeze 拒绝；freeze + start + independent verify 后接受', { timeout: 120000 }, () => {
+  const project = initProject('l2');
+  const review = path.join(project.gov, 'workspace', 'evidence', 'review-l2.md');
+  fs.writeFileSync(review, 'independent L2 review\n', 'utf8');
+  const verified = cli(project, ['verify', project.gov, '--reviewer', 'tester', '--risk', 'high']);
+  assert.equal(verified.code, 0, verified.output);
+  const attestations = () => fs.readdirSync(path.join(project.gov, 'workspace', 'evidence', 'attestations')).filter((name) => name.endsWith('.json')).map((name) => path.join(project.gov, 'workspace', 'evidence', 'attestations', name));
+  const first = attestations()[0];
+  const rejected = cli(project, ['decide', project.gov, '--attestation', first, '--scope', 'stage l2', '--risk', 'high', '--by', 'tester', '--decision', 'accept', '--residual', 'r', '--independent-review', review, '--id', 'DR-L2-1']);
+  assert.equal(rejected.code, 1, rejected.output);
+  assert.match(rejected.output, /frozen|freeze/);
+  const freeze = cli(project, ['freeze', project.gov, '--stage', 'l2', '--scope', 's', '--budget', '1', '--stop', 'x', '--acceptance', 'a', '--by', 'tester']);
+  assert.equal(freeze.code, 0, freeze.output);
+  const start = cli(project, ['start', project.gov, '--by', 'tester']);
+  assert.equal(start.code, 0, start.output);
+  const independent = cli(project, ['verify', project.gov, '--reviewer', 'independent', '--risk', 'high', '--independent']);
+  assert.equal(independent.code, 0, independent.output);
+  const latest = attestations().sort().at(-1);
+  const accepted = cli(project, ['decide', project.gov, '--attestation', latest, '--scope', 'stage l2', '--risk', 'high', '--by', 'tester', '--decision', 'accept', '--residual', 'r', '--independent-review', review, '--id', 'DR-L2-2']);
+  assert.equal(accepted.code, 0, accepted.output);
+  const checked = cli(project, ['check', project.gov]);
+  assert.equal(checked.code, 0, checked.output);
+});
+
+test('32 路并发 evolve propose 不丢/不重/不截断', { timeout: 120000 }, async () => {
+  const project = initProject('concurrent');
+  const jobs = [];
+  for (let index = 0; index < 32; index += 1) {
+    jobs.push(new Promise((resolve, reject) => {
+      const child = spawn(process.execPath, [
+        project.cli, 'evolve', 'propose', project.gov,
+        '--id', `EV-C-${index}`, '--type', 'test', '--scope', 'project',
+        '--observation', 'o', '--change', 'c', '--expected', 'e',
+        '--risk', 'low', '--rollback', 'r', '--run', `run-${index}`,
+      ], { cwd: project.project, stdio: 'ignore', windowsHide: true });
+      child.on('error', reject);
+      child.on('exit', (code) => resolve(code));
+    }));
+  }
+  const codes = await Promise.all(jobs);
+  assert.deepEqual(codes, Array(32).fill(0));
+  const candidates = fs.readdirSync(path.join(project.gov, 'workspace', 'evolution', 'candidates')).filter((name) => name.endsWith('.json'));
+  assert.equal(candidates.length, 32);
+  const ledger = fs.readFileSync(path.join(project.gov, 'workspace', 'evolution', 'ledger.jsonl'), 'utf8').trim().split(/\r?\n/).filter(Boolean);
+  assert.equal(ledger.length, 32);
+  const checked = cli(project, ['check', project.gov]);
+  assert.equal(checked.code, 0, checked.output);
 });
 
 test('E1 自动采纳、E2 必须人类、失败候选 retired', () => {

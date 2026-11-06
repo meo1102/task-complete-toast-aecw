@@ -7,33 +7,34 @@
     "check PASS",
     "probe PASS",
     "tests PASS（pass 174）",
-    "governance PASS（pass 8）",
-    "tree sha256:277E29F5A5893461B0915A084248B6C886D05055E32211AA7EF3BA41B4E03709",
+    "governance PASS（pass 10）",
+    "tree sha256:93E85FF918084868ED04D84FE42958F6777C2CDB856D712E28EC60D4B67492E9",
     "1.3.1 产品版本 1.3.1；tag v1.3.1；原 release attestation VA-20261106071124-fd647e；原完整 gate 0700071129 有条件通过",
-    "2026-11-06 简化树 verify：check/probe/tests/governance PASS；产品 174/174；治理 8/8；probe 7/7",
+    "2026-11-06 简化树 verify：check/probe/tests/governance PASS；产品 174/174；治理 10/10；probe 7/7",
+    "L2 路径测试：high 无 freeze 拒绝；freeze+start+independent verify 后接受；32 路并发 evolve propose 无丢写/重复/截断",
     "final gate 0711355f20 正文为空；本 decision 用完整旧 gate + 新树 verify 回填，不重新发布",
     "远程 main 与 v1.3.1 未推送；本决定仅本地发布"
   ],
   "evidence": [
     {
-      "path": "aecw/workspace/evidence/attestations/VA-20261106090844-72e33e.json",
-      "sha256": "sha256:59CA9A875D9A2AC385C03E50C8BA4B1F405C5455674CE93B60F4C5164A59769D"
+      "path": "aecw/workspace/evidence/attestations/VA-20261106092022-b24b74.json",
+      "sha256": "sha256:DB8D8583899FCDCA059C064CE13371876ACE7CD862046985F89948BBDE79D5C3"
     },
     {
-      "path": "aecw/workspace/evidence/attestations/VA-20261106090844-72e33e-check.log",
-      "sha256": "sha256:5B42420F3C8214D529104494BA66071D3F8DE7EED1E01BE4D0179EF597DFAF7A"
+      "path": "aecw/workspace/evidence/attestations/VA-20261106092022-b24b74-check.log",
+      "sha256": "sha256:E74EAECDAE740FB76E12B85CE178C16A982AE5D69B898FCB7A04FF348261F7F9"
     },
     {
-      "path": "aecw/workspace/evidence/attestations/VA-20261106090844-72e33e-probe.log",
+      "path": "aecw/workspace/evidence/attestations/VA-20261106092022-b24b74-probe.log",
       "sha256": "sha256:0D9B97F8472F30E566A213AC7C19411D96BA0232386DE1403BE869ABF1CFFDF7"
     },
     {
-      "path": "aecw/workspace/evidence/attestations/VA-20261106090844-72e33e-test.log",
-      "sha256": "sha256:E5B6B139EA8F3731301C98B8CF4F9317794A29B54AA9D4FF0B440EDFA70E5066"
+      "path": "aecw/workspace/evidence/attestations/VA-20261106092022-b24b74-test.log",
+      "sha256": "sha256:A673196F2064662F335EF043BE7D33A87A6A4B63FBB9ACFB6F55464D4CA28E97"
     },
     {
-      "path": "aecw/workspace/evidence/attestations/VA-20261106090844-72e33e-governance.log",
-      "sha256": "sha256:A567FE2D0056D1885574995B8480AA96B22720E37890591C0B165A0E28922BC2"
+      "path": "aecw/workspace/evidence/attestations/VA-20261106092022-b24b74-governance.log",
+      "sha256": "sha256:0183493C279A0872EDC07BB4604594DA19B946548BC76F7EE2E823C030C501F6"
     },
     {
       "path": "aecw/workspace/evidence/attestations/VA-20261106071124-fd647e.json",
@@ -44,20 +45,20 @@
       "sha256": "sha256:9AE1253B0D3258BB9897BFB6AAB9949DFB250A48F114D02F0BD8E5C65DB78ED9"
     },
     {
-      "path": "aecw/workspace/evidence/2026-11-06-release-v1.3.1.md",
-      "sha256": "sha256:9C856F9D1ADCFF68B04D34BBFE42642F1E3840C76C833C22B98CEB0E9D699924"
-    },
-    {
-      "path": "aecw/workspace/evidence/2026-11-06-independent-review.md",
-      "sha256": "sha256:EB436BB47CA9492604D799D22AFAB5F752621C5C16C4300071ED25F27323464C"
-    },
-    {
       "path": "aecw/workspace/archive/gates/2026-11-06-release-v1-3-1-final-0711355f20.md",
       "sha256": "sha256:6E986538D5DD67A13EEDF0771C490AC43F71BA1F118F9E9440A8D3FB89D27DA2"
     },
     {
       "path": "aecw/workspace/evidence/attestations/VA-20261106065956-f82564.json",
       "sha256": "sha256:2264DC365147D61EE41D3C29055CB89D3336D4632F0B4C873285E8DF74D1DD1D"
+    },
+    {
+      "path": "aecw/workspace/evidence/2026-11-06-release-v1.3.1.md",
+      "sha256": "sha256:9C856F9D1ADCFF68B04D34BBFE42642F1E3840C76C833C22B98CEB0E9D699924"
+    },
+    {
+      "path": "aecw/workspace/evidence/2026-11-06-independent-review.md",
+      "sha256": "sha256:EB436BB47CA9492604D799D22AFAB5F752621C5C16C4300071ED25F27323464C"
     }
   ],
   "conditions": [
@@ -115,25 +116,25 @@
   "residual_risk": "独立 review 为 conditional；W6 人类最终验收 pending；人类分钟/L1 自主率未测量；产品 routePath/限速/G4 compact 宽度未修；远程未推送；final gate 0711355f20 正文为空。",
   "human": {
     "name": "meo1102",
-    "decision": "有条件接受（回填原 1.3.1 发布决定；本次 decision 绑定简化树）",
+    "decision": "有条件接受（回填原 1.3.1 发布决定；本次 decision 绑定 L2/并发加固后的简化树）",
     "at": "2026-11-06T07:00:00.000Z",
     "source": "archive/gates/2026-11-06-release-v1-3-1-0700071129.md（原完整 gate 的人类发布决定）"
   },
   "attestation": {
-    "path": "aecw/workspace/evidence/attestations/VA-20261106090844-72e33e.json",
-    "id": "VA-20261106090844-72e33e",
-    "tree_hash": "sha256:277E29F5A5893461B0915A084248B6C886D05055E32211AA7EF3BA41B4E03709"
+    "path": "aecw/workspace/evidence/attestations/VA-20261106092022-b24b74.json",
+    "id": "VA-20261106092022-b24b74",
+    "tree_hash": "sha256:93E85FF918084868ED04D84FE42958F6777C2CDB856D712E28EC60D4B67492E9"
   },
-  "created_at": "2026-11-06T09:09:03.005Z",
+  "created_at": "2026-11-06T09:20:40.181Z",
   "independent_review": {
     "path": "aecw/workspace/evidence/2026-11-06-independent-review.md",
     "sha256": "sha256:EB436BB47CA9492604D799D22AFAB5F752621C5C16C4300071ED25F27323464C"
   },
   "backfilled": true,
-  "backfilled_at": "2026-11-06T09:09:03.005Z",
+  "backfilled_at": "2026-11-06T09:20:40.181Z",
   "legacy": {
     "tag": "v1.3.1",
     "commit": "9c1632f",
-    "note": "回填不重新发布；original release gate 0700071129 + final attestation fd647e + 新树 verify 72e33e"
+    "note": "回填不重新发布；original release gate 0700071129 + final attestation fd647e + 新树 verify b24b74"
   }
 }
