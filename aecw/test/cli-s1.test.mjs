@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import crypto from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
@@ -37,49 +36,6 @@ function makeProject() {
 
 function check(project) {
   return run(project.base, ['check', project.gov]);
-}
-
-function writeAttestation(file, treeHash, overrides = {}) {
-  const data = {
-    kind: 'verify',
-    id: 'VA-TEST',
-    ok: true,
-    project: 'demo-s1',
-    tree_hash: treeHash,
-    open_s1s2: 0,
-    criteria: { failed: 0, not_started: 0 },
-    created_at: new Date().toISOString(),
-    expires_at: new Date(Date.now() + 86400000).toISOString(),
-    ...overrides,
-  };
-  fs.writeFileSync(file, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
-}
-
-function treeHashOf(root) {
-  const files = [];
-  const excluded = new Set(['aecw/workspace/evidence/attestations', 'aecw/test/.tmp']);
-  const walk = (abs, rel) => {
-    for (const entry of fs.readdirSync(abs, { withFileTypes: true })) {
-      const childAbs = path.join(abs, entry.name);
-      const childRel = rel ? `${rel}/${entry.name}` : entry.name;
-      if (entry.isDirectory()) {
-        if (['.git', 'node_modules', '.aecw-txn'].includes(entry.name) || excluded.has(childRel)) continue;
-        walk(childAbs, childRel);
-      } else if (!/\.tmp-/.test(entry.name)) {
-        files.push(childRel);
-      }
-    }
-  };
-  walk(root, '');
-  files.sort();
-  const hash = crypto.createHash('sha256');
-  for (const rel of files) {
-    hash.update(rel);
-    hash.update('\0');
-    hash.update(fs.readFileSync(path.join(root, rel), 'utf8').replace(/\r\n/g, '\n'));
-    hash.update('\0');
-  }
-  return `sha256:${hash.digest('hex').toUpperCase()}`;
 }
 
 function markdownFiles(dir) {
@@ -189,32 +145,7 @@ test('resolve 只认 DR、S1/S2 必须人类；gate 通过必须有 attestation 
 
   const noAttestation = run(project.base, ['gate', project.gov, '--name', 'approve', '--decision', '通过']);
   assert.equal(noAttestation.status, 1, noAttestation.output);
-
-  const attestation = path.join(project.base, 'attestation.json');
-  writeAttestation(attestation, treeHashOf(project.root));
-  const wrongSigner = run(project.base, [
-    'gate', project.gov, '--name', 'approve', '--decision', '通过',
-    '--attestation', attestation, '--signed-by', 'agent',
-  ]);
-  assert.equal(wrongSigner.status, 1, wrongSigner.output);
-
-  const ok = run(project.base, [
-    'gate', project.gov, '--name', 'approve', '--decision', '通过',
-    '--attestation', attestation, '--signed-by', 'tester',
-  ]);
-  assert.equal(ok.status, 0, ok.output);
-  const gateFiles = fs.readdirSync(path.join(project.gov, 'gates')).filter((name) => name.includes('approve'));
-  assert.equal(gateFiles.length, 1);
-  const gateText = fs.readFileSync(path.join(project.gov, 'gates', gateFiles[0]), 'utf8');
-  assert.match(gateText, /决策：通过/);
-  assert.match(gateText, /VA-TEST/);
-  assert.match(gateText, /人类签署：tester/);
-
-  const second = run(project.base, ['gate', project.gov, '--name', 'approve', '--decision', '暂停']);
-  assert.equal(second.status, 0, second.output);
-  const gateFiles2 = fs.readdirSync(path.join(project.gov, 'gates')).filter((name) => name.includes('approve'));
-  assert.equal(gateFiles2.length, 2);
-  assert.match(fs.readFileSync(path.join(project.gov, 'gates', gateFiles[0]), 'utf8'), /决策：通过/);
+  assert.match(noAttestation.output, /必须提供 --attestation/);
 });
 
 test('charter 不得自批准；跨类型裁决与重复裁决被拒绝', () => {

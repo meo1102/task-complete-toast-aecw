@@ -120,7 +120,7 @@ test('verify 生成 attestation；gate 通过并绑定当前 tree；tree 变化�
   assert.equal(approved.status, 0, approved.output);
   assert.equal(gateFiles(project, 'release').length, 1);
 
-  fs.appendFileSync(path.join(project.gov, 'workspace', 'landing', 'README.md'), '\nchanged\n', 'utf8');
+  fs.appendFileSync(path.join(project.gov, 'BLUEPRINT.md'), '\n- changed after verify\n', 'utf8');
   const stale = run(project.base, [
     'gate', project.gov, '--name', 'release-2', '--decision', '通过',
     '--attestation', attestation, '--signed-by', 'tester',

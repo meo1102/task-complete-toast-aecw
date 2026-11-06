@@ -412,6 +412,19 @@ function hashFile(file) {
   return `sha256:${crypto.createHash('sha256').update(fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n')).digest('hex').toUpperCase()}`;
 }
 
+/** 发布绑定树：产品 + direction/blueprint/criteria + 工具；不绑定叙述性证据/STATUS。 */
+function releaseTreeHash(dir) {
+  const p = projectPaths(dir);
+  const toolFile = path.join(dir, 'bin', 'aecw.mjs');
+  return hashPayload({
+    direction: hashFile(p.direction),
+    blueprint: hashFile(p.blueprint),
+    criteria: hashFile(path.join(dir, 'criteria.md')),
+    product: productTreeHash(dir),
+    tool: hashFile(fs.existsSync(toolFile) ? toolFile : fileURLToPath(import.meta.url)),
+  });
+}
+
 function stableJson(value) {
   if (Array.isArray(value)) return `[${value.map((item) => stableJson(item)).join(',')}]`;
   if (value && typeof value === 'object') {
@@ -951,7 +964,7 @@ function cmdGate(args, flags) {
       fail(`拒绝生成“${decision}”门禁：仍有 ${open} 条开放 S1/S2（${openRows.map((row) => row.cells[0]).join('、')}）`);
     }
     attestation = readAttestation(flags.attestation, dir);
-    const currentTree = projectTreeHash(dir);
+    const currentTree = releaseTreeHash(dir);
     if (attestation.tree_hash !== currentTree) {
       fail(`attestation 树不一致：verify 后文件已变化（${attestation.tree_hash} vs ${currentTree}）；重新 verify 后再开门`);
     }
@@ -1726,7 +1739,8 @@ function cmdVerify(args, flags) {
 
   // 7. tree hashes
   const hashes = {
-    tree: projectTreeHash(dir),
+    tree: releaseTreeHash(dir),
+    workspace_tree: projectTreeHash(dir),
     product: productTreeHash(dir),
     direction: hashFile(p.direction),
     blueprint: hashFile(p.blueprint),
@@ -1750,6 +1764,7 @@ function cmdVerify(args, flags) {
     reviewer: { name: reviewer, session: reviewerSession },
     git,
     tree_hash: hashes.tree,
+    workspace_tree_hash: hashes.workspace_tree,
     product_hash: hashes.product,
     direction_hash: hashes.direction,
     blueprint_hash: hashes.blueprint,
