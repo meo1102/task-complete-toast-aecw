@@ -1,41 +1,50 @@
-# AGENTS.md · task-complete-toast-aecw（仓库级）
+# AGENTS.md · task-complete-toast-aecw
 
 > 状态：current｜最后核对：2026-11-06
 
-本仓库的硬规则：**产品代码在仓库根，AECW 治理在 `aecw/`，两者物理分离**。
+## 硬规则
 
-- 产品代码在仓库根：`package.json`、`index.js`、`client.js`、`lib/`、`locale/`、`test/`、`cordis.patch.yml`、`icon.svg`。
-- AECW 结构只在 [`aecw/`](aecw/)：`STATUS.md`、`state.json`、`criteria.md`、`BLUEPRINT.md`、`ledger.md`、`human/`、`cluster/`、`workspace/`、`gates/`、`inbox/`、CLI/模板、探针。
-- 不要把治理文档放进仓库根的产品目录结构，也不要把产品源码/测试放进 `aecw/`。
-- 开始任何治理/开发工作前：读 [`PROJECT.json`](PROJECT.json) → [`aecw/STATUS.md`](aecw/STATUS.md) → [`aecw/state.json`](aecw/state.json) → [`aecw/criteria.md`](aecw/criteria.md) → [`aecw/AGENTS.md`](aecw/AGENTS.md)；治理规则以 `aecw/AGENTS.md` 为准。
+- **产品代码在仓库根**：`package.json`、`index.js`、`client.js`、`lib/`、`locale/`、`test/`、`cordis.patch.yml`、`icon.svg`。
+- **治理只在 `aecw/`**：`state.json`、`STATUS.md`、`criteria.md`、`workspace/{evidence,decisions,evolution,memory,archive}`、`bin/aecw.mjs`。
+- **一个源**：`aecw/state.json` 是唯一当前状态；`STATUS.md`/`criteria.md` 由 `aecw render` 生成，**不要手改**。
+- **一个门**：当前发布/阶段决定只在 `aecw/workspace/decisions/<id>.json`；`gate` 已废弃，不再生成 gate 文件。
+- **一个验证**：`aecw verify` 绑定 tests/probe/tree/日志/reviewer；`aecw decide` 只接受 `workspace/evidence/attestations/` 下的成功 verify。
+- **一个进化闭环**：候选 → 评估 → 采纳/淘汰；E1 自动、E2 人类 + 独立复核；失败候选 retired，不删除负记忆。
+- **按风险分级**：L0/L1 不 freeze；L2（安全边界/发布/不可逆/外部副作用/并发共享写/预算超限）才 freeze + 独立验证 + 一次人类决定。
+- **人类保留位**：方向/边界/停止、阶段或发布的一次决定、S1/S2 例外、真实使用验收；不替集群写方案、不逐单审批、不维护台账、不在空模板上签字。
+- **单写者**：只有编排者写 mainline 与 state；worker 隔离实现，不写 state/mainline。
+- **不删除证据**：旧门禁/旧视图进 `aecw/workspace/archive/`，只读；回滚点 tag `pre-simplify-2026-11-06`。
+- **未测就写未测**：E2 不写成 E1；不称“全部通过”；无截图就标证据缺口。
+- **UTF-8**：写回后断言无 `U+FFFD`；不要用默认编码改中文文件。
+- **不改产品行为**：产品代码变更需按风险分级；L2 必须 freeze + 独立验证 + 人类决定。
 
-## 动作完成 = 状态写回
+## 开工前
 
-**任何改变布局、安装路径、版本、tag、发布、远程仓库、配置的动作，完成后的下一步必须先写回状态，再回复人类：**
+1. 读 [`aecw/state.json`](aecw/state.json) → [`aecw/STATUS.md`](aecw/STATUS.md) → 最近的 [`aecw/workspace/decisions/`](aecw/workspace/decisions/)。
+2. 读 [`aecw/workspace/memory/direction.md`](aecw/workspace/memory/direction.md)（方向/边界/风险分级）。
+3. 需要历史时读 [`aecw/workspace/archive/`](aecw/workspace/archive/)；不要把归档 gate 当当前门。
+4. 门禁/交付前运行 `node aecw/bin/aecw.mjs check aecw` 与 `node aecw/scripts/probe.mjs`；FAIL 不得继续。
 
-1. 更新 [`aecw/state.json`](aecw/state.json)（`layout` / `install` / `release` / `features` / `updated`）；
-2. 更新 [`aecw/STATUS.md`](aecw/STATUS.md) 的摘要与当前段；
-3. 写证据文件（`aecw/workspace/evidence/`）并在 `ledger.md` 登记；
-4. 跑 `node aecw/bin/aecw.mjs check aecw`，FAIL 不得结束回合。
-
-只完成动作、不写回状态，视为**未完成**。`state.layout` / `state.install` 与 `PROJECT.json` 不一致时，`check` 会 FAIL。
-
-## 命令位置
+## 命令
 
 ```powershell
-# 探针（从仓库根）
+# 产品
+node --test --test-isolation=none test/*.test.js
 node aecw/scripts/probe.mjs
 
-# 单测（从仓库根）
-node --test --test-isolation=none test/smoke.test.js test/integration.test.js test/store.test.js test/format.test.js test/dismiss.test.js test/notifier.test.js test/resolver.test.js test/wiring.test.js test/presentation.test.js test/interaction.test.js test/security.test.js
-
-# AECW 治理回归（S1 + S2 + S3 + S5 红队；从仓库根）
-node --test --test-isolation=none aecw/test/cli-s1.test.mjs aecw/test/cli-s2.test.mjs aecw/test/cli-s3.test.mjs aecw/test/cli-s5.test.mjs
-
-# AECW 检查（治理目录是 aecw/）
+# 治理
+node --test --test-isolation=none aecw/test/*.test.mjs
 node aecw/bin/aecw.mjs check aecw
+node aecw/bin/aecw.mjs render aecw
+node aecw/bin/aecw.mjs verify aecw --reviewer "reviewer" --risk high
+node aecw/bin/aecw.mjs decide aecw --attestation <verify.json> --scope "release 1.3.1" --risk high --by meo1102 --decision "有条件接受"
+node aecw/bin/aecw.mjs evolve aecw list
 ```
 
-- `aecw` 工具版本 **0.9.6**（S1：open S1/S2 = FAIL、gate 需 attestation、表格/ID/半事务；S2：`verify` attestation、freeze/start payload hash、closed 终态；S3：`.aecw-lock` 进程锁、journal 恢复、32 路并发回归；S4：probe health 身份、settings 写路由安全）。
-- 当前阶段 `security-1`（P0-6 安全收口，closed）；`grow-2` 已 closed。产品行为变更需新蓝图 + `freeze`/`start`，不得静默扩范围。
-- 当前发布口径 v1.3.1（G1/G2/G3 + G4 + G2 遮挡修复 + P0-6 安全收口；release gate 有条件通过）；截图/录屏要求人类挂起；E2 证据（无截图）不得写成 E1。
+## 完成定义
+
+- 行为变更：有 `check` + tests/probe 证据；L2 另有独立验证与人类 decision。
+- 证据：日志/attestation 写进 `aecw/workspace/evidence/`；事实/决定写进 `aecw/workspace/decisions/`。
+- 状态：先 `render`，再 `check`；`STATUS.md`/`criteria.md` 必须与 state/decisions 一致。
+- 发布：`verify` → 人类 `decide` → `state.release.decision` 指向 decision；不手写 gate。
+- 当前发布口径：1.3.1 本地发布，conditional；远程未推送；已知限制见 README。
