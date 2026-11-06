@@ -153,5 +153,16 @@
     "name": "aecw",
     "version": "0.9.3",
     "hash": "0EF0CC930FF3C94E08F652641209A4425D23B814ECAEA7380AE13B7883961124"
+  },
+  "governance_baseline": {
+    "commit": "e76031f",
+    "tag": "aecw-s1-2026-11-06",
+    "tool": "0.9.3",
+    "plan": "agent-engineering-control/PLAN-v0.9.1-红队整改.md",
+    "scope": [
+      "P0-1",
+      "P0-7"
+    ],
+    "next": "S2 pending human approval"
   }
 }
