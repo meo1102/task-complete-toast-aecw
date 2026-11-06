@@ -1,7 +1,7 @@
 # STATUS · task-complete-toast-aecw
 
 > 状态：current｜生成视图｜最后核对：2026-11-06
-<!-- AECW-STATE {"project":"task-complete-toast-aecw","stage":"product-hardening/active","release":"1.3.2/unreleased","decision":null,"risk":"high","owner":"meo1102","evolution":["EV-2026-11-06-01"]} -->
+<!-- AECW-STATE {"project":"task-complete-toast-aecw","stage":"product-hardening/active","release":"1.3.2/conditional","decision":"DR-2026-11-06-1.3.2","risk":"high","owner":"meo1102","evolution":["EV-2026-11-06-01"]} -->
 > 本页由 `node aecw/bin/aecw.mjs render aecw` 生成；勿手改。
 
 ## 当前
@@ -11,8 +11,8 @@
 | 项目 | task-complete-toast-aecw |
 | 人类所有者 | meo1102 |
 | 阶段 | `product-hardening/active` |
-| 发布 | `1.3.2/unreleased` |
-| 发布决定 | —（回填中） |
+| 发布 | `1.3.2/conditional`（conditional 发布（condition lifecycle + baseline + evolution）） |
+| 发布决定 | `DR-2026-11-06-1.3.2` |
 | 风险 | `high` |
 | 活跃进化 | `EV-2026-11-06-01` |
 | 证据 | `aecw/workspace/evidence` |

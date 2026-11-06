@@ -13,8 +13,8 @@
   },
   "release": {
     "version": "1.3.2",
-    "state": "unreleased",
-    "decision": null
+    "state": "conditional",
+    "decision": "aecw/workspace/decisions/DR-2026-11-06-1.3.2.json"
   },
   "risk": "high",
   "evolution": {

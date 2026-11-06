@@ -1,0 +1,82 @@
+{
+  "id": "DR-2026-11-06-1.3.2",
+  "kind": "decision",
+  "scope": "release 1.3.2",
+  "risk": "high",
+  "facts": [
+    "check PASS",
+    "probe PASS",
+    "tests PASS（pass 178）",
+    "governance PASS（pass 10）",
+    "tree sha256:7B994592130AC37CBA9CAD8A057846FCE0BFE38CCDC142CDD8BE5F4F32CEE90C",
+    "1.3.2：routePath/限速/G4 宽度；产品 178/178；治理 10/10；check 0/0；probe 7/7",
+    "8 open conditions；remote condition closed；criteria 8/10",
+    "decision baseline 绑定 clean commit e956725 + tree 7B994592…",
+    "evolution EV-2026-11-06-01 adopted：open-conditions 9→8，tests/probe pass，artifact/metric/eval_log"
+  ],
+  "evidence": [
+    {
+      "path": "aecw/workspace/evidence/attestations/VA-20261106103641-fdea52.json",
+      "sha256": "sha256:321715C9CB4FDE0BFDCCB6CC4B2518E400CC75BDE0E8DB8D6637FDD11E63C4A3"
+    },
+    {
+      "path": "aecw/workspace/evidence/attestations/VA-20261106103641-fdea52-check.log",
+      "sha256": "sha256:A3E2C29900298E160AF19DAD0F95D38B557D0D9865D0943E78BE31ADF3D488F7"
+    },
+    {
+      "path": "aecw/workspace/evidence/attestations/VA-20261106103641-fdea52-probe.log",
+      "sha256": "sha256:3703A640A85AEAA89257E760156FAB293FFC0E85E1DEE1F342CA63778347B53B"
+    },
+    {
+      "path": "aecw/workspace/evidence/attestations/VA-20261106103641-fdea52-test.log",
+      "sha256": "sha256:0774F8B1F8F8BDF0E84575105C99565171352E0E9BD5343A7471CF7863365A48"
+    },
+    {
+      "path": "aecw/workspace/evidence/attestations/VA-20261106103641-fdea52-governance.log",
+      "sha256": "sha256:251A5C7F1CB26E855799FFAAC1736D7772DB3CB45C7D02D53A60B35140FF901C"
+    },
+    {
+      "path": "aecw/workspace/evidence/2026-11-06-product-1.3.2.md",
+      "sha256": "sha256:07FBAE726CD4368223DD15233EF294B804660B6A89D3742B41672AC8A8122A02"
+    },
+    {
+      "path": "aecw/workspace/evidence/2026-11-06-product-independent-review.md",
+      "sha256": "sha256:8ACA9D7A70B56339601F9A69F9F5174A54CEA13A8F25BB7244D4D73A7D2A26B5"
+    },
+    {
+      "path": "aecw/workspace/evidence/2026-11-06-remote-push.md",
+      "sha256": "sha256:C7233CCF565CE4A5AA47CB5CB0308D12107EDC2865DB92EF8A917CDB2F83EC8A"
+    }
+  ],
+  "conditions": [],
+  "residual_risk": "独立 review conditional；真机浏览器/307/live routePath/live 限速仍 open；probe validator 独立；1.3.2 conditional；remote 已推送；evolution 已采纳 1 个 E1。",
+  "human": {
+    "name": "meo1102",
+    "decision": "conditional 发布（condition lifecycle + baseline + evolution）",
+    "at": "2026-11-06T10:36:59.256Z"
+  },
+  "attestation": {
+    "path": "aecw/workspace/evidence/attestations/VA-20261106103641-fdea52.json",
+    "id": "VA-20261106103641-fdea52",
+    "tree_hash": "sha256:7B994592130AC37CBA9CAD8A057846FCE0BFE38CCDC142CDD8BE5F4F32CEE90C"
+  },
+  "baseline": {
+    "tree_hash": "sha256:7B994592130AC37CBA9CAD8A057846FCE0BFE38CCDC142CDD8BE5F4F32CEE90C",
+    "commit": "e956725e9a07848b4232ee8cab7344d29bd41726"
+  },
+  "condition_ids": [
+    "C-2026-11-06-01",
+    "C-2026-11-06-02",
+    "C-2026-11-06-03",
+    "C-2026-11-06-04",
+    "C-2026-11-06-05",
+    "C-2026-11-06-06",
+    "C-2026-11-06-07",
+    "C-2026-11-06-08"
+  ],
+  "created_at": "2026-11-06T10:36:59.256Z",
+  "independent_review": {
+    "path": "aecw/workspace/evidence/2026-11-06-product-independent-review.md",
+    "sha256": "sha256:8ACA9D7A70B56339601F9A69F9F5174A54CEA13A8F25BB7244D4D73A7D2A26B5"
+  }
+}
