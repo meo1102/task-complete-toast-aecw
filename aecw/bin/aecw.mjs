@@ -66,12 +66,30 @@ function writeJson(file, value) {
   writeAtomic(file, `${JSON.stringify(value, null, 2)}\n`);
 }
 
+function readHashBytes(file) {
+  const buffer = fs.readFileSync(file);
+  if (/\.(?:md|js|mjs|json|ya?ml|svg|txt)$/i.test(file)) {
+    return Buffer.from(buffer.toString('utf8').replace(/\r\n/g, '\n'), 'utf8');
+  }
+  return buffer;
+}
+
 function hashFile(file) {
-  return `sha256:${crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex').toUpperCase()}`;
+  return `sha256:${crypto.createHash('sha256').update(readHashBytes(file)).digest('hex').toUpperCase()}`;
 }
 
 function hashText(text) {
   return `sha256:${crypto.createHash('sha256').update(String(text), 'utf8').digest('hex').toUpperCase()}`;
+}
+
+function normalizeHash(value) {
+  return String(value ?? '').replace(/^sha256:/i, '').toUpperCase();
+}
+
+function requireId(value, label = 'id') {
+  const id = String(value ?? '');
+  if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{0,79}$/.test(id)) fail(`${label} 非法：${id}`);
+  return id;
 }
 
 function rel(project, abs) {
@@ -333,7 +351,7 @@ function hashFiles(project, files) {
   for (const relative of [...new Set(files)].sort()) {
     hash.update(relative);
     hash.update('\0');
-    hash.update(fs.readFileSync(path.join(project, relative)));
+    hash.update(readHashBytes(path.join(project, relative)));
     hash.update('\0');
   }
   return `sha256:${hash.digest('hex').toUpperCase()}`;
@@ -518,6 +536,43 @@ function validateEvidence(project, evidence, errors, label) {
   }
 }
 
+function attestationErrors(project, attestation) {
+  const errors = [];
+  if (!attestation || typeof attestation !== 'object') return ['attestation 不是对象'];
+  if (attestation.kind !== 'verify' || attestation.ok !== true) errors.push('attestation 不是成功的 verify');
+  if (attestation.version !== 2) errors.push('attestation.version 必须是 2');
+  if (typeof attestation.project !== 'string' || !attestation.project) errors.push('attestation.project 为空');
+  if (typeof attestation.tree_hash !== 'string' || !/^sha256:[0-9A-F]{64}$/i.test(attestation.tree_hash)) errors.push('attestation.tree_hash 非法');
+  if (typeof attestation.state_hash !== 'string' || !/^sha256:[0-9A-F]{64}$/i.test(attestation.state_hash)) errors.push('attestation.state_hash 非法');
+  if (typeof attestation.product_hash !== 'string' || !/^sha256:[0-9A-F]{64}$/i.test(attestation.product_hash)) errors.push('attestation.product_hash 非法');
+  if (!isIso(attestation.created_at) || !isIso(attestation.expires_at)) errors.push('attestation created/expires 非法');
+  if (!attestation.reviewer || typeof attestation.reviewer.name !== 'string' || !attestation.reviewer.name.trim()) errors.push('attestation.reviewer.name 为空');
+  if (!attestation.reviewer || typeof attestation.reviewer.session !== 'string' || !attestation.reviewer.session.trim()) errors.push('attestation.reviewer.session 为空');
+  if (typeof attestation.reviewer?.independent !== 'boolean') errors.push('attestation.reviewer.independent 必须是 boolean');
+  if (!Array.isArray(attestation.facts) || attestation.facts.length === 0) errors.push('attestation.facts 为空');
+  for (const key of ['check', 'probe', 'tests', 'governance']) {
+    if (!attestation.checks || attestation.checks[key]?.status !== 'pass') errors.push(`attestation.checks.${key} 未 pass`);
+  }
+  if (!Number.isInteger(attestation.checks?.tests?.pass) || attestation.checks.tests.pass <= 0) errors.push('attestation.tests.pass 必须 > 0');
+  if (!Number.isInteger(attestation.checks?.governance?.pass) || attestation.checks.governance.pass <= 0) errors.push('attestation.governance.pass 必须 > 0');
+  for (const key of ['check', 'probe', 'tests', 'governance']) {
+    const log = attestation.logs?.[key];
+    if (!log || typeof log.path !== 'string' || typeof log.sha256 !== 'string') {
+      errors.push(`attestation.logs.${key} 缺失`);
+      continue;
+    }
+    let abs;
+    try {
+      abs = safeInProject(project, log.path);
+    } catch (error) {
+      errors.push(`attestation.logs.${key} 路径：${error.message}`);
+      continue;
+    }
+    if (!fs.existsSync(abs) || normalizeHash(hashFile(abs)) !== normalizeHash(log.sha256)) errors.push(`attestation.logs.${key} 缺失或哈希不匹配`);
+  }
+  return errors;
+}
+
 function validateDecision(dir, decision, owner, currentTree, errors) {
   const p = projectPaths(dir);
   const project = p.project;
@@ -574,34 +629,28 @@ function validateDecision(dir, decision, owner, currentTree, errors) {
     return;
   }
   const attestation = readJsonMaybe(attestationPath);
-  if (!attestation || attestation.kind !== 'verify' || attestation.ok !== true) {
-    errors.push(`${label} attestation 不是成功的 verify`);
-    return;
-  }
-  if (attestation.project !== decision.project && attestation.project !== readJsonMaybe(path.join(project, 'PROJECT.json'))?.project) {
+  for (const error of attestationErrors(project, attestation)) errors.push(`${label} ${error}`);
+  if (attestation && attestation.project !== readJsonMaybe(path.join(project, 'PROJECT.json'))?.project) {
     errors.push(`${label} attestation 项目不匹配`);
   }
-  if (attestation.tree_hash !== currentTree || decision.attestation.tree_hash !== currentTree) {
+  if (attestation && (attestation.tree_hash !== currentTree || decision.attestation.tree_hash !== currentTree)) {
     errors.push(`${label} tree 不一致：decision/attestation 与当前树不同`);
   }
-  if (attestation.expires_at && Date.parse(attestation.expires_at) < Date.now()) {
-    // 历史决定不因 72 小时过期而失效；只在创建时由 decide 检查。
+  if (attestation && decision.risk !== attestation.risk) {
+    errors.push(`${label} risk 与 attestation.risk 不一致`);
   }
-  if (attestation.version >= 2 && attestation.logs) {
-    for (const log of Object.values(attestation.logs)) {
-      if (!log || typeof log.path !== 'string' || typeof log.sha256 !== 'string') {
-        errors.push(`${label} attestation.log 项非法`);
-        continue;
-      }
-      let logPath;
+  if (decision.risk === 'high') {
+    if (!decision.independent_review || typeof decision.independent_review.path !== 'string' || typeof decision.independent_review.sha256 !== 'string') {
+      errors.push(`${label} high risk 缺 independent_review`);
+    } else {
+      let reviewPath;
       try {
-        logPath = safeInProject(project, log.path);
+        reviewPath = safeInProject(project, decision.independent_review.path);
       } catch (error) {
-        errors.push(`${label} log 路径：${error.message}`);
-        continue;
+        errors.push(`${label} independent_review 路径：${error.message}`);
       }
-      if (!fs.existsSync(logPath) || hashFile(logPath).toUpperCase() !== log.sha256.toUpperCase()) {
-        errors.push(`${label} log 缺失或哈希不匹配：${log.path}`);
+      if (reviewPath && (!fs.existsSync(reviewPath) || normalizeHash(hashFile(reviewPath)) !== normalizeHash(decision.independent_review.sha256))) {
+        errors.push(`${label} independent_review 缺失或哈希不匹配`);
       }
     }
   }
@@ -656,9 +705,40 @@ function checkEvolution(dir, state, errors) {
   }
   for (const candidate of candidates.values()) {
     if (candidate.status === 'adopted' && !adopted.has(candidate.id)) errors.push(`candidate ${candidate.id} adopted 但 ledger 无记录`);
+    if (candidate.status === 'adopted' && candidate.scope === 'project') {
+      if (!candidate.evaluation?.e1) errors.push(`project candidate ${candidate.id} adopted 但缺 E1 通过证据`);
+      for (const key of ['tests', 'probe']) {
+        const log = candidate.evaluation?.logs?.[key];
+        if (!log || typeof log.path !== 'string' || typeof log.sha256 !== 'string') {
+          errors.push(`project candidate ${candidate.id} 缺 ${key} 日志/hash`);
+          continue;
+        }
+        let abs;
+        try {
+          abs = safeInProject(p.project, log.path);
+        } catch (error) {
+          errors.push(`project candidate ${candidate.id} ${key} 日志路径：${error.message}`);
+          continue;
+        }
+        if (!fs.existsSync(abs) || normalizeHash(hashFile(abs)) !== normalizeHash(log.sha256)) errors.push(`project candidate ${candidate.id} ${key} 日志缺失或哈希不匹配`);
+      }
+    }
     if (candidate.status === 'adopted' && candidate.scope === 'governance') {
       if (!candidate.human || candidate.human.name !== state.owner?.name || !candidate.human.decision) {
         errors.push(`governance candidate ${candidate.id} 缺人类决定`);
+      }
+      if (!candidate.evaluation?.review?.path || !candidate.evaluation?.review?.sha256) {
+        errors.push(`governance candidate ${candidate.id} 缺独立 review`);
+      } else {
+        let reviewPath;
+        try {
+          reviewPath = safeInProject(p.project, candidate.evaluation.review.path);
+        } catch (error) {
+          errors.push(`governance candidate ${candidate.id} review 路径：${error.message}`);
+        }
+        if (reviewPath && (!fs.existsSync(reviewPath) || normalizeHash(hashFile(reviewPath)) !== normalizeHash(candidate.evaluation.review.sha256))) {
+          errors.push(`governance candidate ${candidate.id} review 缺失或哈希不匹配`);
+        }
       }
     }
   }
@@ -755,9 +835,8 @@ function cmdCheck(args, flags) {
   }
 
   if (manifest?.tool?.version !== TOOL_VERSION) errors.push(`PROJECT.tool.version ${manifest?.tool?.version} 与工具 ${TOOL_VERSION} 不一致`);
-  const normalizeHash = (value) => String(value ?? '').replace(/^sha256:/i, '').toUpperCase();
   if (manifest?.tool?.hash && normalizeHash(manifest.tool.hash) !== normalizeHash(hashFile(CLI))) errors.push('PROJECT.tool.hash 与当前 aecw.mjs 不一致');
-  for (const command of ['test', 'probe', 'check']) {
+  for (const command of ['test', 'probe', 'governance', 'check']) {
     if (typeof manifest?.commands?.[command] !== 'string' || !manifest.commands[command].trim()) errors.push(`PROJECT.commands.${command} 缺失`);
   }
 
@@ -773,7 +852,7 @@ function cmdCheck(args, flags) {
     validateDecision(dir, decision, state.owner?.name, currentTree, errors);
   }
   if ((state.release?.state === 'released' || state.release?.state === 'conditional') && !state.release?.decision) {
-    if (!state.migration?.active) errors.push('已发布版本缺 state.release.decision');
+    errors.push('已发布版本缺 state.release.decision（不允许 migration 空窗）');
   }
   if (state.release?.decision) {
     let decisionPath;
@@ -791,10 +870,9 @@ function cmdCheck(args, flags) {
       }
     }
   }
-  if (state.migration?.active && (typeof state.migration.reason !== 'string' || !state.migration.reason.trim())) {
-    errors.push('state.migration.active 但缺 reason');
+  if (state.migration?.active) {
+    errors.push('state.migration.active 不被 check 接受；最终状态必须是 decision 或 unreleased');
   }
-  if (state.migration?.active) warnings.push('migration active：允许回填 1.3.1 decision；完成后必须清空');
 
   if (state.stage?.state === 'frozen' || state.stage?.state === 'active') {
     const freezePath = state.stage.freeze ? safeInProject(project, state.stage.freeze) : undefined;
@@ -877,23 +955,33 @@ function cmdVerify(args, flags) {
   const checkLog = path.join(p.attestations, `${id}-check.log`);
   const probeLog = path.join(p.attestations, `${id}-probe.log`);
   const testLog = path.join(p.attestations, `${id}-test.log`);
+  const governanceLog = path.join(p.attestations, `${id}-governance.log`);
 
   const checkRun = runCaptured(process.execPath, [CLI, 'check', dir], project, checkLog, { timeout: 120000 });
   const probeRun = runCommandString(manifest.commands?.probe, project, probeLog, 120000);
   const testRun = runCommandString(manifest.commands?.test, project, testLog, 900000);
+  const governanceRun = runCommandString(manifest.commands?.governance, project, governanceLog, 900000);
   const after = treeHash(dir);
   const failures = [];
   if (checkRun.status !== 0) failures.push('check 未通过');
   if (probeRun.status !== 0) failures.push('probe 未通过');
   if (testRun.status !== 0) failures.push('tests 未通过');
+  if (governanceRun.status !== 0) failures.push('governance tests 未通过');
   if (before !== after) failures.push('验证期间树发生变化');
 
-  const passCount = (testRun.output.match(/ℹ pass (\d+)/) ?? [])[1] ?? null;
-  const failCount = (testRun.output.match(/ℹ fail (\d+)/) ?? [])[1] ?? null;
+  const parseCount = (output, key) => {
+    const match = output.match(new RegExp(`ℹ ${key} (\\d+)`));
+    return match ? Number(match[1]) : null;
+  };
+  const passCount = parseCount(testRun.output, 'pass');
+  const failCount = parseCount(testRun.output, 'fail');
+  const govPass = parseCount(governanceRun.output, 'pass');
+  const govFail = parseCount(governanceRun.output, 'fail');
   const facts = [
     `check ${checkRun.status === 0 ? 'PASS' : 'FAIL'}`,
     `probe ${probeRun.status === 0 ? 'PASS' : 'FAIL'}`,
     `tests ${testRun.status === 0 ? 'PASS' : 'FAIL'}${passCount ? `（pass ${passCount}${failCount ? ` / fail ${failCount}` : ''}）` : ''}`,
+    `governance ${governanceRun.status === 0 ? 'PASS' : 'FAIL'}${govPass ? `（pass ${govPass}${govFail ? ` / fail ${govFail}` : ''}）` : ''}`,
     `tree ${before}`,
   ];
   const attestation = {
@@ -914,11 +1002,13 @@ function cmdVerify(args, flags) {
       check: { status: checkRun.status === 0 ? 'pass' : 'fail', exit: checkRun.status },
       probe: { status: probeRun.status === 0 ? 'pass' : 'fail', exit: probeRun.status },
       tests: { status: testRun.status === 0 ? 'pass' : 'fail', exit: testRun.status, pass: passCount, fail: failCount },
+      governance: { status: governanceRun.status === 0 ? 'pass' : 'fail', exit: governanceRun.status, pass: govPass, fail: govFail },
     },
     logs: {
       check: { path: rel(project, checkLog), sha256: hashFile(checkLog) },
       probe: { path: rel(project, probeLog), sha256: hashFile(probeLog) },
       tests: { path: rel(project, testLog), sha256: hashFile(testLog) },
+      governance: { path: rel(project, governanceLog), sha256: hashFile(governanceLog) },
     },
     facts,
     failures,
@@ -950,21 +1040,19 @@ function cmdDecide(args, flags) {
   if (!attestationPath.startsWith(`${attestationsDir}${path.sep}`)) fail('attestation 必须在 workspace/evidence/attestations/ 下');
   if (!fs.existsSync(attestationPath)) fail(`attestation 不存在：${attestationFlag}`);
   const attestation = readJsonMaybe(attestationPath);
-  if (!attestation || attestation.kind !== 'verify' || attestation.ok !== true) fail('attestation 不是成功的 verify');
+  const attestationProblems = attestationErrors(project, attestation);
+  if (attestationProblems.length) fail(attestationProblems.join('；'));
   if (attestation.project !== projectManifest(project).project) fail('attestation 项目不匹配');
   const currentTree = treeHash(dir);
   if (attestation.tree_hash !== currentTree) fail('attestation tree 与当前树不一致；重新 verify');
   if (!isIso(attestation.expires_at) || Date.parse(attestation.expires_at) < Date.now()) fail('attestation 已过期');
-  if (attestation.logs) {
-    for (const log of Object.values(attestation.logs)) {
-      const abs = safeInProject(project, log.path);
-      if (!fs.existsSync(abs) || hashFile(abs).toUpperCase() !== String(log.sha256).toUpperCase()) fail(`attestation log 缺失或哈希不匹配：${log.path}`);
-    }
-  }
   const scope = one(flags, 'scope', undefined);
   if (typeof scope !== 'string' || !scope.trim()) fail('decide 需要 --scope');
   const risk = one(flags, 'risk', state.risk);
   if (!RISKS.has(risk)) fail(`decide --risk 非法：${risk}`);
+  if (String(scope).toLowerCase().startsWith('release') && risk !== 'high') fail('release decision 必须是 high risk');
+  if (state.risk === 'high' && risk !== 'high') fail('state.risk 为 high，decision 不得降级为 low/medium');
+  if (attestation.risk !== risk) fail(`decision risk ${risk} 与 attestation.risk ${attestation.risk} 不一致`);
   const by = one(flags, 'by', undefined);
   if (by !== owner) fail(`decide --by 必须是 owner ${owner}`);
   const humanDecision = one(flags, 'decision', undefined);
@@ -999,6 +1087,18 @@ function cmdDecide(args, flags) {
   if (existingConditions + conditions.length > MAX_CRITERIA) fail(`conditions 总数超过 ${MAX_CRITERIA}`);
   const residual = one(flags, 'residual', undefined);
   if (risk === 'high' && (typeof residual !== 'string' || !residual.trim())) fail('high risk 必须写 --residual');
+  let independentReview = null;
+  if (risk === 'high') {
+    const reviewFlag = one(flags, 'independent-review', undefined);
+    if (typeof reviewFlag !== 'string' || !reviewFlag.trim()) fail('high risk 必须提供 --independent-review <path>');
+    const reviewPath = safeInProject(project, reviewFlag);
+    if (!fs.existsSync(reviewPath) || !fs.readFileSync(reviewPath, 'utf8').trim()) fail(`independent review 为空：${reviewFlag}`);
+    independentReview = { path: rel(project, reviewPath), sha256: hashFile(reviewPath) };
+  }
+  const humanAt = one(flags, 'human-at', NOW());
+  if (!isIso(humanAt)) fail(`human-at 非法：${humanAt}`);
+  const humanSource = one(flags, 'human-source', undefined);
+  const backfill = bool(flags, 'backfill');
   const legacy = {};
   for (const key of ['legacy-tag', 'legacy-commit', 'legacy-note']) {
     const value = one(flags, key, undefined);
@@ -1013,28 +1113,47 @@ function cmdDecide(args, flags) {
     evidence,
     conditions,
     residual_risk: residual ?? 'none',
-    human: { name: owner, decision: humanDecision, at: NOW() },
+    human: { name: owner, decision: humanDecision, at: humanAt, ...(humanSource ? { source: humanSource } : {}) },
     attestation: { path: rel(project, attestationPath), id: attestation.id, tree_hash: attestation.tree_hash },
     created_at: NOW(),
+    ...(independentReview ? { independent_review: independentReview } : {}),
+    ...(backfill ? { backfilled: true, backfilled_at: NOW() } : {}),
     ...(Object.keys(legacy).length ? { legacy } : {}),
   };
-  writeJson(decisionPath, decision);
-  if (String(scope).toLowerCase().startsWith('release')) {
-    state.release = { ...(state.release ?? {}), decision: rel(project, decisionPath) };
-    state.migration = null;
-  } else if (String(scope).toLowerCase().startsWith('stage')) {
-    state.stage = { ...(state.stage ?? {}), decision: rel(project, decisionPath) };
+  const previous = {
+    state: fs.readFileSync(p.state, 'utf8'),
+    status: fs.readFileSync(p.status, 'utf8'),
+    criteria: fs.readFileSync(p.criteria, 'utf8'),
+  };
+  const rollback = () => {
+    try { writeAtomic(p.state, previous.state); } catch { /* ignore */ }
+    try { writeAtomic(p.status, previous.status); } catch { /* ignore */ }
+    try { writeAtomic(p.criteria, previous.criteria); } catch { /* ignore */ }
+    try { fs.rmSync(decisionPath, { force: true }); } catch { /* ignore */ }
+  };
+  try {
+    writeJson(decisionPath, decision);
+    if (String(scope).toLowerCase().startsWith('release')) {
+      state.release = { ...(state.release ?? {}), state: conditions.length > 0 ? 'conditional' : 'released', decision: rel(project, decisionPath) };
+      state.migration = null;
+    } else if (String(scope).toLowerCase().startsWith('stage')) {
+      state.stage = { ...(state.stage ?? {}), decision: rel(project, decisionPath) };
+    }
+    state.updated = DATE;
+    saveState(dir, state);
+    renderAll(dir);
+    const check = runCaptured(process.execPath, [CLI, 'check', dir], project, path.join(p.evidence, 'decide-check.log'), { timeout: 120000 });
+    if (check.status !== 0) {
+      rollback();
+      console.error(check.output);
+      fail('decide 后 check 失败；已回滚 decision/state/STATUS/criteria');
+    }
+  } catch (error) {
+    rollback();
+    fail(`decide 失败，已回滚：${error?.message ?? error}`);
   }
-  state.updated = DATE;
-  saveState(dir, state);
-  renderAll(dir);
   console.log(`decision ${id}`);
   console.log(`  ${rel(project, decisionPath)}`);
-  const check = runCaptured(process.execPath, [CLI, 'check', dir], project, path.join(p.evidence, 'decide-check.log'), { timeout: 120000 });
-  if (check.status !== 0) {
-    console.error(check.output);
-    process.exit(1);
-  }
 }
 
 function cmdEvolve(args, flags) {
@@ -1044,7 +1163,7 @@ function cmdEvolve(args, flags) {
   const project = p.project;
   const state = loadState(dir);
   ensureDir(p.candidates);
-  const candidatePath = (id) => path.join(p.candidates, `${id}.json`);
+  const candidatePath = (id) => path.join(p.candidates, `${requireId(id, 'candidate id')}.json`);
   const loadCandidate = (id) => {
     const file = candidatePath(id);
     if (!fs.existsSync(file)) fail(`candidate 不存在：${id}`);
@@ -1094,21 +1213,27 @@ function cmdEvolve(args, flags) {
     if (candidate.status !== 'proposed' && candidate.status !== 'evaluated') fail(`candidate ${id} 状态不可评估：${candidate.status}`);
     const evaluation = { at: NOW() };
     if (candidate.scope === 'project') {
-      let testsPass = passFlag(flags, 'tests-pass');
-      let probePass = passFlag(flags, 'probe-pass');
-      if (testsPass === null || probePass === null) {
+      const testsFlag = passFlag(flags, 'tests-pass');
+      const probeFlag = passFlag(flags, 'probe-pass');
+      if (testsFlag === false || probeFlag === false) {
+        evaluation.e1 = false;
+        evaluation.forced_failure = true;
+        evaluation.tests_pass = testsFlag !== false;
+        evaluation.probe_pass = probeFlag !== false;
+      } else {
         ensureDir(p.evidence);
-        const testLog = path.join(p.evidence, 'evolution', `${id}-tests.log`);
-        const probeLog = path.join(p.evidence, 'evolution', `${id}-probe.log`);
+        const testLog = path.join(p.evidence, 'evolution', `${requireId(id, 'candidate id')}-tests.log`);
+        const probeLog = path.join(p.evidence, 'evolution', `${requireId(id, 'candidate id')}-probe.log`);
         const tests = runCommandString(projectManifest(project).commands?.test, project, testLog, 900000);
         const probe = runCommandString(projectManifest(project).commands?.probe, project, probeLog, 120000);
-        testsPass = tests.status === 0;
-        probePass = probe.status === 0;
-        evaluation.logs = { tests: rel(project, testLog), probe: rel(project, probeLog) };
+        evaluation.e1 = tests.status === 0 && probe.status === 0;
+        evaluation.tests_pass = tests.status === 0;
+        evaluation.probe_pass = probe.status === 0;
+        evaluation.logs = {
+          tests: { path: rel(project, testLog), sha256: hashFile(testLog) },
+          probe: { path: rel(project, probeLog), sha256: hashFile(probeLog) },
+        };
       }
-      evaluation.e1 = Boolean(testsPass && probePass);
-      evaluation.tests_pass = Boolean(testsPass);
-      evaluation.probe_pass = Boolean(probePass);
     } else {
       const review = one(flags, 'independent-review', undefined);
       if (!review) fail('governance candidate 需要 --independent-review');
@@ -1131,6 +1256,7 @@ function cmdEvolve(args, flags) {
     if (candidate.status !== 'evaluated') fail(`candidate ${id} 未评估`);
     if (candidate.scope === 'project') {
       if (!candidate.evaluation?.e1) fail('E1 未通过 tests/probe，不得采纳');
+      if (!candidate.evaluation?.logs?.tests?.sha256 || !candidate.evaluation?.logs?.probe?.sha256) fail('E1 缺 tests/probe 日志哈希，不得采纳');
     } else {
       const by = one(flags, 'by', undefined);
       if (by !== state.owner?.name) fail(`E2 adopt --by 必须是 owner ${state.owner?.name}`);
@@ -1184,16 +1310,17 @@ function cmdChange(args, flags) {
   const state = loadState(dir);
   const id = one(flags, 'id', undefined);
   if (id && one(flags, 'decision', undefined) !== undefined) {
-    const file = path.join(p.decisions, `${id}.json`);
-    if (!fs.existsSync(file)) fail(`change 不存在：${id}`);
+    const safeId = requireId(id, 'change id');
+    const file = path.join(p.decisions, `${safeId}.json`);
+    if (!fs.existsSync(file)) fail(`change 不存在：${safeId}`);
     const record = readJson(file);
-    if (record.kind !== 'change') fail(`${id} 不是 change`);
+    if (record.kind !== 'change') fail(`${safeId} 不是 change`);
     const by = one(flags, 'by', undefined);
     if (by !== state.owner?.name) fail(`change 裁决 --by 必须是 owner ${state.owner?.name}`);
     record.status = one(flags, 'decision');
     record.human = { name: state.owner.name, decision: record.status, at: NOW() };
     writeJson(file, record);
-    console.log(`change ${id} → ${record.status}`);
+    console.log(`change ${safeId} → ${record.status}`);
     return;
   }
   const title = one(flags, 'title', undefined);
@@ -1219,8 +1346,7 @@ function cmdFreeze(args, flags) {
   if (state.stage?.state === 'active') fail('stage active，不能重复 freeze');
   const by = one(flags, 'by', undefined);
   if (by !== state.owner?.name) fail(`freeze --by 必须是 owner ${state.owner?.name}`);
-  const stage = one(flags, 'stage', undefined);
-  if (!stage) fail('freeze 需要 --stage');
+  const stage = requireId(one(flags, 'stage', undefined), 'stage');
   for (const key of ['scope', 'budget', 'stop', 'acceptance']) {
     if (!one(flags, key, undefined)) fail(`freeze 需要 --${key}`);
   }
@@ -1237,6 +1363,7 @@ function cmdFreeze(args, flags) {
     created_at: NOW(),
   };
   const file = path.join(p.decisions, `${record.id}.json`);
+  if (fs.existsSync(file)) fail(`freeze 记录已存在，拒绝覆盖：${record.id}`);
   writeJson(file, record);
   state.stage = { name: stage, state: 'frozen', freeze: rel(p.project, file) };
   state.updated = DATE;
@@ -1266,7 +1393,7 @@ function cmdStart(args, flags) {
 function cmdDissent(args, flags) {
   const dir = requireDir(args, 'dissent');
   const p = projectPaths(dir);
-  const severity = one(flags, 'severity', undefined);
+  const severity = String(one(flags, 'severity', '')).toUpperCase();
   if (!['S1', 'S2', 'S3', 'S4'].includes(severity)) fail('dissent --severity 必须是 S1|S2|S3|S4');
   const claim = one(flags, 'claim', undefined);
   if (!claim) fail('dissent 需要 --claim');
@@ -1288,8 +1415,7 @@ function cmdResolve(args, flags) {
   const dir = requireDir(args, 'resolve');
   const p = projectPaths(dir);
   const state = loadState(dir);
-  const id = one(flags, 'id', undefined);
-  if (!id) fail('resolve 需要 --id');
+  const id = requireId(one(flags, 'id', undefined), 'dissent id');
   const by = one(flags, 'by', undefined);
   if (by !== state.owner?.name) fail(`resolve --by 必须是 owner ${state.owner?.name}`);
   const file = path.join(p.dissent, `${id}.json`);
@@ -1331,8 +1457,8 @@ function cmdInit(rawArgs, flags) {
       roots: { product: '.', governance: gov, workspace: `${gov}/workspace` },
       install: { target: '.', profile: '' },
       commands: {
-        test: 'node -e "process.exit(0)"',
-        governance: 'node -e "process.exit(0)"',
+        test: 'node -e "console.log(\'ℹ pass 1\')"',
+        governance: 'node -e "console.log(\'ℹ pass 1\')"',
         probe: 'node -e "process.exit(0)"',
         check: `node ${gov}/bin/aecw.mjs check ${gov}`,
       },

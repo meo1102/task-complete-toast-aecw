@@ -68,8 +68,8 @@ function parseBaseUrl(raw) {
 function readRoutePath(patch) {
   const match = patch.match(/routePath:\s*['"]?([^'"\s#]+)/);
   const routePath = match ? match[1] : DEFAULT_ROUTE_PATH;
-  if (!routePath.startsWith('/') || routePath.startsWith('//')) throw new Error(`invalid routePath: ${routePath}`);
-  if (routePath.includes('..') || /[?#\s]/.test(routePath)) throw new Error(`unsafe routePath: ${routePath}`);
+  if (!routePath.startsWith('/') || routePath.startsWith('//') || routePath.startsWith('/\\')) throw new Error(`invalid routePath: ${routePath}`);
+  if (routePath.includes('..') || /[?#\s\\]/.test(routePath)) throw new Error(`unsafe routePath: ${routePath}`);
   return routePath;
 }
 
@@ -116,8 +116,12 @@ await check('profile dependency link', () => {
   const profilePkg = readJson(path.join(profileDir, 'package.json'));
   const link = profilePkg.dependencies?.['@local/task-complete-toast'];
   if (typeof link !== 'string') throw new Error('dependency missing');
-  const normalized = link.replace(/\\/g, '/').replace(/\/+$/, '');
-  if (!/task-complete-toast-aecw$/.test(normalized)) throw new Error(`not pointing to repo root: ${link}`);
+  const target = link.startsWith('link:') ? link.slice(5) : link;
+  const abs = path.isAbsolute(target) ? target : path.resolve(profileDir, target);
+  if (!fs.existsSync(abs)) throw new Error(`link target missing: ${link}`);
+  const expected = fs.realpathSync(PRODUCT).toLowerCase();
+  const actual = fs.realpathSync(abs).toLowerCase();
+  if (actual !== expected) throw new Error(`not this checkout: ${link} -> ${actual}`);
   return link;
 });
 
@@ -131,8 +135,9 @@ await check('profile bundles', () => {
 await check('junction target', () => {
   const link = path.join(profileDir, 'node_modules', '@local', 'task-complete-toast');
   const target = fs.realpathSync(link);
-  const normalized = target.replace(/\\/g, '/').replace(/\/+$/, '');
-  if (!/task-complete-toast-aecw$/.test(normalized)) throw new Error(`unexpected target: ${target}`);
+  const expected = fs.realpathSync(PRODUCT).toLowerCase();
+  const actual = target.toLowerCase();
+  if (actual !== expected) throw new Error(`unexpected target: ${target}`);
   return target;
 });
 

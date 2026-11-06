@@ -116,20 +116,20 @@ test('decide 拒绝 evidence/attestations 之外的 attestation', () => {
 
 test('decide 负控：高风险缺 residual、11 个 conditions、tree 变化都拒绝', () => {
   const project = initProject();
-  const verified = cli(project, ['verify', project.gov, '--reviewer', 'tester', '--risk', 'low']);
+  const verified = cli(project, ['verify', project.gov, '--reviewer', 'tester', '--risk', 'high']);
   assert.equal(verified.code, 0, verified.output);
   const attestation = path.join(project.gov, 'workspace', 'evidence', 'attestations', fs.readdirSync(path.join(project.gov, 'workspace', 'evidence', 'attestations')).find((name) => name.endsWith('.json')));
   const base = ['decide', project.gov, '--attestation', attestation, '--scope', 'release 0.1.0', '--by', 'tester', '--decision', 'accept'];
   const missingResidual = cli(project, [...base, '--risk', 'high']);
   assert.equal(missingResidual.code, 1, missingResidual.output);
   assert.match(missingResidual.output, /residual/);
-  const eleven = [...base, '--risk', 'low'];
+  const eleven = [...base, '--risk', 'high', '--residual', 'r'];
   for (let index = 0; index < 11; index += 1) eleven.push('--condition', `c${index}|2026-11-20|tester`);
   const tooMany = cli(project, eleven);
   assert.equal(tooMany.code, 1, tooMany.output);
   assert.match(tooMany.output, /超过 10/);
   fs.appendFileSync(path.join(project.project, 'README.md'), '\ntree changed\n', 'utf8');
-  const changed = cli(project, [...base, '--risk', 'low']);
+  const changed = cli(project, [...base, '--risk', 'high', '--residual', 'r']);
   assert.equal(changed.code, 1, changed.output);
   assert.match(changed.output, /tree/);
 });
@@ -137,7 +137,7 @@ test('decide 负控：高风险缺 residual、11 个 conditions、tree 变化都
 test('E1 自动采纳、E2 必须人类、失败候选 retired', () => {
   const project = initProject();
   assert.equal(cli(project, ['evolve', 'propose', project.gov, '--id', 'EV-E1', '--type', 'skill', '--scope', 'project', '--observation', 'o', '--change', 'c', '--expected', 'e', '--risk', 'low', '--rollback', 'r', '--run', 'r1']).code, 0);
-  assert.equal(cli(project, ['evolve', 'evaluate', project.gov, '--id', 'EV-E1', '--tests-pass', 'true', '--probe-pass', 'true']).code, 0);
+  assert.equal(cli(project, ['evolve', 'evaluate', project.gov, '--id', 'EV-E1']).code, 0);
   assert.equal(cli(project, ['evolve', 'adopt', project.gov, '--id', 'EV-E1']).code, 0);
   assert.equal(cli(project, ['evolve', 'propose', project.gov, '--id', 'EV-E2', '--type', 'workflow', '--scope', 'governance', '--observation', 'o', '--change', 'c', '--expected', 'e', '--risk', 'high', '--rollback', 'r', '--run', 'r2']).code, 0);
   const review = path.join(project.gov, 'workspace', 'evidence', 'review.md');

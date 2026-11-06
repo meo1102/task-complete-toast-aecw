@@ -2,44 +2,24 @@
 
 > 状态：current｜最后核对：2026-11-06
 
-原始证据：测试输出、日志、截图、真机记录、历史快照。E1 放这里；E2 人类目视要写清“无截图”或附截图；E3 只是主张，不能单独当通过。
+原始证据只追加：测试/探针日志、verify attestation、独立 review、旧发布证据。当前状态不在本目录；见 [`../../state.json`](../../state.json) 与 [`../../STATUS.md`](../../STATUS.md)。
 
-> **当前状态不在本目录**：以 [`../../STATUS.md`](../../STATUS.md) 为准。本目录是证据/历史。
+## 当前
 
-## 索引
+| 文件 | 内容 | 时效 |
+|---|---|---|
+| [`attestations/`](attestations/) | `verify` 生成的 `VA-*.json` + check/probe/tests/governance 日志 | 当前 |
+| [`2026-11-06-simplify-baseline.md`](2026-11-06-simplify-baseline.md) | 精简化前基线 | 历史（W0） |
+| [`2026-11-06-simplify-result.md`](2026-11-06-simplify-result.md) | 精简化技术结果/W6 | 当前 |
+| [`2026-11-06-independent-review.md`](2026-11-06-independent-review.md) | fresh-context 独立复核（conditional） | 当前 |
+| [`2026-11-06-release-v1.3.1.md`](2026-11-06-release-v1.3.1.md) | 1.3.1 原发布证据 | 历史（发布时） |
 
-| 文件 | 内容 | 时效 | 证据等级 |
-|---|---|---|---|
-| [`charter-v1.0-original.md`](charter-v1.0-original.md) | 试点宪章 v1.0 原文 | **历史副本**（方向以 `human/direction.md` 为准；条款未改） | E3（已批准文本） |
-| [`blueprint-v1-steward-1.md`](blueprint-v1-steward-1.md) | 施工蓝图 v1（阶段 `steward-1`，未冻结、未执行） | 历史草案（当前蓝图 v2 = `grow-2`） | E3 |
-| [`acceptance-report-v1.2.0.md`](acceptance-report-v1.2.0.md) | 验收报告 §1–§14（§1–§6 为 v1.1.0 历史，§14 为 v1.2.0 发布口径） | 部分历史 | E3/E2 |
-| [`真机验收清单.md`](真机验收清单.md) | 真机验收步骤/清单 | 当前清单 | — |
-| [`真机验收结果-2026-11-04.md`](真机验收结果-2026-11-04.md) | 首轮真机（G2-1 遮挡失败） | 历史 | E2（无截图） |
-| [`真机复验-G2-2026-11-04.md`](真机复验-G2-2026-11-04.md) | G2 修复后复验（7/8） | 历史快照（结果有效） | E2（无截图） |
-| [`真机验收结果-G3-2026-11-04.md`](真机验收结果-G3-2026-11-04.md) | G3 四轮矩阵（6/6，G3-4b 未单独） | 历史快照（结果有效） | E2（无截图） |
-| [`G2-遮挡修复方案.md`](G2-遮挡修复方案.md) | G2-1 修复方案 | 历史 | E3（方案） |
-| [`阶段报告-2026-11-04.md`](阶段报告-2026-11-04.md) | 阶段 0–2 报告 + 学习 | 部分历史（§3 有复制残留） | E2/E3 |
-| [`试点数据-项目开发过程-2026-11-04.md`](试点数据-项目开发过程-2026-11-04.md) | 试点开发过程回溯整理 | 当前回溯 | E3 |
-| [`接手测试-2026-11-04.md`](接手测试-2026-11-04.md) | 新 agent 只读文档的接手测试记录 | 历史 | E2/E3 |
-| [`baseline-2026-11-05-grow-2.md`](baseline-2026-11-05-grow-2.md) | grow-2 代码/验收基线：commit `4aff41a`、tag、哈希 | 历史冻结基线（grow-2） | E1 |
-| [`ev-001-probe-2026-11-05.md`](ev-001-probe-2026-11-05.md) | EV-001 运行态探针正控/负控证据 | 历史（trial 记录；当前 active） | E1 |
-| [`2026-11-05-G4-live-host.md`](2026-11-05-G4-live-host.md) | G4 替换安装、live 设置路由、A 方案持久化验证（host 部分） | 历史（设置页后已验收） | E1 |
-| [`2026-11-05-standalone-migration.md`](2026-11-05-standalone-migration.md) | 从 `DSH_end/插件` 迁到独立目录/独立仓库；布局 v2：产品 `product/`、AECW `aecw/`；迁移后探针 7/7 | 历史（迁移已完成） | E1 |
-| [`2026-11-05-v09-calibration.md`](2026-11-05-v09-calibration.md) | v0.9 校准：PROJECT/state/criteria、文档状态头、check 对账、负控 | 历史（校准当时；随后 1.3.0 发布） | E1 |
-| [`2026-11-05-release-v1.3.0.md`](2026-11-05-release-v1.3.0.md) | v1.3.0 发布：版本/tag/哈希/校验/截图挂起 | 历史（发布时布局 v2） | E1/E2 |
-| [`2026-11-05-v09-acceptance.md`](2026-11-05-v09-acceptance.md) | v0.9 校准验收：13 处残留修复；check/probe/tests；已知 check 缺口 | 当前 | E1/E2 |
-| [`2026-11-06-layout-v3.md`](2026-11-06-layout-v3.md) | 布局 v3：取消 `product/` 层，产品代码回仓库根；profile/清单/状态/探针写回 | 当前 | E1 |
-| [`2026-11-06-s1-redteam.md`](2026-11-06-s1-redteam.md) | 红队整改 S1：P0-1（check/gate/init）+ P0-7（表格/ID/半事务）；工具 0.9.3 | 当前（阶段证据） | E1 |
-| [`2026-11-06-s2-redteam.md`](2026-11-06-s2-redteam.md) | 红队整改 S2：P0-2 verify attestation + P0-3 状态机/冻结哈希；工具 0.9.4 | 当前（阶段证据） | E1 |
-| [`2026-11-06-s3-redteam.md`](2026-11-06-s3-redteam.md) | 红队整改 S3：P0-4 进程锁/journal/32 路并发；工具 0.9.5 | 当前（阶段证据） | E1 |
-| [`2026-11-06-s4-security.md`](2026-11-06-s4-security.md) | 红队整改 S4：P0-6 health/settings guard/probe/EV-001；产品 1.3.1 候选 | 当前（阶段证据） | E1 |
-| [`2026-11-06-s5-redteam.md`](2026-11-06-s5-redteam.md) | 红队整改 S5：P1 SSOT 机器块/引用/路径/LF/判据修正 | 当前（阶段证据） | E1 |
-| [`attestations/`](attestations/) | `verify` 生成的 `VA-*.json` 与 check/probe/test 原始日志 | 当前 | E1 |
-| [`2026-11-05-development-retrospective.md`](2026-11-05-development-retrospective.md) | **开发过程全记录**：需求追踪、时间线、决策、失败/修正、证据、未完成项 | 历史（复盘） | E3（叙述）/引用 E1/E2 |
+## 历史
+
+旧红队/S1–S5/布局/真机/迁移证据仍在 `evidence/` 根目录，只读；旧索引已归档到 [`../archive/views/evidence-README-pre-simplify.md`](../archive/views/evidence-README-pre-simplify.md)。旧 gates/board/release/manifest/criteria 在 [`../archive/`](../archive/)。
 
 ## 规则
 
-1. 新证据按 `E1-<主题>-<日期>.md` / `E2-<主题>-<日期>.md` 命名；截图放 `截图/`（尚无）。
-2. 原始文件不改写；更正用新文件 + 在旧文件头标 `SUPERSEDED`。
-3. 高影响事实注明核验人；作者自验只能写“可复现”，不能写“独立通过”。
-4. 引用旧编号前先看 [`../memory/history-mapping.md`](../memory/history-mapping.md)。
+1. 不改写原始证据；更正用新文件并在旧文件头标 `SUPERSEDED`。
+2. 高影响事实注明核验人；作者自验只能写“可复现”，不能写“独立通过”。
+3. 当前 decision 只引用可哈希的证据路径；归档证据可引用，但不得把归档 gate 当当前门。

@@ -42,5 +42,5 @@
 ## 6. 当前停点
 
 - 产品：1.3.1 本地发布（tag `v1.3.1`，conditional；远程未推送）。
-- 治理：AECW 0.10.0 精简化；1.3.1 decision 回填中。
-- 当前阻塞项：见 [`../workspace/decisions/`](../workspace/decisions/) 的 conditions，或 `STATUS.md` 生成视图。
+- 治理：AECW 0.10.0 精简化；1.3.1 decision 在 [`../decisions/`](../decisions/)。
+- 当前阻塞项：见 `decisions/*.json` 的 conditions，或 [`../../STATUS.md`](../../STATUS.md) 生成视图。

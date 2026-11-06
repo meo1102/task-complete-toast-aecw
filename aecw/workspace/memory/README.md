@@ -5,8 +5,8 @@
 ## 当前
 
 - [`direction.md`](direction.md)：人类方向/边界/风险分级/保留位。
-- `state.json`：唯一当前状态源（上级目录）。
-- `STATUS.md`：生成视图。
+- [`../../state.json`](../../state.json)：唯一当前状态源。
+- [`../../STATUS.md`](../../STATUS.md)：生成视图。
 
 ## 规则
 

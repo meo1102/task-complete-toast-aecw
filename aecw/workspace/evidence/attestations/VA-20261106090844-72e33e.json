@@ -1,0 +1,71 @@
+{
+  "kind": "verify",
+  "version": 2,
+  "id": "VA-20261106090844-72e33e",
+  "ok": true,
+  "project": "task-complete-toast-aecw",
+  "risk": "high",
+  "created_at": "2026-11-06T09:08:48.067Z",
+  "expires_at": "2026-11-09T09:08:48.067Z",
+  "reviewer": {
+    "name": "aecw-simplify",
+    "session": "local-2026-11-06",
+    "independent": false
+  },
+  "git": {
+    "available": true,
+    "head": "f9b005bccb92af6332161f988a153da89a55260a",
+    "dirty": true
+  },
+  "tree_hash": "sha256:277E29F5A5893461B0915A084248B6C886D05055E32211AA7EF3BA41B4E03709",
+  "state_hash": "sha256:3E546570FF943A806DC4429CF1FDA1147F5FC1B40F467555AA24C99D3CDEDA1A",
+  "product_hash": "sha256:0C2B99465B90485461638D96AB866B355E1E7D97079B571CFA7BBB34F6D7E308",
+  "checks": {
+    "check": {
+      "status": "pass",
+      "exit": 0
+    },
+    "probe": {
+      "status": "pass",
+      "exit": 0
+    },
+    "tests": {
+      "status": "pass",
+      "exit": 0,
+      "pass": 174,
+      "fail": 0
+    },
+    "governance": {
+      "status": "pass",
+      "exit": 0,
+      "pass": 8,
+      "fail": 0
+    }
+  },
+  "logs": {
+    "check": {
+      "path": "aecw/workspace/evidence/attestations/VA-20261106090844-72e33e-check.log",
+      "sha256": "sha256:5B42420F3C8214D529104494BA66071D3F8DE7EED1E01BE4D0179EF597DFAF7A"
+    },
+    "probe": {
+      "path": "aecw/workspace/evidence/attestations/VA-20261106090844-72e33e-probe.log",
+      "sha256": "sha256:0D9B97F8472F30E566A213AC7C19411D96BA0232386DE1403BE869ABF1CFFDF7"
+    },
+    "tests": {
+      "path": "aecw/workspace/evidence/attestations/VA-20261106090844-72e33e-test.log",
+      "sha256": "sha256:E5B6B139EA8F3731301C98B8CF4F9317794A29B54AA9D4FF0B440EDFA70E5066"
+    },
+    "governance": {
+      "path": "aecw/workspace/evidence/attestations/VA-20261106090844-72e33e-governance.log",
+      "sha256": "sha256:A567FE2D0056D1885574995B8480AA96B22720E37890591C0B165A0E28922BC2"
+    }
+  },
+  "facts": [
+    "check PASS",
+    "probe PASS",
+    "tests PASS（pass 174）",
+    "governance PASS（pass 8）",
+    "tree sha256:277E29F5A5893461B0915A084248B6C886D05055E32211AA7EF3BA41B4E03709"
+  ],
+  "failures": []
+}
