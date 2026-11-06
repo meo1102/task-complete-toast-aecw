@@ -13,7 +13,7 @@ import {
 const INJECTION_NAME = '__DSH_TASK_COMPLETE_TOAST__';
 const PACKAGE_NAME = '@local/task-complete-toast';
 /** 本阶段候选版本；发布时与 package.json 同步。 */
-const PLUGIN_VERSION = '1.3.1';
+const PLUGIN_VERSION = '1.3.2';
 /** G4 设置路由：与结果桥分开，避免被 bridge.routePath 的自定义覆盖。 */
 const SETTINGS_PATH = '/dsh-task-complete/settings';
 /** 只读 health：probe 用它证明“是哪个插件/实例”，不再用任意 400。 */

@@ -7,13 +7,16 @@
     "source": "git-committer"
   },
   "stage": {
-    "name": "security-1",
-    "state": "closed"
+    "name": "product-hardening",
+    "state": "active",
+    "freeze": "aecw/workspace/decisions/FREEZE-product-hardening.json",
+    "started_at": "2026-11-06T09:30:00.533Z",
+    "started_by": "meo1102"
   },
   "release": {
-    "version": "1.3.1",
-    "state": "conditional",
-    "decision": "aecw/workspace/decisions/DR-2026-11-06-1.3.1.json"
+    "version": "1.3.2",
+    "state": "unreleased",
+    "decision": null
   },
   "risk": "high",
   "evolution": {

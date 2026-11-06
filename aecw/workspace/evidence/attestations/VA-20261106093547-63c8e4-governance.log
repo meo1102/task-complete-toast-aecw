@@ -1,0 +1,42 @@
+✔ init + check：state/STATUS/criteria 生成，旧当前路径不存在 (134.6687ms)
+✔ verify + decide：facts/evidence/human 完整，tree 绑定，check 通过 (617.1112ms)
+✔ 空 decision / 缺 facts / 缺 attestation → check FAIL (127.5176ms)
+✔ state/STATUS 漂移 → check FAIL；render 后恢复 (235.3572ms)
+✔ gate 是废弃别名：不生成空模板 (112.0173ms)
+✔ decide 拒绝 evidence/attestations 之外的 attestation (109.984ms)
+✔ decide 负控：高风险缺 residual、11 个 conditions、tree 变化都拒绝 (592.4882ms)
+✖ L2：high 无 freeze 拒绝；freeze + start + independent verify 后接受 (997.3583ms)
+✔ 32 路并发 evolve propose 不丢/不重/不截断 (906.5989ms)
+✔ E1 自动采纳、E2 必须人类、失败候选 retired (811.6491ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 9
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4698.1449
+
+✖ failing tests:
+
+test at aecw\test\simplify.test.mjs:137:1
+✖ L2：high 无 freeze 拒绝；freeze + start + independent verify 后接受 (997.3583ms)
+  AssertionError [ERR_ASSERTION]: FAIL  attestation tree 与当前树不一致；重新 verify
+  
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/DSH/task-complete-toast-aecw/aecw/test/simplify.test.mjs:158:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

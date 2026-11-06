@@ -32,7 +32,7 @@ const RUNTIME_FILES = [
 
 test('S1 清单：名称、版本、私有、ESM 与四个导出齐全', () => {
   assert.equal(manifest.name, '@local/task-complete-toast');
-  assert.equal(manifest.version, '1.3.1');
+  assert.equal(manifest.version, '1.3.2');
   assert.equal(manifest.private, true);
   assert.equal(manifest.type, 'module');
 
@@ -163,6 +163,7 @@ test('S5 客户端：apply 不抛错，注册一项，组件为函数且可渲�
   assert.equal(style.type, 'style');
   assert.match(style.props.children[0], /--dsw-alias-bg-overlay/);
   assert.match(style.props.children[0], /prefers-reduced-motion/);
+  assert.match(style.props.children[0], /min-width: max\(280px, calc\(var\(--dtt-font-size, 12px\) \* 18\)\)/);
   assert.match(style.props.children[0], /box-shadow: 0 10px 30px rgba\(0, 0, 0, 0.18\)/);
   assert.match(style.props.children[0], /data-theme="dark"/);
   assert.match(style.props.children[0], /data-size="compact"/);

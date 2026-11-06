@@ -1,6 +1,6 @@
 # 任务完成提示（task-complete-toast）· AECW 精简化项目
 
-> 状态：current｜最后核对：2026-11-06｜版本：`1.3.1`｜人类所有者：meo1102
+> 状态：current｜最后核对：2026-11-06｜版本：`1.3.2`（候选）｜人类所有者：meo1102
 > 当前状态以 [`aecw/STATUS.md`](aecw/STATUS.md) 为准；该页由 `aecw render` 从 [`aecw/state.json`](aecw/state.json) 生成。
 > 产品代码在仓库根；治理只在 [`aecw/`](aecw/)；历史在 [`aecw/workspace/archive/`](aecw/workspace/archive/)。
 
@@ -9,9 +9,9 @@ DSH 持久化插件：当 Agent 从运行变为空闲时，在窗口右下角提
 | 项 | 值 |
 |---|---|
 | 包名 | `@local/task-complete-toast` |
-| 版本 | `1.3.1`（本地发布；tag `v1.3.1`；release decision 见 `aecw/workspace/decisions/`） |
+| 版本 | `1.3.2`（候选；1.3.1 为上一版；尚未发布/tag） |
 | 目标环境 | DSH Desktop `0.2.1-rc.3`（Cordis），Windows |
-| 自动化 | **174/174** 通过（2026-11-06） |
+| 自动化 | **176/176** 通过（2026-11-06） |
 | 治理工具 | AECW `0.10.0`（精简化：state + decision + verify + evolution） |
 | 安装 | desktop profile link/junction → `D:\DSH\task-complete-toast-aecw` |
 
@@ -70,7 +70,7 @@ DSH 持久化插件：当 Agent 从运行变为空闲时，在窗口右下角提
 node --test --test-isolation=none test/*.test.js
 ```
 
-期望 `tests 174 / pass 174 / fail 0`。受限沙箱内必须用 `--test-isolation=none`。
+期望 `tests 176 / pass 176 / fail 0`。受限沙箱内必须用 `--test-isolation=none`。
 
 治理回归：
 
@@ -118,10 +118,8 @@ node aecw/bin/aecw.mjs evolve aecw list
 - 点击系统通知不激活/还原最小化窗口（Electron + Windows；已接受）。
 - G2-8 双会话并发/上限/顺序未测（已接受遗留）。
 - G3-4b 提醒卡不受 `durationMs` 未单独真机（已接受遗留）。
-- G4 的 compact + 17/18 px + auto 宽度仍可能低于最小宽度（待修；见当前审计）。
-- `routePath` 仍只做 `startsWith('/')` 校验，理论上可用 `//`/反斜杠逃逸到外部主机（待修；见当前审计）。
 - 真实浏览器 settings save/307/自定义 routePath/live 限速未真机；发布后条件 2026-11-20 前复核。
-- 远程 `main` 与 `v1.3.1` 未推送（本机 GitHub 凭证缺失）。
+- 1.3.2 候选未发布；远程 `main` 与 `v1.3.2` 未推送（本机 GitHub 凭证缺失）。
 
 ## 目录
 

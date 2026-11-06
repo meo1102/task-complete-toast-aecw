@@ -156,10 +156,29 @@ window.__ModuleLoader__.load({
       bridge: 'auto',
     });
 
+    /** 结果路由的安全边界；与宿主 Config 同口径，禁止外部/保留路径。 */
+    const RESERVED_ROUTE_PATHS = Object.freeze([
+      '/dsh-task-complete/health',
+      '/dsh-task-complete/settings',
+      '/dsh-task-complete/settings-token',
+    ]);
+
+    function isSafeRoutePath(value) {
+      if (typeof value !== 'string' || !value.startsWith('/')) return false;
+      if (value.length < 8 || value.length > 120) return false;
+      if (/[\\?#\s]/.test(value)) return false;
+      if (value.startsWith('//') || value.includes('//')) return false;
+      if (value.split('/').some((segment) => segment === '.' || segment === '..')) return false;
+      if (!/^[A-Za-z0-9._~!$&'()*+,;=:@/-]+$/.test(value)) return false;
+      if (value === '/dsh-task-complete' || value === '/dsh-task-complete/') return false;
+      if (RESERVED_ROUTE_PATHS.some((reserved) => value === reserved || value.startsWith(`${reserved}/`))) return false;
+      return true;
+    }
+
     /** 客户端字段的类型守卫；类型或取值不符时整字段忽略（§7.2 / ADR-009）。 */
     const CONFIG_GUARDS = Object.freeze({
       enabled: (value) => typeof value === 'boolean',
-      routePath: (value) => typeof value === 'string' && value.startsWith('/'),
+      routePath: isSafeRoutePath,
       awaiting: (value) => typeof value === 'boolean',
       position: (value) => POSITION_VALUES.includes(value),
       theme: (value) => THEME_VALUES.includes(value),
@@ -1456,7 +1475,7 @@ window.__ModuleLoader__.load({
         : DEFAULTS.resolveBudgetMs;
       const SKEW_MS = 100;
       const RETRY_MS = 40;
-      const routePath = typeof settings.routePath === 'string' && settings.routePath.length > 0
+      const routePath = isSafeRoutePath(settings.routePath)
         ? settings.routePath
         : DEFAULTS.routePath;
       const bridgeOff = settings.bridge === 'off';
@@ -1731,6 +1750,7 @@ window.__ModuleLoader__.load({
   align-items: flex-start;
   gap: 10px;
   width: var(--dtt-width, 360px);
+  min-width: max(280px, calc(var(--dtt-font-size, 12px) * 18));
   max-width: calc(100vw - 48px);
   padding: 12px 14px;
   border-radius: 12px;

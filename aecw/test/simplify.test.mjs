@@ -149,9 +149,14 @@ test('L2：high 无 freeze 拒绝；freeze + start + independent verify 后接�
   assert.equal(freeze.code, 0, freeze.output);
   const start = cli(project, ['start', project.gov, '--by', 'tester']);
   assert.equal(start.code, 0, start.output);
+  // L2 允许 start 后在冻结授权范围内实现变更；final verify 绑定新树。
+  fs.appendFileSync(path.join(project.project, 'README.md'), '\nchanged after start\n', 'utf8');
   const independent = cli(project, ['verify', project.gov, '--reviewer', 'independent', '--risk', 'high', '--independent']);
   assert.equal(independent.code, 0, independent.output);
-  const latest = attestations().sort().at(-1);
+  const latest = attestations()
+    .map((file) => ({ file, mtime: fs.statSync(file).mtimeMs }))
+    .sort((left, right) => left.mtime - right.mtime)
+    .at(-1).file;
   const accepted = cli(project, ['decide', project.gov, '--attestation', latest, '--scope', 'stage l2', '--risk', 'high', '--by', 'tester', '--decision', 'accept', '--residual', 'r', '--independent-review', review, '--id', 'DR-L2-2']);
   assert.equal(accepted.code, 0, accepted.output);
   const checked = cli(project, ['check', project.gov]);

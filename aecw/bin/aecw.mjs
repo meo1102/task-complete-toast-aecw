@@ -712,7 +712,7 @@ function validateDecision(dir, decision, owner, currentTree, errors, state) {
         else {
           const freeze = readJsonMaybe(freezePath);
           if (!freeze || freeze.kind !== 'freeze') errors.push(`${label} freeze 文件非法`);
-          else if (freeze.tree_hash !== currentTree) errors.push(`${label} freeze.tree_hash 与当前树不一致`);
+          else if (typeof freeze.tree_hash !== 'string') errors.push(`${label} freeze.tree_hash 缺失`);
         }
       }
       if (attestation?.reviewer?.independent !== true) errors.push(`${label} high risk 非回填 decision 要求 independent verify`);
@@ -944,7 +944,8 @@ function cmdCheck(args, flags) {
     else {
       const freeze = readJsonMaybe(freezePath);
       if (!freeze || freeze.kind !== 'freeze') errors.push('freeze 文件不是 kind freeze');
-      else if (freeze.tree_hash !== currentTree) errors.push('freeze.tree_hash 与当前树不一致');
+      // frozen（未 start）必须仍等于基线；active 允许在冻结授权的范围内实现变更，由 final verify 绑定新树。
+      else if (state.stage.state === 'frozen' && freeze.tree_hash !== currentTree) errors.push('freeze.tree_hash 与当前树不一致');
     }
   }
 
@@ -1180,7 +1181,7 @@ function cmdDecide(args, flags) {
       const freezePath = state.stage.freeze ? safeInProject(project, state.stage.freeze) : undefined;
       if (!freezePath || !fs.existsSync(freezePath)) fail('high risk 非回填 decision 缺 freeze 文件');
       const freeze = readJsonMaybe(freezePath);
-      if (!freeze || freeze.kind !== 'freeze' || freeze.tree_hash !== currentTree) fail('freeze 与当前树不一致');
+      if (!freeze || freeze.kind !== 'freeze' || typeof freeze.tree_hash !== 'string') fail('freeze 文件非法/缺 tree_hash');
       if (attestation.reviewer?.independent !== true) fail('high risk 非回填 decision 要求 independent verify');
     }
   }

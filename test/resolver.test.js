@@ -184,6 +184,18 @@ test('R03 404/400/500 等非 2xx → completed + fallback', async (t) => {
   }
 });
 
+test('R-unsafe routePath 外部/反斜杠 → 回退默认同源路径，不 fetch 外部', async () => {
+  for (const routePath of ['//evil.example/x', '/\\evil.example/x', '/dsh-task-complete/health']) {
+    const { env, calls } = createEnv({
+      fetch: async () => ({ ok: true, json: async () => ({ outcome: 'completed', at: 1 }) }),
+    });
+    const resolver = createResolver(env, { routePath });
+    const result = await resolver.resolve('s-unsafe');
+    assert.equal(result.outcome, 'completed');
+    assert.equal(calls[0].url, `${DEFAULTS.routePath}?sessionId=s-unsafe`);
+  }
+});
+
 test('R04 200ms 预算超时 → completed + fallback，且 abort 被触发', async () => {
   const { env, clock, calls } = createEnv();
   let fetchAborted = false;

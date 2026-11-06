@@ -68,8 +68,11 @@ function parseBaseUrl(raw) {
 function readRoutePath(patch) {
   const match = patch.match(/routePath:\s*['"]?([^'"\s#]+)/);
   const routePath = match ? match[1] : DEFAULT_ROUTE_PATH;
+  const reserved = ['/dsh-task-complete/health', '/dsh-task-complete/settings', '/dsh-task-complete/settings-token'];
   if (!routePath.startsWith('/') || routePath.startsWith('//') || routePath.startsWith('/\\')) throw new Error(`invalid routePath: ${routePath}`);
   if (routePath.includes('..') || /[?#\s\\]/.test(routePath)) throw new Error(`unsafe routePath: ${routePath}`);
+  if (routePath === '/dsh-task-complete' || routePath === '/dsh-task-complete/') throw new Error(`reserved routePath: ${routePath}`);
+  if (reserved.some((item) => routePath === item || routePath.startsWith(`${item}/`))) throw new Error(`reserved routePath: ${routePath}`);
   return routePath;
 }
 

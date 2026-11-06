@@ -1,0 +1,15 @@
+{
+  "id": "FREEZE-product-hardening",
+  "kind": "freeze",
+  "stage": "product-hardening",
+  "scope": "fix routePath external resolution, settings rate-limit ordering, G4 compact auto width",
+  "budget": "1 day / 10 turns",
+  "stop": "S1/S2; product tests fail; tree corruption",
+  "acceptance": "product tests + new regressions; independent L2 review",
+  "tree_hash": "sha256:27062119939D91F3E65193F0894F52E70FB8A8EBCC73AF4C9BA2FA271FA70120",
+  "human": {
+    "name": "meo1102",
+    "at": "2026-11-06T09:30:00.426Z"
+  },
+  "created_at": "2026-11-06T09:30:00.426Z"
+}

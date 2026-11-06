@@ -147,6 +147,26 @@ test('settings 限速：第 31 次请求 429', async () => {
   assert.equal(readResponseJson(limited).error, 'rate-limited');
 });
 
+test('settings 限速在鉴权后：未认证请求不能耗尽合法用户配额', async () => {
+  const route = {
+    handler: createSettingsHandler({
+      save: async (patch) => patch,
+      security: { csrfToken: TOKEN },
+    }),
+  };
+  const body = { fontSize: 16 };
+  for (let index = 0; index < 31; index += 1) {
+    const bad = await requestJsonRoute(route, 'POST', '/dsh-task-complete/settings', body, {
+      ...BASE_HEADERS,
+      origin: 'https://attacker.invalid',
+      'x-aecw-csrf': undefined,
+    });
+    assert.equal(bad.statusCode, 403);
+  }
+  const ok = await requestJsonRoute(route, 'POST', '/dsh-task-complete/settings', body, BASE_HEADERS);
+  assert.equal(ok.statusCode, 200);
+});
+
 test('纯函数：loopback/同源/Content-Type/token 比较', () => {
   assert.equal(isLoopbackHost('127.0.0.1:36137'), true);
   assert.equal(isLoopbackHost('localhost:36137'), true);
